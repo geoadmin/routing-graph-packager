@@ -25,7 +25,7 @@ jobs:
     - name: YAPF linting
       uses: AlexanderMelde/yapf-action@master
       with:
-        args: -r -vv --diff -p tests app config.py http_app.py
+        args: -r -vv --diff -p
     - name: pytest
       env:
         FLASK_CONFIG: testing
