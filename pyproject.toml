@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6.1"
 flask = "^1.1.2"
 flask-sqlalchemy = "^2.4.4"
 psycopg2-binary = "^2.8.5"
