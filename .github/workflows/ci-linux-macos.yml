@@ -1,0 +1,32 @@
+name: Test Routing Packager
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python_version: [3.7, 3.8, pypy3]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+    - name: YAPF linting
+      run: |
+        yapf -r -vv --diff -p tests app config.py http_app.py
+    - name: pytest
+      env:
+        FLASK_CONFIG: testing
+      run: |
+        pytest --cov=app
+    - name: coveralls
+      run: |
+        coveralls

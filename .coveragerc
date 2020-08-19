@@ -1,0 +1,20 @@
+[run]
+branch = True
+omit =
+    */constants.py
+    */__init__.py
+    */__version__.py
+    */venv/*
+    */.venv/*
+    */__main__.py
+    */.tox/*
+
+[report]
+omit =
+    */constants.py
+    */__init__.py
+    */__version__.py
+    */venv/*
+    */.venv/*
+    */__main__.py
+    */.tox/*
