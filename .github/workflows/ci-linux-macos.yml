@@ -11,10 +11,10 @@ jobs:
         python_version: [3.7, 3.8, pypy3]
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python_version }}
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
     - name: Install Poetry
