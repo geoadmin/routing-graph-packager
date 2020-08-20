@@ -1,5 +1,6 @@
 import pytest
 from flask import Flask
+from base64 import b64encode
 
 from app import create_app
 from . import utils
@@ -25,3 +26,14 @@ def db(flask_app: Flask):
 def flask_app_client(flask_app: Flask):
     flask_app.response_class = utils.JSONResponse
     return flask_app.test_client()
+
+
+@pytest.fixture(scope='session')
+def basic_auth_header(flask_app: Flask):
+    admin_email = flask_app.config['ADMIN_EMAIL']
+    admin_pass = flask_app.config['ADMIN_PASS']
+
+    auth_encoded = b64encode(bytes(':'.join((admin_email, admin_pass)).encode('utf-8'))).decode()
+    auth_header = {'Authorization': f'Basic {auth_encoded}'}
+
+    return auth_header

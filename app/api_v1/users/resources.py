@@ -1,10 +1,12 @@
-from flask_restx import Resource, Namespace, fields, reqparse
+from flask import g
+from flask_restx import Resource, Namespace, fields, reqparse, abort
 from flask_restx.errors import HTTPStatus
 from werkzeug.exceptions import NotFound, BadRequest
+import re
 
-from app import db
 from .models import User
 from . import UserFields
+from app.auth.basic_auth import basic_auth
 from ...db_utils import add_or_abort
 
 # Mandatory, will be added by api_vX.__init__
@@ -12,28 +14,42 @@ ns = Namespace('users', description='User related operations')
 
 # Parse POST request
 parser = reqparse.RequestParser()
-parser.add_argument(UserFields.EMAIL, help='Email is equivalent to username.', required=True)
-parser.add_argument(UserFields.PASSWORD, help='No password rules apply.', required=True)
+parser.add_argument(UserFields.EMAIL)
+parser.add_argument(UserFields.PASSWORD)
 
-user_schema = ns.model('User', {
-    UserFields.ID: fields.Integer,
+user_base_schema = ns.model('UserBase', {
     UserFields.EMAIL: fields.String,
 })
+user_response_schema = ns.clone('UserResp', user_base_schema, {UserFields.ID: fields.Integer})
+user_body_schema = ns.clone('UserReq', user_base_schema, {UserFields.PASSWORD: fields.String})
 
 
 @ns.route('/')
 @ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
 class UserRegistration(Resource):
     """Manipulates User table"""
-    @ns.marshal_with(user_schema)
+    @basic_auth.login_required
+    @ns.expect(user_body_schema)
+    @ns.marshal_with(user_response_schema)
     @ns.response(HTTPStatus.CONFLICT, 'User already exists.')
+    @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def post(self):
-        """Create a new user"""
-        new_user = User(**parser.parse_args(strict=True))
+        """POST a new user. Needs admin privileges"""
+        args = parser.parse_args(strict=True)
+        for arg, value in args.items():
+            if not value:
+                raise BadRequest(f"'{arg}' is required in request.")
+
+        # Validate email
+        email_re = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\D{2,3})+$'
+        if not re.search(email_re, args['email']):
+            raise BadRequest(f'Email \'{args["email"]}\' is invalid.')
+
+        new_user = User(**args)
         add_or_abort(new_user)
         return new_user
 
-    @ns.marshal_list_with(user_schema)
+    @ns.marshal_list_with(user_response_schema)
     def get(self):
         """GET all users"""
         return User.query.all()
@@ -41,16 +57,19 @@ class UserRegistration(Resource):
 
 @ns.route('/<int:id>')
 @ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
+@ns.response(HTTPStatus.NOT_FOUND, 'Unknown user id.')
 class UserSingle(Resource):
     """Get or delete single users"""
-    @ns.marshal_with(user_schema)
-    @ns.response(HTTPStatus.NOT_FOUND, 'Unknown user id.')
+    @ns.marshal_with(user_response_schema)
     def get(self, id):
         """GET a single user"""
         return User.query.get_or_404(id)
 
+    @basic_auth.login_required
+    @ns.response(HTTPStatus.NO_CONTENT, 'Success, no content.')
     def delete(self, id):
         """DELETE a user"""
+        db = g.db
         db.session.delete(User.query.get_or_404(id))
         db.session.commit()
         return '', HTTPStatus.NO_CONTENT

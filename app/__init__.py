@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -26,6 +26,23 @@ def create_app(config_string=None):
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+
+    # Add a master account on first request
+    @app.before_first_request
+    def intialize_app():
+        if config_string == 'development':
+            db.create_all()
+        # Make sure g has db
+        initialize_request()
+
+        from app.db_utils import add_admin_user
+        add_admin_user()
+
+    # Add the db to g to avoid circular imports
+    @app.before_request
+    def initialize_request():
+        if not hasattr(g, 'db'):
+            g.db = db
 
     # initialize the API module(s)
     # placed here to avoid circular imports
