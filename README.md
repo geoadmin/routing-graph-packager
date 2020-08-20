@@ -1,6 +1,6 @@
 # Routing Packager HTTP API
 
-![tests](https://github.com/gis-ops/kadas-routing-packager/workflows/Tests/badge.svg)
+![tests](https://github.com/gis-ops/kadas-routing-packager/workflows/tests/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/gis-ops/kadas-routing-packager/badge.svg?branch=master)](https://coveralls.io/github/gis-ops/kadas-routing-packager?branch=master)
 
 **This project is in development, more updates follow soon.**
