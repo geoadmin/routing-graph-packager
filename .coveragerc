@@ -1,20 +1,20 @@
 [run]
 branch = True
 omit =
-    */constants.py
-    */__init__.py
     */__version__.py
+    app/api_v1/jobs/*
+    app/core/routers/*
+    app/logger.py
     */venv/*
     */.venv/*
-    */__main__.py
     */.tox/*
 
 [report]
 omit =
-    */constants.py
-    */__init__.py
     */__version__.py
+    app/api_v1/jobs/*
+    app/core/routers/*
+    app/logger.py
     */venv/*
     */.venv/*
-    */__main__.py
     */.tox/*

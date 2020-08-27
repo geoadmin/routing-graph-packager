@@ -8,7 +8,11 @@ log = logging.getLogger(__name__)
 
 
 def add_or_abort(obj):
-    """Commit the object or abort"""
+    """
+    Commit the database object or abort.
+
+    :param obj: Any database object which needs to be commited.
+    """
     session = g.db.session
     success = False
     try:
@@ -27,7 +31,7 @@ def add_or_abort(obj):
 
 
 def add_admin_user():
-    """Add admin user before first request"""
+    """Add admin user before first request."""
     admin_email = current_app.config['ADMIN_EMAIL']
     admin_pass = current_app.config['ADMIN_PASS']
 

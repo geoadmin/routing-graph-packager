@@ -6,7 +6,7 @@ import re
 
 from .models import User
 from . import UserFields
-from app.auth.basic_auth import basic_auth
+from ...auth.basic_auth import basic_auth
 from ...db_utils import add_or_abort
 
 # Mandatory, will be added by api_vX.__init__
@@ -17,6 +17,7 @@ parser = reqparse.RequestParser()
 parser.add_argument(UserFields.EMAIL)
 parser.add_argument(UserFields.PASSWORD)
 
+# Set up different schemas for request and response
 user_base_schema = ns.model(
     'UserBase', {
         UserFields.EMAIL: fields.String(example='example@email.org'),
@@ -58,7 +59,7 @@ class UserRegistration(Resource):
 
     @ns.marshal_list_with(user_response_schema)
     def get(self):
-        """GET all users"""
+        """GET all users."""
         return User.query.all()
 
 
@@ -77,7 +78,7 @@ class UserSingle(Resource):
     @ns.response(HTTPStatus.NO_CONTENT, 'Success, no content.')
     @ns.response(HTTPStatus.CONFLICT, 'Conflict detected.')
     def delete(self, id):
-        """DELETE a user"""
+        """DELETE a user. Needs admin privileges."""
         db = g.db
         user = User.query.get_or_404(id)
         current_user_email = basic_auth.current_user().email

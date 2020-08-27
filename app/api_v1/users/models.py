@@ -3,6 +3,7 @@ from sqlalchemy_utils.types import PasswordType
 
 
 class User(db.Model):
+    """The users table."""
 
     __tablename__ = 'users'
 

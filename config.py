@@ -47,8 +47,6 @@ class BaseConfig(object):
     GRAPH_DIR = os.getenv('GRAPH_DIR') or os.path.join(basedir, 'data', 'graphs')
     os.makedirs(GRAPH_DIR, exist_ok=True)
     PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
-    if not os.path.exists(PBF_PATH):
-        raise FileNotFoundError(f"PBF_PATH '{PBF_PATH}' doesn't exist.")
     PBF_TEMP_DIR = os.getenv('PBF_TEMP_DIR') or os.path.join(basedir, 'data', 'temp')
     os.makedirs(PBF_TEMP_DIR, exist_ok=True)
 
@@ -59,11 +57,15 @@ class BaseConfig(object):
 
 
 class DevConfig(BaseConfig):
-    pass
+    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
+    if not os.path.exists(PBF_PATH):
+        raise FileNotFoundError(f"PBF_PATH '{PBF_PATH}' doesn't exist.")
 
 
 class ProdConfig(BaseConfig):
-    pass
+    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
+    if not os.path.exists(PBF_PATH):
+        raise FileNotFoundError(f"PBF_PATH '{PBF_PATH}' doesn't exist.")
 
 
 class TestingConfig(BaseConfig):

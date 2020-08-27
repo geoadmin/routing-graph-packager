@@ -6,7 +6,15 @@ basic_auth = HTTPBasicAuth()
 
 @basic_auth.verify_password
 def verify(email, password):
-    """Verify """
+    """
+    Callback to verify the email and password.
+
+    :param str email: user's email
+    :param str password: user's password
+
+    :returns: False if not verified, the User object if it is.
+    :rtype: User
+    """
     if not (email and password):
         return False
 
