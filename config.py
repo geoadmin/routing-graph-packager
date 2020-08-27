@@ -44,28 +44,23 @@ class BaseConfig(object):
     SMTP_SECURE = os.getenv('SMTP_SECURE') or False
 
     # Routers & PBF
+    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
     GRAPH_DIR = os.getenv('GRAPH_DIR') or os.path.join(basedir, 'data', 'graphs')
     os.makedirs(GRAPH_DIR, exist_ok=True)
-    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
     PBF_TEMP_DIR = os.getenv('PBF_TEMP_DIR') or os.path.join(basedir, 'data', 'temp')
     os.makedirs(PBF_TEMP_DIR, exist_ok=True)
 
     ENABLED_PROVIDERS = _get_list_var(os.getenv('ENABLED_PROVIDERS')) or ['osm']
     ENABLED_ROUTERS = _get_list_var(os.getenv('ENABLED_ROUTERS')) or ['valhalla']
-    ENABLED_MODULES = ['users', 'jobs']
     VALHALLA_IMAGE = os.getenv('VALHALLA_IMAGE') or 'gisops/valhalla:3.0.9'
 
 
 class DevConfig(BaseConfig):
-    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
-    if not os.path.exists(PBF_PATH):
-        raise FileNotFoundError(f"PBF_PATH '{PBF_PATH}' doesn't exist.")
+    pass
 
 
 class ProdConfig(BaseConfig):
-    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
-    if not os.path.exists(PBF_PATH):
-        raise FileNotFoundError(f"PBF_PATH '{PBF_PATH}' doesn't exist.")
+    pass
 
 
 class TestingConfig(BaseConfig):

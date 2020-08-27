@@ -1,5 +1,6 @@
 import pytest
-from sqlite3 import OperationalError
+from docker.errors import NullResource
+import os
 
 from app import CONF_MAPPER, create_app
 
@@ -32,21 +33,15 @@ def test_create_app_with_broken_import_config():
     del CONF_MAPPER['broken-import-config']
 
 
-# def test_spatialite_warning(monkeypatch, caplog):
-#     """"""
-#     monkeypatch.setenv('SPATIALITE_PATH', '/not/existent')
-#     app = create_app(config_string='testing')
-#     from app import db
-#     with app.app_context():
-#         db.create_all()
-#     client = app.test_client()
-#
-#     # with pytest.raises(OperationalError):
-#     client.get('/api/v1/users/')
-#     for rec in caplog.records:
-#         assert rec.levelname == "WARNING"
-#     print(caplog.text)
-#     # assert "SPATIALITE_PATH set to /not/existent: can't find the module. Attempting to find myself." in caplog.text
-#
-#     with app.app_context():
-#         db.drop_all()
+def test_false_docker_image(monkeypatch):
+    from config import TestingConfig
+    monkeypatch.setattr(TestingConfig, 'ENABLED_ROUTERS', ['valhalla', 'graphhopper'])
+    with pytest.raises(NullResource):
+        create_app()
+
+
+def test_false_pbf_path(monkeypatch):
+    from config import TestingConfig
+    monkeypatch.setattr(TestingConfig, 'PBF_PATH', '/some/path')
+    with pytest.raises(FileNotFoundError):
+        create_app()

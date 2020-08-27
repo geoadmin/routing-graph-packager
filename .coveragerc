@@ -5,6 +5,7 @@ omit =
     app/api_v1/jobs/*
     app/core/routers/*
     app/logger.py
+    app/cmd_utils.py
     */venv/*
     */.venv/*
     */.tox/*
@@ -15,6 +16,7 @@ omit =
     app/api_v1/jobs/*
     app/core/routers/*
     app/logger.py
+    app/cmd_utils.py
     */venv/*
     */.venv/*
     */.tox/*

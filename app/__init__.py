@@ -1,11 +1,12 @@
 import os
 import logging
+import signal
 
 from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_restx.errors import HTTPStatus
-from werkzeug.exceptions import NotFound, BadRequest, Conflict, Forbidden, InternalServerError
+import docker
+from docker.errors import ImageNotFound, NullResource
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +26,21 @@ def create_app(config_string=None):
 
     config_string = config_string or os.getenv('FLASK_CONFIG')
     app.config.from_object(CONF_MAPPER[config_string])
+
+    # some quick sanity checks
+    try:
+        if not os.path.exists(app.config['PBF_PATH']):
+            raise FileNotFoundError(f"PBF_PATH '{app.config['PBF_PATH']}' doesn't exist.")
+        # Are all Docker images installed?
+        enabled_routers = app.config['ENABLED_ROUTERS']
+        docker_clnt = docker.from_env()
+        for r in enabled_routers:
+            print(r)
+            env_var = f'{r.upper()}_IMAGE'
+            docker_clnt.images.get(app.config.get(env_var))
+    except (NullResource, ImageNotFound, FileNotFoundError) as e:
+        log.error(e)
+        raise e
 
     # Flask complains about missing trailing slashes
     app.url_map.strict_slashes = False

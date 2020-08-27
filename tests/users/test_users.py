@@ -117,6 +117,34 @@ def test_new_user_wrong_email_error(email, flask_app_client, basic_auth_header):
     assert response.json['error'] == f'Email \'{email}\' is invalid.'
 
 
+def test_new_user_no_admin_error(flask_app_client, db, basic_auth_header):
+    email = 'user@email.org'
+    password = 'password'
+
+    new_user_id = create_new_user(
+        flask_app_client, auth_header=basic_auth_header, data={
+            'email': email,
+            'password': password
+        }
+    )
+
+    auth_encoded = b64encode(bytes(':'.join((email, password)).encode('utf-8'))).decode()
+    auth_header = {'Authorization': f'Basic {auth_encoded}'}
+
+    response = create_new_user(
+        flask_app_client,
+        auth_header=auth_header,
+        data={
+            'email': 'soemone@email.org',
+            'password': 'bafa'
+        },
+        must_succeed=False
+    )
+    assert response.status_code == 403
+
+    delete_users(db, [new_user_id])
+
+
 def test_get_all_users_empty(flask_app_client):
     # Will still contain the admin user
     assert len(flask_app_client.get('/api/v1/users/').json) == 1
@@ -207,6 +235,33 @@ def test_delete_single_user_not_found(flask_app_client, basic_auth_header):
     assert response.status_code == 404
     assert response.content_type == 'application/json'
     assert response.json['error'] == 'Entity not found.'
+
+
+def test_delete_admin_error(flask_app_client, basic_auth_header):
+    response = flask_app_client.delete('/api/v1/users/1', headers=basic_auth_header)
+
+    assert response.status_code == 409
+    assert response.json['error'] == "Can't delete admin user."
+
+
+def test_delete_auth_no_admin_error(flask_app_client, db, basic_auth_header):
+    email = 'user@email.org'
+    password = 'password'
+
+    new_user_id = create_new_user(
+        flask_app_client, auth_header=basic_auth_header, data={
+            'email': email,
+            'password': password
+        }
+    )
+
+    auth_encoded = b64encode(bytes(':'.join((email, password)).encode('utf-8'))).decode()
+    auth_header = {'Authorization': f'Basic {auth_encoded}'}
+
+    response = flask_app_client.delete(f'/api/v1/users/{new_user_id}', headers=auth_header)
+
+    assert response.status_code == 403
+    assert response.json['error'] == "Admin privileges are required to delete a user."
 
 
 def test_admin_user_created(flask_app_client, flask_app):
