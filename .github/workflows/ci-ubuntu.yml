@@ -49,10 +49,10 @@ jobs:
       run: |
         source $HOME/.poetry/env
         poetry install
-    - name: YAPF linting
-      uses: AlexanderMelde/yapf-action@master
-      with:
-        args: -r -vv --diff -p --exclude '.venv/**/*' --exclude '.tox/**/*' --exclude '.git/**/*'
+    - name: yapf linting
+      run: |
+        source .venv/bin/activate
+        yapf -r -vv --diff -p tests app config.py http_app.py
     - name: pytest
       env:
         FLASK_CONFIG: testing
