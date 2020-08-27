@@ -16,7 +16,6 @@ jobs:
           POSTGRES_USER: admin
           POSTGRES_PASS: admin
           POSTGRES_DB: gis_test
-          POSTGRES_PORT: 5432
           ALLOW_IP_RANGE: 0.0.0.0/0
         options: >-
          --health-cmd pg_isready
@@ -56,6 +55,14 @@ jobs:
       run: |
         source $HOME/.poetry/env
         poetry install
+    - name: Test PG
+      # Runs a script that creates a PostgreSQL client, populates
+      # the client with data, and retrieves data
+      run: python test_pg.py
+      env:
+        POSTGRES_PORT: 5432
+        POSTGRES_USER: admin
+        POSTGRES_PASS: admin
     - name: yapf linting
       run: |
         source .venv/bin/activate

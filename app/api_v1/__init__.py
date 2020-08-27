@@ -8,7 +8,7 @@ from werkzeug.exceptions import (
     NotFound, BadRequest, Conflict, Forbidden, Unauthorized, InternalServerError
 )
 
-from .__version__ import __version__, __api_suffix__
+from .__version__ import __version__, __api_suffix__, __description__
 
 cwd = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,14 +21,7 @@ api = Api(
     authorizations=auth,
     version=__version__,
     title='KADAS Routing Tile Generator',
-    description=(
-        """App to generate Valhalla routing tiles, including:
-- email notification on final job status
-- automatic placement on a hard disk, e.g. FTP
-- simple JWT authentication
-- jobs queuing
-"""
-    )
+    description=__description__
 )
 
 # Add some custom error handlers to make the error response consistent
