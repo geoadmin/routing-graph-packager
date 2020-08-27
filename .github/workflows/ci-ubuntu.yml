@@ -52,7 +52,7 @@ jobs:
     - name: YAPF linting
       uses: AlexanderMelde/yapf-action@master
       with:
-        args: -r -vv --diff -p
+        args: -r -vv --diff -p --exclude '.venv/**/*' --exclude '.tox/**/*' --exclude '.git/**/*' .
     - name: pytest
       env:
         FLASK_CONFIG: testing
