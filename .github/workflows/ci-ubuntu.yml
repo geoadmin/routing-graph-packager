@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04]
-        python_version: [3.7, 3.8, pypy3]
+        python_version: [3.7, 3.8]
     services:
       postgres:
         image: kartoza/postgis:12.1
