@@ -59,9 +59,11 @@ jobs:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
       run: |
+        source .venv/bin/activate
         pytest --cov=app
     - name: coveralls
       run: |
+        source .venv/bin/activate
         coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
