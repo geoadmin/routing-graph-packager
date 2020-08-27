@@ -78,5 +78,7 @@ class TestingConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_URL') or \
         f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB_TEST}'
 
+    PBF_PATH = os.path.join(basedir, 'tests', 'data', 'andorra-200827.osm.pbf')
+
     ADMIN_EMAIL = 'admin@example.org'
     ADMIN_PASS = 'admin'

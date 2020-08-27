@@ -1,4 +1,5 @@
 import os
+from importlib import import_module
 
 from flask import Blueprint
 from flask_restx import Api
@@ -65,9 +66,11 @@ def handle_job_server_error(e):
 
 def init_app(app):
     """Initializes all ENABLED_MODULES and the Api object."""
-    from importlib import import_module
 
-    for module_name in app.config['ENABLED_MODULES']:
+    for module_name in os.listdir(cwd):
+        module_path = os.path.join(cwd, module_name)
+        if 'pycache' in module_name or not os.path.isdir(module_path):
+            continue
         # Import the module's models package before attempting to load its "ns" attribute
         import_module(f'.{module_name}.models', package=__name__)
 
