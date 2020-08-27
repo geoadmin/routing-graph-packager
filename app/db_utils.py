@@ -6,28 +6,21 @@ from sqlalchemy import exc
 
 log = logging.getLogger(__name__)
 
-HTTP_EXC = {
-    HTTPStatus.CONFLICT.value: {
-        "code": HTTPStatus.CONFLICT,
-        "error": "Entity already exists, aborting.."
-    }
-}
 
-
-def add_or_abort(object):
+def add_or_abort(obj):
     """Commit the object or abort"""
     session = g.db.session
     success = False
     try:
-        session.add(object)
+        session.add(obj)
         session.commit()
         success = True
     except exc.IntegrityError as e:
         log.error(f"Transaction aborted because: {e}")
-        abort(**HTTP_EXC[HTTPStatus.CONFLICT])
+        abort(code=HTTPStatus.CONFLICT, error="Entity already exists...")
     except Exception as e:  # pragma: no cover
         log.error(f"Transaction aborted because: {e}")
-        abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, status=str(e))
+        abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, error=str(e))
     finally:
         if not success:
             session.rollback()

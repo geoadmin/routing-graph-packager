@@ -9,6 +9,21 @@ jobs:
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04]
         python_version: [3.7, 3.8, pypy3]
+    services:
+      postgres:
+        image: kartoza/postgis:12.1
+        env:
+          POSTGRES_USE: admin
+          POSTGRES_PASS: admin
+          POSTGRES_DB: gis_test
+        options: >-
+         --health-cmd pg_isready
+         --health-interval 10s
+         --health-timeout 5s
+         --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python_version }}
@@ -17,8 +32,14 @@ jobs:
         python-version: ${{ matrix.python_version }}
     - name: Install Poetry
       uses: dschep/install-poetry-action@v1.3
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.poetry
+        key: ${{ runner.os }}-build-${{ hashFiles('**/pyproject.toml') }}
     - name: Install dependencies
       run: |
+        ll ${{ runner.os }}-build-${{ hashFiles('**/pyproject.toml') }}
         poetry install
     - name: YAPF linting
       uses: AlexanderMelde/yapf-action@master
@@ -27,6 +48,8 @@ jobs:
     - name: pytest
       env:
         FLASK_CONFIG: testing
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
       run: |
         pytest --cov=app
     - name: coveralls

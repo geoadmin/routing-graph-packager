@@ -1,7 +1,13 @@
 import os
+import logging
+
 from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_restx.errors import HTTPStatus
+from werkzeug.exceptions import NotFound, BadRequest, Conflict, Forbidden, InternalServerError
+
+log = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -23,13 +29,16 @@ def create_app(config_string=None):
     # Flask complains about missing trailing slashes
     app.url_map.strict_slashes = False
 
-    # Initialize extensions
     db.init_app(app)
+
+    # Initialize extensions
     migrate.init_app(app, db)
 
     # Add a master account on first request
     @app.before_first_request
     def intialize_app():
+
+        # TODO: remove once released, then migrate will take over this job
         if config_string == 'development':
             db.create_all()
         # Make sure g has db

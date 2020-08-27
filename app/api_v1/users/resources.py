@@ -1,7 +1,7 @@
-from flask import g
-from flask_restx import Resource, Namespace, fields, reqparse, abort
+from flask import g, current_app
+from flask_restx import Resource, Namespace, fields, reqparse
 from flask_restx.errors import HTTPStatus
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 import re
 
 from .models import User
@@ -17,9 +17,11 @@ parser = reqparse.RequestParser()
 parser.add_argument(UserFields.EMAIL)
 parser.add_argument(UserFields.PASSWORD)
 
-user_base_schema = ns.model('UserBase', {
-    UserFields.EMAIL: fields.String,
-})
+user_base_schema = ns.model(
+    'UserBase', {
+        UserFields.EMAIL: fields.String(example='example@email.org'),
+    }
+)
 user_response_schema = ns.clone('UserResp', user_base_schema, {UserFields.ID: fields.Integer})
 user_body_schema = ns.clone('UserReq', user_base_schema, {UserFields.PASSWORD: fields.String})
 
@@ -29,19 +31,24 @@ user_body_schema = ns.clone('UserReq', user_base_schema, {UserFields.PASSWORD: f
 class UserRegistration(Resource):
     """Manipulates User table"""
     @basic_auth.login_required
+    @ns.doc(security='basic')
     @ns.expect(user_body_schema)
     @ns.marshal_with(user_response_schema)
     @ns.response(HTTPStatus.CONFLICT, 'User already exists.')
     @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def post(self):
         """POST a new user. Needs admin privileges"""
+        admin_email = current_app.config['ADMIN_EMAIL']
+        if not admin_email == basic_auth.current_user().email:
+            raise Forbidden("Admin privileges are required to register a new user.")
+
         args = parser.parse_args(strict=True)
         for arg, value in args.items():
             if not value:
                 raise BadRequest(f"'{arg}' is required in request.")
 
         # Validate email
-        email_re = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\D{2,3})+$'
+        email_re = r'^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\D{2,3})+$'
         if not re.search(email_re, args['email']):
             raise BadRequest(f'Email \'{args["email"]}\' is invalid.')
 
@@ -66,21 +73,21 @@ class UserSingle(Resource):
         return User.query.get_or_404(id)
 
     @basic_auth.login_required
+    @ns.doc(security='basic')
     @ns.response(HTTPStatus.NO_CONTENT, 'Success, no content.')
+    @ns.response(HTTPStatus.CONFLICT, 'Conflict detected.')
     def delete(self, id):
         """DELETE a user"""
         db = g.db
+        user = User.query.get_or_404(id)
+        current_user_email = basic_auth.current_user().email
+
+        admin_email = current_app.config['ADMIN_EMAIL']
+        if admin_email == user.email:
+            raise Conflict("Can't delete admin user.")
+        elif not admin_email == current_user_email:
+            raise Forbidden("Admin privileges are required to delete a user.")
+
         db.session.delete(User.query.get_or_404(id))
         db.session.commit()
         return '', HTTPStatus.NO_CONTENT
-
-
-# Some error handlers
-@ns.errorhandler(NotFound)
-def handle_no_sql_result_error(e: NotFound):
-    return {'error': 'User not found.'}, HTTPStatus.NOT_FOUND
-
-
-@ns.errorhandler(BadRequest)
-def handle_bad_post_error(e: BadRequest):
-    return {'error': e.description}, HTTPStatus.BAD_REQUEST

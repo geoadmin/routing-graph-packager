@@ -43,6 +43,11 @@ If you're planning to install/add new packages, we'd like you to use [`poetry`](
 
 ## Tests
 
+You'll need a few things to run the tests:
+
+- PostreSQL installation with a DB named `gis_test` (or rename the `TestingConfig` variable in [`config.py`](./config.py)) **and PostGIS enabled**
+- some fake SMTP service to handle email tests, e.g. [fake-smtp-server](https://www.npmjs.com/package/fake-smtp-server)
+
 We use `pytest` in this project with `coverage`:
 
 ```bash

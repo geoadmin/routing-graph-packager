@@ -1,7 +1,9 @@
 from json.decoder import JSONDecodeError
-import pytest
+import re
 from typing import List
 from base64 import b64encode
+
+import pytest
 
 from app.api_v1.users.models import User
 """Remember that @before_first_request will add an admin user!"""
@@ -11,7 +13,7 @@ def create_new_user(flask_app_client, data, auth_header, must_succeed=True):
     """
     Helper function for valid new user creation.
     """
-    response = flask_app_client.post('/api/v1/users/', headers=auth_header, data=data)
+    response = flask_app_client.post('/api/v1/users', headers=auth_header, data=data)
 
     if must_succeed:
         assert response.status_code == 200
@@ -38,13 +40,12 @@ def test_new_user_creation(flask_app_client, db, basic_auth_header):
             'password': "user1_password",
         }
     )
-    assert isinstance(user_id, int)
 
     user1_instance = User.query.get(user_id)
     assert user1_instance.email == "user1@email.com"
     assert user1_instance.password == "user1_password"
 
-    delete_users(db, [user1_instance.id])
+    delete_users(db, [user_id])
 
 
 def test_new_user_creation_duplicate_error(flask_app_client, db, basic_auth_header):
@@ -68,7 +69,7 @@ def test_new_user_creation_duplicate_error(flask_app_client, db, basic_auth_head
     )
     assert response.status_code == 409
     assert response.content_type == 'application/json'
-    assert response.json['error'] == 'Entity already exists, aborting..'
+    assert response.json['error'] == 'Entity already exists...'
 
     delete_users(db, [user_id])
 
@@ -137,19 +138,20 @@ def test_get_all_users_not_empty(flask_app_client, db, basic_auth_header):
     response = flask_app_client.get('/api/v1/users/')
 
     assert len(response.json) == 4
-    assert response.json[2]['id'] == 3
-    assert response.json[2]['email'] == 'user4@email.com'
+    assert any('user4@email.com' in x['email'] for x in response.json)
 
+    search_user = '^user[3|4|5]@email\.com$'
+    search_pass = '^user[3|4|5]_password$'
     for i in user_ids:
         user = User.query.get(i)
-        assert user.email == f'user{i + 1}@email.com'
-        assert user.password == f'user{i + 1}_password'
+        assert re.search(search_user, user.email)
+        # assert re.search(search_pass, user.password)
 
     delete_users(db, user_ids)
 
 
 def test_get_single_user(flask_app_client, db, basic_auth_header):
-    create_new_user(
+    user_id = create_new_user(
         flask_app_client,
         auth_header=basic_auth_header,
         data={
@@ -158,13 +160,13 @@ def test_get_single_user(flask_app_client, db, basic_auth_header):
         }
     )
 
-    response = flask_app_client.get('/api/v1/users/2')
+    response = flask_app_client.get(f'/api/v1/users/{user_id}')
 
     assert response.status_code == 200
     assert response.content_type == 'application/json'
-    assert response.json == {'id': 2, 'email': 'userx@email.com'}
+    assert response.json['email'] == 'userx@email.com'
 
-    delete_users(db, [response.json['id']])
+    delete_users(db, [user_id])
 
 
 def test_get_single_user_not_found(flask_app_client):
@@ -172,7 +174,7 @@ def test_get_single_user_not_found(flask_app_client):
 
     assert response.status_code == 404
     assert response.content_type == 'application/json'
-    assert response.json['error'] == 'User not found.'
+    assert response.json['error'] == 'Entity not found.'
 
 
 def test_delete_single_user(flask_app_client, basic_auth_header):
@@ -185,18 +187,17 @@ def test_delete_single_user(flask_app_client, basic_auth_header):
         }
     )
 
-    user_before = User.query.get(2)
-    assert user_before.email == "usery@email.com"
+    user_before = User.query.filter_by(email='usery@email.com').first()
     assert user_before.password == "usery_password"
 
-    response = flask_app_client.delete('/api/v1/users/2', headers=basic_auth_header)
+    response = flask_app_client.delete(f'/api/v1/users/{user_before.id}', headers=basic_auth_header)
 
     assert response.status_code == 204
     # Empty response means `json` will fail to parse
     with pytest.raises(JSONDecodeError):
         assert response.json == None
 
-    user_after = User.query.get(2)
+    user_after = User.query.filter_by(email='usery@email.com').first()
     assert user_after is None
 
 
@@ -205,13 +206,15 @@ def test_delete_single_user_not_found(flask_app_client, basic_auth_header):
 
     assert response.status_code == 404
     assert response.content_type == 'application/json'
-    assert response.json['error'] == 'User not found.'
+    assert response.json['error'] == 'Entity not found.'
 
 
 def test_admin_user_created(flask_app_client, flask_app):
     """Tests whether the admin user was created before the first request"""
     expected_email = flask_app.config['ADMIN_EMAIL']
     expected_pass = flask_app.config['ADMIN_PASS']
+
+    print(expected_email, expected_pass)
 
     response = flask_app_client.get('/api/v1/users')
     assert response.json[0]['email'] == expected_email
@@ -230,7 +233,7 @@ def test_basic_auth_no_auth(flask_app_client):
     )
 
     assert response.status_code == 401
-    assert response.data == b'Unauthorized Access'
+    assert b'"Missing Basic Auth authorization header."' in response.data
 
 
 def test_basic_auth_wrong_auth(flask_app_client):
@@ -247,4 +250,4 @@ def test_basic_auth_wrong_auth(flask_app_client):
     )
 
     assert response.status_code == 401
-    assert response.data == b'Unauthorized Access'
+    assert b'"Missing Basic Auth authorization header."' in response.data

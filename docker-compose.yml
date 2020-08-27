@@ -1,0 +1,7 @@
+version: '3.0'
+services:
+  valhalla:
+    image: gisops/valhalla:3.0.9
+    container_name: valhalla
+    volumes:
+      - ./data/graphs/valhalla: /graphs

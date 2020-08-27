@@ -3,6 +3,7 @@ from flask import Flask
 from base64 import b64encode
 
 from app import create_app
+from app.db_utils import add_admin_user
 from . import utils
 
 
@@ -13,7 +14,18 @@ def flask_app():
     with app.app_context():
         db.create_all()
         yield app
+        db.session.close()
         db.drop_all()
+
+
+# @pytest.yield_fixture(scope='function', autouse=True)
+# def delete_tables(flask_app):
+#     from app import db
+#     with flask_app.app_context():
+#         db.create_all()
+#         add_admin_user()
+#         yield
+#         db.drop_all()
 
 
 @pytest.yield_fixture(scope='session')
