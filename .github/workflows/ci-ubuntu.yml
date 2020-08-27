@@ -39,7 +39,7 @@ jobs:
         key: ${{ runner.os }}-build-${{ hashFiles('**/pyproject.toml') }}
     - name: Install dependencies
       run: |
-        ll ${{ runner.os }}-build-${{ hashFiles('**/pyproject.toml') }}
+        ls -l ${{ runner.os }}-build-${{ hashFiles('**/pyproject.toml') }}
         poetry install
     - name: YAPF linting
       uses: AlexanderMelde/yapf-action@master
