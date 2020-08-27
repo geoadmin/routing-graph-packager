@@ -13,9 +13,11 @@ jobs:
       postgres:
         image: kartoza/postgis:12.1
         env:
-          POSTGRES_USE: admin
+          POSTGRES_USER: admin
           POSTGRES_PASS: admin
           POSTGRES_DB: gis_test
+          POSTGRES_PORT: 5432
+          ALLOW_IP_RANGE: 0.0.0.0/0
         options: >-
          --health-cmd pg_isready
          --health-interval 10s
@@ -63,6 +65,8 @@ jobs:
         FLASK_CONFIG: testing
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
+        POSTGRES_USER: admin
+        POSTGRES_PASS: admin
       run: |
         source .venv/bin/activate
         pytest --cov=app
