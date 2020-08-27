@@ -45,6 +45,11 @@ jobs:
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+    - name: Install Docker and pull image(s)
+      run: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+        sudo docker pull gisops/valhalla:3.0.9
     - name: Install dependencies
       run: |
         source $HOME/.poetry/env
