@@ -36,11 +36,11 @@ jobs:
   #    id: full-python-version
   #    run: |
   #      echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
-  #  - name: Install and set up Poetry
-  #    run: |
-  #      curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-  #      source $HOME/.poetry/env
-  #      poetry config virtualenvs.in-project true
+    - name: Install and set up Poetry
+      run: |
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        source $HOME/.poetry/env
+        poetry config virtualenvs.in-project true
   #  - name: Cache dependencies
   #    uses: actions/cache@v2
   #    with:
