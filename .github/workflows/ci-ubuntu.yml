@@ -62,6 +62,7 @@ jobs:
         source .venv/bin/activate
         python test_pg.py
       env:
+        POSTGRES_HOST: postgres
         POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
         POSTGRES_USER: admin
         POSTGRES_PASS: admin
