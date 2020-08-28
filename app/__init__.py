@@ -24,21 +24,25 @@ def create_app(config_string='production'):
     """Factory to create contextful apps."""
     app = Flask(__name__)
 
-    config_string = config_string or os.getenv('FLASK_CONFIG')
-
-    app.config.from_object(CONF_MAPPER[config_string])
+    config_env = os.getenv('FLASK_CONFIG')
+    config_string = config_env or config_string
 
     # some quick sanity checks
     try:
+        app.config.from_object(CONF_MAPPER[config_string])  # throws KeyError
         if not os.path.exists(app.config['PBF_PATH']):
             raise FileNotFoundError(f"PBF_PATH '{app.config['PBF_PATH']}' doesn't exist.")
         # Are all Docker images installed?
         enabled_routers = app.config['ENABLED_ROUTERS']
         docker_clnt = docker.from_env()
         for r in enabled_routers:
-            print(r)
             env_var = f'{r.upper()}_IMAGE'
-            docker_clnt.images.get(app.config.get(env_var))
+            docker_clnt.images.get(app.config.get(env_var))  # Throws ImageNotFound error
+    except KeyError:
+        log.error(
+            f"'FLASK_CONFIG' needs to be one of testing, development, production. '{config_env}' is invalid."
+        )
+        raise
     except (NullResource, ImageNotFound, FileNotFoundError) as e:
         log.error(e)
         raise e
@@ -46,9 +50,8 @@ def create_app(config_string='production'):
     # Flask complains about missing trailing slashes
     app.url_map.strict_slashes = False
 
-    db.init_app(app)
-
     # Initialize extensions
+    db.init_app(app)
     migrate.init_app(app, db)
 
     # Add a master account on first request
