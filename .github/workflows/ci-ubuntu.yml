@@ -26,21 +26,21 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python_version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python_version }}
+  #  - uses: actions/checkout@v2
+  #  - name: Set up Python ${{ matrix.python_version }}
+  #    uses: actions/setup-python@v2
+  #    with:
+  #      python-version: ${{ matrix.python_version }}
     # From https://github.com/python-poetry/poetry/actions
   #  - name: Get full python version
   #    id: full-python-version
   #    run: |
   #      echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
-    - name: Install and set up Poetry
-      run: |
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-        source $HOME/.poetry/env
-        poetry config virtualenvs.in-project true
+  #  - name: Install and set up Poetry
+  #    run: |
+  #      curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+  #      source $HOME/.poetry/env
+  #      poetry config virtualenvs.in-project true
   #  - name: Cache dependencies
   #    uses: actions/cache@v2
   #    with:
@@ -64,12 +64,13 @@ jobs:
         curl postgres:5432 || true
         which psql || true
         sudo docker ps || true
-        python test_pg.py
+        psql -U $POSTGRES_USER -h $POSTGRES_HOST -p $POSTGRES_PORT -d $POSTGRES_DB -c "SELECT PostGIS_full_version();" -x
       env:
         POSTGRES_HOST: postgres
         POSTGRES_PORT: 5432
         POSTGRES_USER: admin
         POSTGRES_PASS: admin
+        PGPASSWORD: admin
     - name: yapf linting
       run: |
         source .venv/bin/activate
