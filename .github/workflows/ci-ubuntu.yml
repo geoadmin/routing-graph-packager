@@ -32,25 +32,25 @@ jobs:
       with:
         python-version: ${{ matrix.python_version }}
     # From https://github.com/python-poetry/poetry/actions
-    - name: Get full python version
-      id: full-python-version
-      run: |
-        echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
-    - name: Install and set up Poetry
-      run: |
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-        source $HOME/.poetry/env
-        poetry config virtualenvs.in-project true
-    - name: Cache dependencies
-      uses: actions/cache@v2
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
-    - name: Install Docker and pull image(s)
-      run: |
-        curl -fsSL https://get.docker.com -o get-docker.sh
-        sudo sh get-docker.sh
-        sudo docker pull gisops/valhalla:3.0.9
+  #  - name: Get full python version
+  #    id: full-python-version
+  #    run: |
+  #      echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
+  #  - name: Install and set up Poetry
+  #    run: |
+  #      curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+  #      source $HOME/.poetry/env
+  #      poetry config virtualenvs.in-project true
+  #  - name: Cache dependencies
+  #    uses: actions/cache@v2
+  #    with:
+  #      path: .venv
+  #      key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+  #  - name: Install Docker and pull image(s)
+  #    run: |
+  #      curl -fsSL https://get.docker.com -o get-docker.sh
+  #      sudo sh get-docker.sh
+  #      sudo docker pull gisops/valhalla:3.0.9
     - name: Install dependencies
       run: |
         source $HOME/.poetry/env
@@ -60,10 +60,14 @@ jobs:
       # the client with data, and retrieves data
       run: |
         source .venv/bin/activate
+        curl localhost:5432 || true
+        curl postgres:5432 || true
+        which psql || true
+        sudo docker ps || true
         python test_pg.py
       env:
         POSTGRES_HOST: postgres
-        POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+        POSTGRES_PORT: 5432
         POSTGRES_USER: admin
         POSTGRES_PASS: admin
     - name: yapf linting
@@ -74,7 +78,7 @@ jobs:
       env:
         FLASK_CONFIG: testing
         POSTGRES_HOST: localhost
-        POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+        POSTGRES_PORT: 5432
         POSTGRES_USER: admin
         POSTGRES_PASS: admin
       run: |
