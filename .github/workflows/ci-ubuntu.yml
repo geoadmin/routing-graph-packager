@@ -58,9 +58,11 @@ jobs:
     - name: Test PG
       # Runs a script that creates a PostgreSQL client, populates
       # the client with data, and retrieves data
-      run: python test_pg.py
+      run: |
+        source .venv/bin/activate
+        python test_pg.py
       env:
-        POSTGRES_PORT: 5432
+        POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
         POSTGRES_USER: admin
         POSTGRES_PASS: admin
     - name: yapf linting
@@ -71,7 +73,7 @@ jobs:
       env:
         FLASK_CONFIG: testing
         POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
+        POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
         POSTGRES_USER: admin
         POSTGRES_PASS: admin
       run: |
