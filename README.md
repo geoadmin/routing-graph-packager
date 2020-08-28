@@ -24,7 +24,9 @@ pip install -r requirements.txt
 ### Requirements
 
 - Python >= 3.7
-- SQLite & SpatiaLite
+- `osmium`
+- PostgreSQL database with PostGIS enabled
+
 
 ### Quick Start
 

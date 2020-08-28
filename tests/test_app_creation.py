@@ -24,7 +24,7 @@ def test_create_app_empty_config(monkeypatch):
         monkeypatch.delenv('FLASK_CONFIG')
 
     with pytest.raises(KeyError):
-        create_app()
+        create_app(config_string=None)
 
 
 def test_create_app_with_broken_import_config():

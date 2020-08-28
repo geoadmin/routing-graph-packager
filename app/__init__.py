@@ -20,11 +20,12 @@ CONF_MAPPER = {
 }
 
 
-def create_app(config_string=None):
+def create_app(config_string='production'):
     """Factory to create contextful apps."""
     app = Flask(__name__)
 
     config_string = config_string or os.getenv('FLASK_CONFIG')
+
     app.config.from_object(CONF_MAPPER[config_string])
 
     # some quick sanity checks
