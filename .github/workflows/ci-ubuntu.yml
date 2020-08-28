@@ -59,7 +59,6 @@ jobs:
       # Runs a script that creates a PostgreSQL client, populates
       # the client with data, and retrieves data
       run: |
-        source .venv/bin/activate
         curl localhost:5432 || true
         sudo docker ps || true
         psql -U $POSTGRES_USER -h $POSTGRES_HOST -p $POSTGRES_PORT -d $POSTGRES_DB -c "SELECT PostGIS_full_version();" -x
