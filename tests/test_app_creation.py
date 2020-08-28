@@ -12,9 +12,9 @@ def test_create_app():
 @pytest.mark.parametrize('flask_config_name', ['production', 'development', 'testing'])
 def test_create_app_passing_flask_config_name(monkeypatch, flask_config_name):
     if flask_config_name != 'testing':
-        from config import ProdConfig
-        monkeypatch.setattr(ProdConfig, 'SQLALCHEMY_DATABASE_URI', 'sqlite://')
-        monkeypatch.setattr(ProdConfig, 'SECRET_KEY', 'secret')
+        from config import ProdConfig, DevConfig
+        for c in (ProdConfig, DevConfig):
+            monkeypatch.setattr(c, 'PBF_PATH', os.path.join('tests', 'data', 'andorra-200827.osm.pbf'))
     create_app(config_string=flask_config_name)
 
 

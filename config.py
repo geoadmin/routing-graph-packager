@@ -72,7 +72,7 @@ class TestingConfig(BaseConfig):
     POSTGRES_USER = os.getenv('POSTGRES_USER') or 'admin'
     POSTGRES_PASS = os.getenv('POSTGRES_PASS') or 'admin'
 
-    SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_URL') or \
+    SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_TEST_URL') or \
         f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB_TEST}'
 
     PBF_PATH = os.path.join(basedir, 'tests', 'data', 'andorra-200827.osm.pbf')
