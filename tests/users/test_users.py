@@ -5,7 +5,7 @@ from base64 import b64encode
 
 import pytest
 
-from app.api_v1.users.models import User
+from kadas_routing_http.api_v1.users.models import User
 """Remember that @before_first_request will add an admin user!"""
 
 
@@ -168,7 +168,7 @@ def test_get_all_users_not_empty(flask_app_client, db, basic_auth_header):
     assert len(response.json) == 4
     assert any('user4@email.com' in x['email'] for x in response.json)
 
-    search_user = '^user[3|4|5]@email\.com$'
+    search_user = r'^user[3|4|5]@email\.com$'
     search_pass = '^user[3|4|5]_password$'
     for i in user_ids:
         user = User.query.get(i)

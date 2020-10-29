@@ -1,6 +1,6 @@
 from geoalchemy2 import Geography
 
-from app import db
+from ... import db
 
 
 class Job(db.Model):
@@ -20,8 +20,8 @@ class Job(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):  # pragma: no cover
-        s = f'<Job id={self.id} pid={self.pid} status={self.status} >'
-        f'router={self.router}'
+        s = f'<Job id={self.id} pid={self.pid} status={self.status} '
+        f'router={self.router}>'
         return s
 
     def set_bbox_geojson(self, bbox_geojson):

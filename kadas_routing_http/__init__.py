@@ -1,6 +1,5 @@
 import os
 import logging
-import signal
 
 from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
@@ -64,7 +63,7 @@ def create_app(config_string='production'):
         # Make sure g has db
         initialize_request()
 
-        from app.db_utils import add_admin_user
+        from kadas_routing_http.db_utils import add_admin_user
         add_admin_user()
 
     # Add the db to g to avoid circular imports
@@ -75,7 +74,7 @@ def create_app(config_string='production'):
 
     # initialize the API module(s)
     # placed here to avoid circular imports
-    from app.api_v1 import (bp as api_v1, init_app as init_v1)
+    from kadas_routing_http.api_v1 import (bp as api_v1, init_app as init_v1)
 
     init_v1(app)
     app.register_blueprint(api_v1)

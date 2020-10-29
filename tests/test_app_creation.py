@@ -2,7 +2,7 @@ import pytest
 from docker.errors import NullResource
 import os
 
-from app import CONF_MAPPER, create_app
+from kadas_routing_http import CONF_MAPPER, create_app
 
 
 def test_create_app():
@@ -27,8 +27,10 @@ def test_create_app_empty_config(monkeypatch):
         create_app(config_string=None)
 
 
-def test_create_app_with_broken_import_config():
+def test_create_app_with_broken_import_config(monkeypatch):
     CONF_MAPPER['broken-import-config'] = 'broken-import-config'
+    if os.getenv('FLASK_CONFIG'):
+        monkeypatch.delenv('FLASK_CONFIG')
     with pytest.raises(ImportError):
         create_app('broken-import-config')
     del CONF_MAPPER['broken-import-config']

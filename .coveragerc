@@ -2,10 +2,10 @@
 branch = True
 omit =
     */__version__.py
-    app/api_v1/jobs/*
-    app/core/routers/*
-    app/logger.py
-    app/cmd_utils.py
+    kadas_routing_http/api_v1/jobs/*
+    kadas_routing_http/core/routers/*
+    kadas_routing_http/logger.py
+    kadas_routing_http/cmd_utils.py
     */venv/*
     */.venv/*
     */.tox/*
@@ -13,10 +13,10 @@ omit =
 [report]
 omit =
     */__version__.py
-    app/api_v1/jobs/*
-    app/core/routers/*
-    app/logger.py
-    app/cmd_utils.py
+    kadas_routing_http/api_v1/jobs/*
+    kadas_routing_http/core/routers/*
+    kadas_routing_http/logger.py
+    kadas_routing_http/cmd_utils.py
     */venv/*
     */.venv/*
     */.tox/*

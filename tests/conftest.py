@@ -2,14 +2,14 @@ import pytest
 from flask import Flask
 from base64 import b64encode
 
-from app import create_app
+from kadas_routing_http import create_app
 from . import utils
 
 
 @pytest.yield_fixture(scope='session')
 def flask_app():
     app = create_app(config_string='testing')
-    from app import db
+    from kadas_routing_http import db
     with app.app_context():
         db.create_all()
         yield app
@@ -19,7 +19,7 @@ def flask_app():
 
 @pytest.yield_fixture(scope='session')
 def db():
-    from app import db as db_instance
+    from kadas_routing_http import db as db_instance
     yield db_instance
 
 

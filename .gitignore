@@ -8,6 +8,6 @@ build/
 .coverage
 htmlcov/
 
-*.db
+*.pbf
 .env
 **/*egg-info/

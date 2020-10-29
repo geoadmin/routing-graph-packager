@@ -1,3 +1,3 @@
-from app import create_app
+from kadas_routing_http import create_app
 
 app = create_app('production')

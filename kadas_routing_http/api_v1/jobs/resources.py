@@ -8,7 +8,7 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 from geoalchemy2.shape import to_shape
 from docker.errors import ImageNotFound
 
-from app.auth.basic_auth import basic_auth
+from ...auth.basic_auth import basic_auth
 from ...db_utils import add_or_abort
 from ...cmd_utils import osmium_extract_proc
 from . import JobFields

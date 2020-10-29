@@ -1,4 +1,4 @@
-from app import db
+from ... import db
 from sqlalchemy_utils.types import PasswordType
 
 

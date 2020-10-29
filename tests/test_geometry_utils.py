@@ -1,6 +1,6 @@
 import pytest
 
-from app.core.geometries import geom_conversions
+from kadas_routing_http.core.geometries import geom_conversions
 
 
 def test_bbox_to_geojson():

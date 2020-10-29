@@ -1,7 +1,24 @@
-version: '3.0'
+volumes:
+  postgis-data:
+version: '2.4'
 services:
   valhalla:
-    image: gisops/valhalla:3.0.9
+    image: gisops/valhalla:latest
     container_name: valhalla
     volumes:
-      - ./data/graphs/valhalla: /graphs
+      - ./data/graphs/valhalla:/graphs  # don't change the container path
+  postgis:
+    volumes:
+      - postgis-data:/var/lib/postgresql
+    environment:
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis
+  kadas-routing-server:
+    image: gisops/kadas-routing-server:latest
+    container_name: kadas-routing-server
+    build:
+      context: .
+    ports:
+      - 5000:5000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Lets Docker use the host docker socket

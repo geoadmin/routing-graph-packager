@@ -25,6 +25,7 @@ class BaseConfig(object):
     # Flask
     ERROR_INCLUDE_MESSAGE = False  # No default "message" field in error responses
     RESTX_MASK_SWAGGER = False  # No default MASK header in Swagger
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # DB
     POSTGRES_HOST = os.getenv('POSTGRES_HOST') or 'localhost'
