@@ -672,6 +672,17 @@ version = "5.3.1"
 
 [[package]]
 category = "main"
+description = "Python client for Redis key-value store"
+name = "redis"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "3.5.3"
+
+[package.extras]
+hiredis = ["hiredis (>=0.1.3)"]
+
+[[package]]
+category = "main"
 description = "Python HTTP for Humans."
 name = "requests"
 optional = false
@@ -687,6 +698,18 @@ urllib3 = ">=1.21.1,<1.25.0 || >1.25.0,<1.25.1 || >1.25.1,<1.26"
 [package.extras]
 security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
+
+[[package]]
+category = "main"
+description = "RQ is a simple, lightweight, library for creating background jobs, and processing them."
+name = "rq"
+optional = false
+python-versions = ">=3.5"
+version = "1.5.2"
+
+[package.dependencies]
+click = ">=5.0.0"
+redis = ">=3.5.0"
 
 [[package]]
 category = "main"
@@ -916,7 +939,7 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "3a6d705ee51a30c67edb7ac438a40e2bcc87e7ea11e457afd629abf48721841c"
+content-hash = "755242f142fe80d3353aa583debe2f9a88f3a02bc348f3774dd2519d9f43c630"
 lock-version = "1.0"
 python-versions = "^3.6.1"
 
@@ -1330,9 +1353,17 @@ pyyaml = [
     {file = "PyYAML-5.3.1-cp38-cp38-win_amd64.whl", hash = "sha256:95f71d2af0ff4227885f7a6605c37fd53d3a106fcab511b8860ecca9fcf400ee"},
     {file = "PyYAML-5.3.1.tar.gz", hash = "sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d"},
 ]
+redis = [
+    {file = "redis-3.5.3-py2.py3-none-any.whl", hash = "sha256:432b788c4530cfe16d8d943a09d40ca6c16149727e4afe8c2c9d5580c59d9f24"},
+    {file = "redis-3.5.3.tar.gz", hash = "sha256:0e7e0cfca8660dea8b7d5cd8c4f6c5e29e11f31158c0b0ae91a397f00e5a05a2"},
+]
 requests = [
     {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
     {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
+]
+rq = [
+    {file = "rq-1.5.2-py2.py3-none-any.whl", hash = "sha256:6e32a39d467ffc56fc18f0f0f10abd6aa258895dbac03af31e38fe0c2337aab8"},
+    {file = "rq-1.5.2.tar.gz", hash = "sha256:fc23788eedc39cad3c10630af1694a550eba2f8519e57e396fd91b1dba0a7d99"},
 ]
 shapely = [
     {file = "Shapely-1.7.1-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:4c10f317e379cc404f8fc510cd9982d5d3e7ba13a9cfd39aa251d894c6366798"},

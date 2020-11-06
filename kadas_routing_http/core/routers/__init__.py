@@ -1,5 +1,7 @@
-from .valhalla import Valhalla
 from typing import List
+
+from ...constants import Routers
+from .valhalla import Valhalla
 
 
 def get_router(name, cut_pbf_path):
@@ -7,13 +9,13 @@ def get_router(name, cut_pbf_path):
     Factory for router classes.
 
     :param str name: The router name, one of 'valhalla'.
-    :param str cut_pbf_path:  The path to the input PBF.
+    :param str cut_pbf_path: The path to the input PBF.
 
     :returns: instantiated router object.
     :rtype: Valhalla
     """
 
-    if name == 'valhalla':
+    if name == Routers.valhalla:
         return Valhalla(cut_pbf_path)
     else:
         return False

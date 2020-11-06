@@ -1,4 +1,5 @@
 import os
+from shutil import which
 import logging
 
 from flask import Flask, g
@@ -6,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import docker
 from docker.errors import ImageNotFound, NullResource
+from redis import Redis
+from rq import Queue
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +40,9 @@ def create_app(config_string='production'):
         for r in enabled_routers:
             env_var = f'{r.upper()}_IMAGE'
             docker_clnt.images.get(app.config.get(env_var))  # Throws ImageNotFound error
+        # osmium is needed too
+        if not which('osmium'):
+            raise FileNotFoundError('"osmium" is not installed or not added to PATH.')
     except KeyError:
         log.error(
             f"'FLASK_CONFIG' needs to be one of testing, development, production. '{config_env}' is invalid."
@@ -52,11 +58,16 @@ def create_app(config_string='production'):
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    app.redis = Redis.from_url(app.config['REDIS_URL'])
+    app.task_queue = Queue(
+        'packaging',
+        connection=app.redis,
+        job_timeout='5h'  # after 5 hours processing the job will be considered as failed
+    )
 
     # Add a master account on first request
     @app.before_first_request
-    def intialize_app():
-
+    def initialize_app():
         # TODO: remove once released, then migrate will take over this job
         if config_string == 'development':
             db.create_all()

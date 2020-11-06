@@ -8,31 +8,28 @@ class Job(db.Model):
     __tablename__ = 'jobs'
 
     id = db.Column(db.Integer, primary_key=True)
-    container_id = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    container_id = db.Column(db.String, nullable=True)
     status = db.Column(db.String, nullable=False)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     provider = db.Column(db.String, nullable=False)
-    router = db.Column(db.String, nullable=False)
+    router = db.Column(db.String, nullable=False)  # router name, i.e. valhalla, graphhopper, ors etc
     bbox = db.Column(Geography("POLYGON", srid=4326), nullable=False)
-    # schedule = db.Column(db.String, nullable=False)
+    schedule = db.Column(db.String, nullable=False)  # daily, weekly, monthly, yearly
+    last_ran = db.Column(db.DateTime, nullable=True)  # did it ever run?
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', backref='jobs')
 
     def __repr__(self):  # pragma: no cover
-        s = f'<Job id={self.id} pid={self.pid} status={self.status} '
-        f'router={self.router}>'
+        s = f'<Job id={self.id} status={self.status} schedule={self.schedule} router={self.router}>'
         return s
 
-    def set_bbox_geojson(self, bbox_geojson):
-        """
+    def set_bbox_wkt(self, bbox_wkt: str):
+        self.bbox = bbox_wkt
 
-        :param dict bbox_geojson: comma-delimited string of minx,miny,maxx,maxy
-        """
-        self.bbox = bbox_geojson
-
-    def set_status(self, status):
+    def set_status(self, status: str):
         self.status = status
 
-    def set_container_id(self, container_id):
+    def set_container_id(self, container_id: str):
         self.container_id = container_id

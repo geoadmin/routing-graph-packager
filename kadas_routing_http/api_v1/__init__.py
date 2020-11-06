@@ -9,6 +9,10 @@ from werkzeug.exceptions import (
 )
 
 from .__version__ import __version__, __api_suffix__, __description__
+# Re-export the models and jobs for easier import in other modules
+from .jobs.models import Job
+from .users.models import User
+
 
 cwd = os.path.abspath(os.path.dirname(__file__))
 
@@ -24,9 +28,8 @@ api = Api(
     description=__description__
 )
 
+
 # Add some custom error handlers to make the error response consistent
-
-
 @api.errorhandler(NotFound)
 def handle_user_no_sql_result_error(e: NotFound):
     return {'error': 'Entity not found.'}, HTTPStatus.NOT_FOUND

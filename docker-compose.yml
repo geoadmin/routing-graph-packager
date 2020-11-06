@@ -13,6 +13,10 @@ services:
     environment:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
+  redis:
+    image: redis:6.0
+    ports:
+      - 6379:6379
   kadas-routing-server:
     image: gisops/kadas-routing-server:latest
     container_name: kadas-routing-server

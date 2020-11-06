@@ -7,5 +7,5 @@ __description__ = """App to generate Valhalla routing tiles, including:
 - basic authentication
 - jobs queuing
 
-**Made in GIS\u200A\u2022\u200AOPS UG**
+**Made by GIS\u200A\u2022\u200AOPS UG**
 """
