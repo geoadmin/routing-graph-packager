@@ -51,7 +51,7 @@ def create_package(router_name: str, job_id: str, user_email: str):
         if osmium_status:
             raise InternalServerError(f"'osmium': {osmium_proc.stderr.read().decode()}")
         try:
-            job.set_status('processing')
+            job.set_status('Processing')
             session.commit()
 
             exit_code, output = router.build_graph()
@@ -60,11 +60,11 @@ def create_package(router_name: str, job_id: str, user_email: str):
         except ImageNotFound:
             raise InternalServerError(f"Docker image {router.image} not found.'")
 
-        job.set_status('completed')
+        job.set_status('Completed')
         session.commit()
     # catch all exceptions we're actually aware of
     except HTTPException as e:
-        job.set_status('failed')
+        job.set_status('Failed')
         session.commit()
 
         LOGGER.error(e.description, extra=dict(router=router.name(), container_id=router.container_id))

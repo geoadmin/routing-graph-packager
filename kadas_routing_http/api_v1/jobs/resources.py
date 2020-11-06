@@ -1,15 +1,11 @@
-import os
-import logging
-
 from flask import current_app
 from flask_restx import Resource, Namespace, fields, reqparse
 from flask_restx.errors import HTTPStatus
-from werkzeug.exceptions import BadRequest
 from geoalchemy2.shape import to_shape
 
 from ...auth.basic_auth import basic_auth
 from ...db_utils import add_or_abort
-from . import JobFields
+from . import *
 from .models import Job
 from .validate import validate_post
 from ...core.geometries.geom_conversions import bbox_to_wkt
@@ -24,7 +20,7 @@ parser.add_argument(JobFields.DESCRIPTION)
 parser.add_argument(JobFields.BBOX)
 parser.add_argument(JobFields.PROVIDER)
 parser.add_argument(JobFields.ROUTER)
-parser.add_argument(JobFields.SCHEDULE)
+parser.add_argument(JobFields.INTERVAL)
 
 
 class BboxField(fields.Raw):
@@ -48,7 +44,7 @@ job_base_schema = ns.model(
         JobFields.PROVIDER: fields.String(example='osm'),
         JobFields.ROUTER: fields.String(example='valhalla'),
         JobFields.BBOX: BboxField(),
-        JobFields.SCHEDULE: fields.String(example='daily'),
+        JobFields.INTERVAL: fields.String(example='daily'),
     }
 )
 
@@ -56,7 +52,7 @@ job_response_schema = ns.clone(
     'JobResp', {
         JobFields.ID: fields.Integer,
         JobFields.USER_ID: fields.Integer,
-        JobFields.STATUS: fields.String(example='completed')
+        JobFields.STATUS: fields.String(example='completed', enum=STATUS_VALUES)
     }, job_base_schema
 )
 
@@ -79,12 +75,6 @@ class Jobs(Resource):
         args = parser.parse_args(strict=True)
         validate_post(args)
         router_name = args[JobFields.ROUTER]
-        provider = args[JobFields.PROVIDER]
-
-        if router_name not in current_app.config['ENABLED_ROUTERS']:
-            raise BadRequest(f"Routing engine '{router_name}' is not enabled.")
-        if provider not in current_app.config['ENABLED_PROVIDERS']:
-            raise BadRequest(f"Provider '{provider}' is not enabled.")
 
         current_user = basic_auth.current_user()
 
@@ -94,7 +84,7 @@ class Jobs(Resource):
             provider=args[JobFields.PROVIDER],
             router=args[JobFields.ROUTER],
             user_id=current_user.id,
-            schedule=args[JobFields.SCHEDULE],
+            interval=args[JobFields.INTERVAL],
             status='Starting'
         )
 

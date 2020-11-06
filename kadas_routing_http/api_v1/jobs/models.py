@@ -16,7 +16,7 @@ class Job(db.Model):
     provider = db.Column(db.String, nullable=False)
     router = db.Column(db.String, nullable=False)  # router name, i.e. valhalla, graphhopper, ors etc
     bbox = db.Column(Geography("POLYGON", srid=4326), nullable=False)
-    schedule = db.Column(db.String, nullable=False)  # daily, weekly, monthly, yearly
+    interval = db.Column(db.String, nullable=False)  # daily, weekly, monthly, yearly
     last_ran = db.Column(db.DateTime, nullable=True)  # did it ever run?
 
     user = db.relationship('User', backref='jobs')

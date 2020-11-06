@@ -30,9 +30,13 @@ def validate_post(args):
 
     # Intervals must be valid
     if args['interval'] not in INTERVALS:
-        raise BadRequest(f"'interval needs to be one of {INTERVALS}")
+        raise BadRequest(f"'interval' must be one of {INTERVALS}")
 
     # Routers must be valid
     allowed_routers = current_app.config['ENABLED_ROUTERS']
     if args['router'] not in allowed_routers:
-        raise BadRequest(f"'router' must be one of {allowed_routers}")
+        raise BadRequest(f"'router' must be one of the 'ENABLED_ROUTERS': {allowed_routers}")
+
+    allowed_providers = current_app.config['ENABLED_PROVIDERS']
+    if args['provider'] not in allowed_providers:
+        raise BadRequest(f"'provider' must be one of 'ENABLED_PROVIDERS': {allowed_providers}.")

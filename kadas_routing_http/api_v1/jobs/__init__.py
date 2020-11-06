@@ -1,6 +1,6 @@
 class JobFields:
     BBOX = 'bbox'
-    SCHEDULE = 'schedule'
+    INTERVAL = 'interval'
     PROVIDER = 'provider'
     ROUTER = 'router'
     DESCRIPTION = 'description'
@@ -9,3 +9,6 @@ class JobFields:
     CONTAINER_ID = 'container_id'
     STATUS = 'status'
     USER_ID = 'user_id'
+
+
+STATUS_VALUES = ['Starting', 'Processing', 'Failed', 'Completed']
