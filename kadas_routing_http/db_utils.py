@@ -30,6 +30,26 @@ def add_or_abort(obj):
             session.rollback()
 
 
+def delete_or_abort(obj):
+    """
+    Delete the database object or abort.
+
+    :param obj: Any database object which needs to be deleted.
+    """
+    session = g.db.session
+    success = False
+    try:
+        session.delete(obj)
+        session.commit()
+        success = True
+    except Exception as e:  # pragma: no cover
+        log.error(f"Transaction aborted because: {e}")
+        abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, error=str(e))
+    finally:
+        if not success:
+            session.rollback()
+
+
 def add_admin_user():
     """Add admin user before first request."""
     admin_email = current_app.config['ADMIN_EMAIL']

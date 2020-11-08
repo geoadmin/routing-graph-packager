@@ -9,6 +9,7 @@ class Job(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    rq_id = db.Column(db.String, nullable=True)
     container_id = db.Column(db.String, nullable=True)
     status = db.Column(db.String, nullable=False)
     name = db.Column(db.String, nullable=False)
@@ -18,8 +19,6 @@ class Job(db.Model):
     bbox = db.Column(Geography("POLYGON", srid=4326), nullable=False)
     interval = db.Column(db.String, nullable=False)  # daily, weekly, monthly, yearly
     last_ran = db.Column(db.DateTime, nullable=True)  # did it ever run?
-
-    user = db.relationship('User', backref='jobs')
 
     def __repr__(self):  # pragma: no cover
         s = f'<Job id={self.id} status={self.status} schedule={self.schedule} router={self.router}>'
@@ -33,3 +32,6 @@ class Job(db.Model):
 
     def set_container_id(self, container_id: str):
         self.container_id = container_id
+
+    def set_rq_id(self, rq_id: str):
+        self.rq_id = rq_id

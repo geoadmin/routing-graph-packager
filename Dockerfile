@@ -14,6 +14,8 @@ RUN apt-get update -y > /dev/null && \
     poetry config virtualenvs.in-project true && \
     python -m venv .venv
 
+#--- END Usual Python stuff ---
+
 # Install docker
 RUN apt-get update -y > /dev/null && \
     apt-get install -y \
@@ -24,8 +26,6 @@ RUN apt-get update -y > /dev/null && \
     apt-get update -y > /dev/null && \
     apt-get install -y docker-ce docker-ce-cli containerd.io > /dev/null && \
     systemctl enable docker
-
-#--- END Usual Python stuff ---
 
 WORKDIR /app
 

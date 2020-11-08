@@ -9,8 +9,10 @@ class AppSmtpHandler(SMTPHandler):
     def getSubject(self, record: logging.LogRecord) -> str:
         """Alters the subject line of the emails."""
         subject = f'KADAS {record.levelname}: '
-        if record.levelno > logging.INFO:
+        if record.levelno == logging.ERROR:
             subject += f'Container ID {record.container_id} für Router {record.router}'
+        if record.levelno == logging.WARNING:
+            subject += f'Job {record.job_id} von Nutzer {record.user} wurde gelöscht'
         else:
             subject += 'Erfolg'
 
@@ -27,7 +29,7 @@ def get_smtp_details(config, toaddrs, to_admin=True):
     App config to be passed.
 
     :param dict config: The App config ideally or any dict having the appropriate keys.
-    :param List[str] toaddrs: The recipient's email addresses.
+    :param List[str] toaddrs: The recipients' email addresses.
     :param bool to_admin: Whether the email(s) should be sent to the DB Admin or not.
 
     :returns: complete SMTP configuration

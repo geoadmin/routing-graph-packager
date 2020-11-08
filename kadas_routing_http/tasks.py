@@ -1,6 +1,9 @@
 import os
 import logging
+from time import sleep
 
+from rq import get_current_job
+from rq.job import Job
 from flask_sqlalchemy import SessionBase
 from werkzeug.exceptions import InternalServerError, HTTPException
 from docker.errors import ImageNotFound
@@ -29,16 +32,25 @@ def create_package(router_name: str, job_id: str, user_email: str):
     cut_pbf_path = os.path.join(out_pbf_dir, router_name, f'{router_name}_cut.pbf')
 
     # Set up the logger where we have access to the user email
+    # and only if there hasn't been one before
     if not LOGGER.handlers:
         handler = AppSmtpHandler(**get_smtp_details(app.config, [user_email], False))
         handler.setLevel(logging.INFO)
         LOGGER.addHandler(handler)
 
     router = get_router(router_name, cut_pbf_path)
+    session: SessionBase = db.session
 
+    # Set bbox and container ID
     job = Job.query.get(job_id)
     bbox = job.bbox
     job.set_container_id(router.container_id)
+
+    # Set the Redis job ID
+    rq_job: Job = get_current_job()
+    job.set_rq_id(rq_job.id)
+
+    session.commit()
 
     session: SessionBase = db.session
 
@@ -68,6 +80,11 @@ def create_package(router_name: str, job_id: str, user_email: str):
         session.commit()
 
         LOGGER.error(e.description, extra=dict(router=router.name(), container_id=router.container_id))
+        raise
+    # any other exception is assumed to be a deleted job and will only be logged/email sent
+    except Exception as e:
+        msg = f"Job {job_id} by {user_email} was deleted."
+        LOGGER.warning(msg, extra=dict(user=user_email, job_id=job_id))
         raise
 
     # only clean up if successful, otherwise retain the container for debugging

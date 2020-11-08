@@ -6,11 +6,12 @@ from werkzeug.exceptions import InternalServerError
 import docker
 from docker.errors import ImageNotFound
 
+docker_clnt = docker.from_env()
+
 
 class RouterBase(ABC):
 
     DOCKER_TMP = '/tmp'
-    docker_clnt = docker.from_env()
 
     def __init__(self, input_pbf_path):
         self._input_pbf_path = input_pbf_path
@@ -41,7 +42,7 @@ class RouterBase(ABC):
         :raises: InternalServerError
         """
         try:
-            self._container = self.docker_clnt.containers.create(self.image, **kwargs)
+            self._container = docker_clnt.containers.create(self.image, **kwargs)
         except ImageNotFound:
             raise InternalServerError(f"Docker image {self.image} not found for '{self.name}'")
 

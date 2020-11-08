@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from distutils.util import strtobool
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
@@ -29,23 +30,23 @@ class BaseConfig(object):
 
     # DB
     POSTGRES_HOST = os.getenv('POSTGRES_HOST') or 'localhost'
-    POSTGRES_PORT = os.getenv('POSTGRES_PORT') or '5432'
+    POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', int())) or 5432
     POSTGRES_DB = os.getenv('POSTGRES_DB') or 'gis'
     POSTGRES_USER = os.getenv('POSTGRES_USER') or 'admin'
     POSTGRES_PASS = os.getenv('POSTGRES_PASS') or 'admin'
     SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_URL') or \
         f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
     REDIS_HOST = os.getenv('REDIS_HOST') or 'localhost'
-    REDIS_PORT = os.getenv('REDIS_PORT') or '6379'
-    REDIS_URL = f'redis://redis:6379/0'
+    REDIS_PORT = int(os.getenv('REDIS_PORT', int())) or 6379
+    REDIS_URL = f'redis://localhost:6379/0'
 
     # SMTP
     SMTP_HOST = os.getenv('SMTP_HOST') or 'localhost'
-    SMTP_PORT = os.getenv('SMTP_PORT') or '587'
+    SMTP_PORT = int(os.getenv('SMTP_PORT', int())) or 587
     SMTP_FROM = os.getenv('SMTP_FROM') or 'valhalla@kadas.org'
     SMTP_USER = os.getenv('SMTP_USER')
     SMTP_PASS = os.getenv('SMTP_PASS')
-    SMTP_SECURE = os.getenv('SMTP_SECURE') or False
+    SMTP_SECURE = bool(strtobool(os.getenv('SMTP_SECURE', True))) or False  # evaluates to True
 
     # Routers & PBF
     PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
