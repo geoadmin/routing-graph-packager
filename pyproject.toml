@@ -5,7 +5,7 @@ description = "Backend to generate Valhalla routing tiles in a job queue."
 authors = ["Nils Nolde <nils@gis-ops.com>"]
 license = "MIT"
 packages = [
-    { include = "app" }
+    { include = "kadas_routing_http" }
 ]
 
 [tool.poetry.dependencies]
