@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04]
-        python_version: [3.7, 3.8]
+        python_version: [3.7, 3.8, 3.9]
     services:
       postgres:
         image: kartoza/postgis:12.1
@@ -46,13 +46,18 @@ jobs:
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
-    - name: Pull image(s)
-      run: |
-        sudo docker pull gisops/valhalla:latest
     - name: Install dependencies
       run: |
         source $HOME/.poetry/env
         poetry install
+    - name: Pull image(s)
+      run: |
+        sudo docker pull gisops/valhalla:latest
+    - name: Install osmium
+      run: |
+        add-apt-repository 'deb http://ftp.debian.org/debian sid main'
+        apt-get update
+        apt-get install -y -qq osmium-tool=1.12.1-1
     - name: yapf linting
       run: |
         source .venv/bin/activate
