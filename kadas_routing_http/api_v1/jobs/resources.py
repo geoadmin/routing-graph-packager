@@ -48,8 +48,7 @@ class BboxField(fields.Raw):
 
 
 job_get_schema = ns.model(
-    'JobGet',
-    {
+    'JobGet', {
         JobFields.PROVIDER: fields.String(example='osm', location='args'),
         JobFields.ROUTER: fields.String(example='valhalla', location='args'),
         JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608', location='args'),
@@ -58,8 +57,7 @@ job_get_schema = ns.model(
 )
 
 job_base_schema = ns.model(
-    'JobBase',
-    {
+    'JobBase', {
         JobFields.NAME: fields.String(example='Switzerland'),
         JobFields.DESCRIPTION: fields.String(example='OSM road network of Switzerland'),
         JobFields.PROVIDER: fields.String(example='osm'),
@@ -72,12 +70,18 @@ job_base_schema = ns.model(
 
 job_response_schema = ns.clone(
     'JobResp', {
-        JobFields.ID: fields.Integer(example=0),
-        JobFields.USER_ID: fields.Integer(example=0),
-        JobFields.STATUS: fields.String(example='completed', enum=STATUSES),
-        JobFields.RQ_ID: fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
-        JobFields.CONTAINER_ID: fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7'),
-        JobFields.LAST_RAN: fields.DateTime(example='')
+        JobFields.ID:
+        fields.Integer(example=0),
+        JobFields.USER_ID:
+        fields.Integer(example=0),
+        JobFields.STATUS:
+        fields.String(example='completed', enum=STATUSES),
+        JobFields.RQ_ID:
+        fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
+        JobFields.CONTAINER_ID:
+        fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7'),
+        JobFields.LAST_RAN:
+        fields.DateTime(example='')
     }, job_base_schema
 )
 
@@ -86,7 +90,6 @@ job_response_schema = ns.clone(
 @ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
 class Jobs(Resource):
     """Manipulates User table"""
-
     @ns.marshal_list_with(job_response_schema)
     @ns.expect(job_get_schema)
     def get(self):

@@ -20,12 +20,13 @@ def validate_post(args):
 
     # make sure no other combo of name & router & provider exists
     existing_combo: Job = Job.query.filter(
-        Job.name == args[JobFields.NAME],
-        Job.provider == args[JobFields.PROVIDER],
+        Job.name == args[JobFields.NAME], Job.provider == args[JobFields.PROVIDER],
         Job.router == args[JobFields.ROUTER]
     ).first()
     if existing_combo:
-        raise Conflict(f"Combination of 'name' & 'router' & 'provider' already exists with ID {existing_combo.id}")
+        raise Conflict(
+            f"Combination of 'name' & 'router' & 'provider' already exists with ID {existing_combo.id}"
+        )
 
     _validate_common(args)
 

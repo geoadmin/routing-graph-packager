@@ -4,7 +4,6 @@ from .router_base import RouterBase
 
 
 class Valhalla(RouterBase):
-
     def build_graph(self):
         config = {"mjolnir": {"tile_dir": self._docker_graph_dir}}
 
@@ -13,7 +12,7 @@ class Valhalla(RouterBase):
         return self._exec_docker(cmd)
 
     def package_graph(self, cformat='zip'):
-        
+
         pass
 
     def name(self):

@@ -13,7 +13,6 @@ from .__version__ import __version__, __api_suffix__, __description__
 from .jobs.models import Job
 from .users.models import User
 
-
 cwd = os.path.abspath(os.path.dirname(__file__))
 
 bp = Blueprint(f'api_{__api_suffix__}', __name__, url_prefix=f'/api/{__api_suffix__}')
