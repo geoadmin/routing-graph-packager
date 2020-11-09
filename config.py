@@ -61,8 +61,8 @@ class BaseConfig(object):
     # Routers
     ENABLED_ROUTERS = _get_list_var(os.getenv('ENABLED_ROUTERS')) or ['valhalla']
     VALHALLA_IMAGE = os.getenv('VALHALLA_IMAGE') or 'gisops/valhalla:latest'
-    OSRM_IMAGE = os.getenv('VALHALLA_IMAGE') or 'osrm/osrm-backend:latest'
-    ORS_IMAGE = os.getenv('VALHALLA_IMAGE') or 'openrouteservice/openrouteservice:latest'
+    OSRM_IMAGE = os.getenv('OSRM_IMAGE') or 'osrm/osrm-backend:latest'
+    ORS_IMAGE = os.getenv('ORS_IMAGE') or 'openrouteservice/openrouteservice:latest'
     GRAPHHOPPER_IMAGE = os.getenv('GRAPHHOPPER_IMAGE') or 'graphhopper/graphhopper:latest'
 
     # create all dirs
@@ -93,7 +93,8 @@ class TestingConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_TEST_URL') or \
         f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB_TEST}'
 
-    PBF_PATH = os.path.join(basedir, 'tests', 'data', 'andorra-200827.osm.pbf')
+    OSM_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'andorra-200827.osm.pbf')
+    TOMTOM_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'liechtenstein-201109.tomtom.pbf')
 
     ADMIN_EMAIL = 'admin@example.org'
     ADMIN_PASS = 'admin'
