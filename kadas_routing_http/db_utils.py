@@ -21,7 +21,13 @@ def add_or_abort(obj):
         success = True
     except exc.IntegrityError as e:
         log.error(f"Transaction aborted because: {e}")
-        abort(code=HTTPStatus.CONFLICT, error="Entity already exists...")
+        msg = str(e.orig)
+        # prettier error message
+        needle = 'DETAIL: '
+        msg_idx = msg.rfind(needle)
+        if msg_idx:
+            msg = msg[msg_idx + len(needle) + 1:]
+        abort(code=HTTPStatus.CONFLICT, error=str(msg.strip()))
     except Exception as e:  # pragma: no cover
         log.error(f"Transaction aborted because: {e}")
         abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, error=str(e))

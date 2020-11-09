@@ -69,7 +69,7 @@ def test_new_user_creation_duplicate_error(flask_app_client, db, basic_auth_head
     )
     assert response.status_code == 409
     assert response.content_type == 'application/json'
-    assert response.json['error'] == 'Entity already exists...'
+    assert response.json['error'] == 'Key (email)=(user1@email.com) already exists.'
 
     delete_users(db, [user_id])
 
