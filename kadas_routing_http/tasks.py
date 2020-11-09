@@ -1,6 +1,6 @@
 import os
 import logging
-from time import sleep
+from datetime import datetime
 
 from rq import get_current_job
 from rq.job import Job
@@ -13,6 +13,7 @@ from .api_v1.jobs.models import Job
 from .cmd_utils import osmium_extract_proc
 from .logger import AppSmtpHandler, get_smtp_details
 from .core.routers import get_router
+from .file_utils import make_tarfile, make_zipfile
 
 LOGGER = logging.getLogger('packager')
 LOGGER.setLevel(logging.INFO)
@@ -27,9 +28,13 @@ def create_package(router_name: str, job_id: str, user_email: str):
     """
     Creates a routing package and puts it in a defined folder.
     """
-    in_pbf_path = app.config['PBF_PATH']
+    job = Job.query.get(job_id)
+    bbox = job.bbox
+    provider = job.provider
+
+    in_pbf_path = app.config[provider.upper() + '_PBF_PATH']
     out_pbf_dir = app.config['TEMP_DIR']
-    cut_pbf_path = os.path.join(out_pbf_dir, router_name, f'{router_name}_cut.pbf')
+    cut_pbf_path = os.path.join(out_pbf_dir, router_name, f'{router_name}_{provider}_cut.pbf')
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
@@ -41,18 +46,13 @@ def create_package(router_name: str, job_id: str, user_email: str):
     router = get_router(router_name, cut_pbf_path)
     session: SessionBase = db.session
 
-    # Set bbox and container ID
-    job = Job.query.get(job_id)
-    bbox = job.bbox
-    job.set_container_id(router.container_id)
-
-    # Set the Redis job ID
+    # Set Redis job ID and container ID
     rq_job: Job = get_current_job()
     job.set_rq_id(rq_job.id)
+    job.set_status('Processing')
+    job.set_container_id(router.container_id)
 
     session.commit()
-
-    session: SessionBase = db.session
 
     # Huge try/except to make sure we only have to write a failure once
     try:
@@ -63,9 +63,6 @@ def create_package(router_name: str, job_id: str, user_email: str):
         if osmium_status:
             raise InternalServerError(f"'osmium': {osmium_proc.stderr.read().decode()}")
         try:
-            job.set_status('Processing')
-            session.commit()
-
             exit_code, output = router.build_graph()
             if exit_code:
                 raise InternalServerError(f"'{router.name()}': {output.decode()}")
@@ -78,7 +75,6 @@ def create_package(router_name: str, job_id: str, user_email: str):
     except HTTPException as e:
         job.set_status('Failed')
         session.commit()
-
         LOGGER.error(e.description, extra=dict(router=router.name(), container_id=router.container_id))
         raise
     # any other exception is assumed to be a deleted job and will only be logged/email sent
@@ -86,6 +82,19 @@ def create_package(router_name: str, job_id: str, user_email: str):
         msg = f"Job {job_id} by {user_email} was deleted."
         LOGGER.warning(msg, extra=dict(user=user_email, job_id=job_id))
         raise
+    finally:
+        # always write the "last_ran" column
+        job.set_last_ran(datetime.utcnow())
+        session.commit()
+
+    # Write to disk
+    file_name = '_'.join([job.router, job.provider, job.name])
+    fp = os.path.join(app.config['DATA_DIR'], router.name(), file_name)
+    comp = job.compression
+    if comp == 'zip':
+        make_zipfile(fp, router.graph_dir)
+    elif comp == 'tar':
+        make_tarfile(fp, router.graph_dir)
 
     # only clean up if successful, otherwise retain the container for debugging
     router.cleanup()

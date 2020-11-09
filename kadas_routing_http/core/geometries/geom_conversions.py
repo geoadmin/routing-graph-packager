@@ -39,3 +39,15 @@ def bbox_to_wkt(bbox):
     :rtype: str
     """
     return box(*bbox).wkt
+
+
+def wkbe_to_wkt(wkbe):
+    """
+    Converts a geoalchemy2 :class:`WKBElement` to a WKT.
+
+    :param WKBElement wkbe: The record.
+
+    :returns: WKT representation
+    :rtype: str
+    """
+    return to_shape(wkbe).wkt

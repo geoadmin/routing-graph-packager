@@ -15,7 +15,7 @@ def get_router(name, cut_pbf_path):
     :rtype: Valhalla
     """
 
-    if name == Routers.valhalla:
+    if name == Routers.VALHALLA.value:
         return Valhalla(cut_pbf_path)
     else:
         return False

@@ -46,18 +46,30 @@ class BaseConfig(object):
     SMTP_FROM = os.getenv('SMTP_FROM') or 'valhalla@kadas.org'
     SMTP_USER = os.getenv('SMTP_USER')
     SMTP_PASS = os.getenv('SMTP_PASS')
-    SMTP_SECURE = bool(strtobool(os.getenv('SMTP_SECURE', True))) or False  # evaluates to True
+    SMTP_SECURE = bool(strtobool(os.getenv('SMTP_SECURE', 'True'))) or False  # evaluates to True
 
-    # Routers & PBF
-    PBF_PATH = os.getenv('PBF_PATH') or os.path.join(basedir, 'data', 'planet-latest.pbf')
-    TEMP_DIR = os.getenv('TEMP_DIR') or os.path.join(basedir, 'data', 'temp')
+    # Dirs
+    DATA_DIR = os.getenv('DATA_DIR') or os.path.join(basedir, 'data')
+    TEMP_DIR = os.path.join(DATA_DIR, 'temp')
 
+    # Input PBFs
     ENABLED_PROVIDERS = _get_list_var(os.getenv('ENABLED_PROVIDERS')) or ['osm']
+    OSM_PBF_PATH = os.getenv('OSM_PBF_PATH') or os.path.join(DATA_DIR, 'planet-latest.osm.pbf')
+    TOMTOM_PBF_PATH = os.getenv('TOMTOM_PBF_PATH') or os.path.join(DATA_DIR, 'planet-latest.tomtom.pbf')
+    HERE_PBF_PATH = os.getenv('HERE_PBF_PATH') or os.path.join(DATA_DIR, 'planet-latest.tomtom.pbf')
+
+    # Routers
     ENABLED_ROUTERS = _get_list_var(os.getenv('ENABLED_ROUTERS')) or ['valhalla']
     VALHALLA_IMAGE = os.getenv('VALHALLA_IMAGE') or 'gisops/valhalla:latest'
+    OSRM_IMAGE = os.getenv('VALHALLA_IMAGE') or 'osrm/osrm-backend:latest'
+    ORS_IMAGE = os.getenv('VALHALLA_IMAGE') or 'openrouteservice/openrouteservice:latest'
+    GRAPHHOPPER_IMAGE = os.getenv('GRAPHHOPPER_IMAGE') or 'graphhopper/graphhopper:latest'
 
     # create all dirs
+    # temp is for intermediate files, i.e. graph etc
+    # data is for persistent files, i.e. ZIP/TAR files
     for router in ENABLED_ROUTERS:
+        os.makedirs(os.path.join(DATA_DIR, router), exist_ok=True)
         os.makedirs(os.path.join(TEMP_DIR, router), exist_ok=True)
 
 

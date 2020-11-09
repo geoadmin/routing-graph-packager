@@ -7,9 +7,8 @@ class JobFields:
     NAME = 'name'
     ID = 'id'
     RQ_ID = 'job_id'
+    COMPRESSION = 'compression'
     CONTAINER_ID = 'container_id'
     STATUS = 'status'
     USER_ID = 'user_id'
-
-
-STATUS_VALUES = ['Starting', 'Processing', 'Failed', 'Deleted', 'Completed']
+    LAST_RAN = 'last_ran'

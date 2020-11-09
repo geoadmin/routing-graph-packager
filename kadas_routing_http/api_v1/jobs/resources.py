@@ -1,28 +1,37 @@
 from flask import current_app
 from flask_restx import Resource, Namespace, fields, reqparse
 from flask_restx.errors import HTTPStatus
+from sqlalchemy import func
 from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
 
 from ...auth.basic_auth import basic_auth
+from ...constants import STATUSES
 from ...db_utils import add_or_abort, delete_or_abort
 from . import *
 from .models import Job
-from .validate import validate_post
+from .validate import validate_post, validate_get
 from ...core.geometries.geom_conversions import bbox_to_wkt
 
 # Mandatory, will be added by api_vX.__init__
 ns = Namespace('jobs', description='Job related operations')
 
 # Parse POST request
-parser = reqparse.RequestParser()
-parser.add_argument(JobFields.NAME)
-parser.add_argument(JobFields.DESCRIPTION)
-parser.add_argument(JobFields.BBOX)
-parser.add_argument(JobFields.PROVIDER)
-parser.add_argument(JobFields.ROUTER)
-parser.add_argument(JobFields.INTERVAL)
+post_parser = reqparse.RequestParser()
+post_parser.add_argument(JobFields.NAME)
+post_parser.add_argument(JobFields.DESCRIPTION)
+post_parser.add_argument(JobFields.BBOX)
+post_parser.add_argument(JobFields.PROVIDER)
+post_parser.add_argument(JobFields.ROUTER)
+post_parser.add_argument(JobFields.INTERVAL)
+post_parser.add_argument(JobFields.COMPRESSION)
+
+get_parser = reqparse.RequestParser()
+get_parser.add_argument(JobFields.PROVIDER)
+get_parser.add_argument(JobFields.ROUTER)
+get_parser.add_argument(JobFields.BBOX)
+get_parser.add_argument(JobFields.STATUS)
 
 
 class BboxField(fields.Raw):
@@ -38,6 +47,16 @@ class BboxField(fields.Raw):
         return ','.join([str(x) for x in bbox])
 
 
+job_get_schema = ns.model(
+    'JobGet',
+    {
+        JobFields.PROVIDER: fields.String(example='osm', location='args'),
+        JobFields.ROUTER: fields.String(example='valhalla', location='args'),
+        JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608', location='args'),
+        JobFields.INTERVAL: fields.String(example='daily', location='args'),
+    }
+)
+
 job_base_schema = ns.model(
     'JobBase',
     {
@@ -47,6 +66,7 @@ job_base_schema = ns.model(
         JobFields.ROUTER: fields.String(example='valhalla'),
         JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608'),
         JobFields.INTERVAL: fields.String(example='daily'),
+        JobFields.COMPRESSION: fields.String(example='zip')
     }
 )
 
@@ -54,9 +74,10 @@ job_response_schema = ns.clone(
     'JobResp', {
         JobFields.ID: fields.Integer(example=0),
         JobFields.USER_ID: fields.Integer(example=0),
-        JobFields.STATUS: fields.String(example='completed', enum=STATUS_VALUES),
+        JobFields.STATUS: fields.String(example='completed', enum=STATUSES),
         JobFields.RQ_ID: fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
-        JobFields.CONTAINER_ID: fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7')
+        JobFields.CONTAINER_ID: fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7'),
+        JobFields.LAST_RAN: fields.DateTime(example='')
     }, job_base_schema
 )
 
@@ -67,9 +88,34 @@ class Jobs(Resource):
     """Manipulates User table"""
 
     @ns.marshal_list_with(job_response_schema)
+    @ns.expect(job_get_schema)
     def get(self):
         """GET all jobs."""
-        return Job.query.all()
+        args = get_parser.parse_args()
+        validate_get(args)
+
+        # collect all filters
+        filters = []
+
+        bbox = args.get(JobFields.BBOX)
+        if bbox:
+            bbox = [float(x) for x in args[JobFields.BBOX].split(',')]
+            bbox_wkt = bbox_to_wkt(bbox)
+            filters.append(func.ST_Intersects(Job.bbox, bbox_wkt))
+
+        router = args.get(JobFields.ROUTER)
+        if router:
+            filters.append(Job.router == router)
+
+        provider = args.get(JobFields.PROVIDER)
+        if provider:
+            filters.append(Job.provider == provider)
+
+        status = args.get(JobFields.STATUS)
+        if status:
+            filters.append(Job.status == status)
+
+        return Job.query.filter(*filters).all()
 
     @basic_auth.login_required
     @ns.doc(security='basic')
@@ -82,7 +128,7 @@ class Jobs(Resource):
         # avoid circular imports
         from ...tasks import create_package
 
-        args = parser.parse_args(strict=True)
+        args = post_parser.parse_args(strict=True)
         validate_post(args)
         router_name = args[JobFields.ROUTER]
 
@@ -95,7 +141,8 @@ class Jobs(Resource):
             router=args[JobFields.ROUTER],
             user_id=current_user.id,
             interval=args[JobFields.INTERVAL],
-            status='Starting'
+            status='Starting',
+            compression=args[JobFields.COMPRESSION]
         )
 
         bbox = [float(x) for x in args[JobFields.BBOX].split(',')]
@@ -107,7 +154,6 @@ class Jobs(Resource):
         current_app.task_queue.enqueue(create_package, router_name, job.id, current_user.email)
 
         return job
-
 
 
 @ns.route('/<int:id>')

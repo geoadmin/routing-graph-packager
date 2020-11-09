@@ -11,13 +11,14 @@ class Job(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     rq_id = db.Column(db.String, nullable=True)
     container_id = db.Column(db.String, nullable=True)
-    status = db.Column(db.String, nullable=False)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
+    status = db.Column(db.String, nullable=False)
     provider = db.Column(db.String, nullable=False)
     router = db.Column(db.String, nullable=False)  # router name, i.e. valhalla, graphhopper, ors etc
-    bbox = db.Column(Geography("POLYGON", srid=4326), nullable=False)
+    bbox = db.Column(Geography("POLYGON", srid=4326, spatial_index=True), nullable=False)
     interval = db.Column(db.String, nullable=False)  # daily, weekly, monthly, yearly
+    compression = db.Column(db.String, nullable=False)  # zip, tar etc
     last_ran = db.Column(db.DateTime, nullable=True)  # did it ever run?
 
     def __repr__(self):  # pragma: no cover
@@ -35,3 +36,6 @@ class Job(db.Model):
 
     def set_rq_id(self, rq_id: str):
         self.rq_id = rq_id
+
+    def set_last_ran(self, dt):
+        self.last_ran = dt

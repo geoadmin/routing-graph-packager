@@ -1,8 +1,9 @@
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Conflict
 from flask import current_app
 
 from . import JobFields
-from ...constants import INTERVALS
+from .models import Job
+from ...constants import INTERVALS, COMPRESSIONS, STATUSES
 
 
 def validate_post(args):
@@ -10,8 +11,6 @@ def validate_post(args):
     Validates the POST request parameters.
 
     :param dict args: request parameters
-
-    :rtype: bool
     """
 
     # all args except Description must have a value
@@ -19,24 +18,59 @@ def validate_post(args):
         if arg != JobFields.DESCRIPTION and not value:
             raise BadRequest(f"'{arg}' is required in request.")
 
-    # bbox must be 4 floats
-    bbox_split = args['bbox'].split(',')
-    if not len(bbox_split) == 4:
-        raise BadRequest(
-            f"'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
-        )
-    if not all([float(x) for x in bbox_split]):
-        raise BadRequest(f"All coordinates in 'bbox' need to be of type float.")
+    # make sure no other combo of name & router & provider exists
+    existing_combo: Job = Job.query.filter(
+        Job.name == args[JobFields.NAME],
+        Job.provider == args[JobFields.PROVIDER],
+        Job.router == args[JobFields.ROUTER]
+    ).first()
+    if existing_combo:
+        raise Conflict(f"Combination of 'name' & 'router' & 'provider' already exists with ID {existing_combo.id}")
 
-    # Intervals must be valid
-    if args['interval'] not in INTERVALS:
-        raise BadRequest(f"'interval' must be one of {INTERVALS}")
+    _validate_common(args)
 
+
+def validate_get(args):
+    """
+    Validates the GET request parameters.
+
+    :param dict args: request parameters
+    """
+    status = args.get(JobFields.STATUS)
+    if status and status not in STATUSES:
+        raise BadRequest(f"'status' must be one of {STATUSES}")
+    _validate_common(args)
+
+
+def _validate_common(args):
     # Routers must be valid
     allowed_routers = current_app.config['ENABLED_ROUTERS']
-    if args['router'] not in allowed_routers:
+    router = args.get(JobFields.ROUTER)
+    if router and router not in allowed_routers:
         raise BadRequest(f"'router' must be one of the 'ENABLED_ROUTERS': {allowed_routers}")
 
     allowed_providers = current_app.config['ENABLED_PROVIDERS']
-    if args['provider'] not in allowed_providers:
+    provider = args.get(JobFields.PROVIDER)
+    if provider and provider not in allowed_providers:
         raise BadRequest(f"'provider' must be one of 'ENABLED_PROVIDERS': {allowed_providers}.")
+
+    # bbox must be 4 floats
+    bbox = args.get(JobFields.BBOX)
+    if bbox:
+        bbox_split = bbox.split(',')
+        if not len(bbox_split) == 4:
+            raise BadRequest(
+                f"'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
+            )
+        if not all([float(x) for x in bbox_split]):
+            raise BadRequest(f"All coordinates in 'bbox' need to be of type float.")
+
+    # Intervals must be valid
+    interval = args.get(JobFields.INTERVAL)
+    if interval and interval not in INTERVALS:
+        raise BadRequest(f"'interval' must be one of {INTERVALS}")
+
+    # Compression format
+    compression = args.get(JobFields.COMPRESSION)
+    if compression and compression not in COMPRESSIONS:
+        raise BadRequest(f"'compression' must be one of {COMPRESSIONS}")

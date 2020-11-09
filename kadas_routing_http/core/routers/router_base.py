@@ -15,10 +15,10 @@ class RouterBase(ABC):
 
     def __init__(self, input_pbf_path):
         self._input_pbf_path = input_pbf_path
+        self._graph_dir = os.path.join(current_app.config['TEMP_DIR'], self.name(), 'graph')
         self._docker_pbf_path = os.path.join(self.DOCKER_TMP, os.path.basename(self._input_pbf_path))
         self._docker_tiles_dir = os.path.join(self.DOCKER_TMP, 'tiles')
         self._docker_graph_dir = os.path.join(self.DOCKER_TMP, 'graph')
-        self._graph_dir = os.path.join(current_app.config['TEMP_DIR'], self.name(), 'graph')
 
         self._container = None
         self._volumes = {
@@ -47,15 +47,18 @@ class RouterBase(ABC):
             raise InternalServerError(f"Docker image {self.image} not found for '{self.name}'")
 
     def _exec_docker(self, cmd):
+        """
+        Executes the command sync in a docker container and stops it after.
+        The container will be removed during cleanup.
+        """
         self._container.start()
         exit_code, output = self._container.exec_run(cmd)
         self._container.stop()
-        # if os.getenv('FLASK_CONFIG') != 'development':
-        #    self._container.remove()
 
         return exit_code, output
 
     def cleanup(self):
+        """Cleanup operations once the packaging was successful."""
         self._container.remove()
 
     @property
@@ -65,6 +68,10 @@ class RouterBase(ABC):
     @property
     def container_id(self):
         return self._container.id
+
+    @property
+    def graph_dir(self):
+        return self._graph_dir
 
     @property
     @abstractmethod

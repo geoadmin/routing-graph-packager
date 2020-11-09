@@ -12,5 +12,9 @@ class Valhalla(RouterBase):
               f" {self._docker_pbf_path}"
         return self._exec_docker(cmd)
 
+    def package_graph(self, cformat='zip'):
+        
+        pass
+
     def name(self):
         return 'valhalla'

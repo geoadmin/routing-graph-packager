@@ -32,8 +32,10 @@ def create_app(config_string='production'):
     # some quick sanity checks
     try:
         app.config.from_object(CONF_MAPPER[config_string])  # throws KeyError
-        if not os.path.exists(app.config['PBF_PATH']):
-            raise FileNotFoundError(f"PBF_PATH '{app.config['PBF_PATH']}' doesn't exist.")
+        for provider in app.config['ENABLED_PROVIDERS']:
+            env_var = provider.upper() + '_PBF_PATH'
+            if not os.path.exists(app.config[env_var]):
+                raise FileNotFoundError(f"{env_var} '{app.config[env_var]}' doesn't exist.")
         # Are all Docker images installed?
         enabled_routers = app.config['ENABLED_ROUTERS']
         docker_clnt = docker.from_env()
@@ -62,7 +64,7 @@ def create_app(config_string='production'):
     app.task_queue = Queue(
         'packaging',
         connection=app.redis,
-        job_timeout='5h'  # after 5 hours processing the job will be considered as failed
+        job_timeout='12h'  # after 12 hours processing the job will be considered as failed
     )
 
     # Add a master account on first request
