@@ -55,9 +55,11 @@ jobs:
         sudo docker pull gisops/valhalla:latest
     - name: Install osmium
       run: |
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC
         sudo add-apt-repository 'deb http://ftp.debian.org/debian sid main'
         sudo apt-get update
-        sudo apt-get install -y -qq osmium-tool=1.12.1-1
+        sudo apt-get install -y -qq osmium-tool
     - name: yapf linting
       run: |
         source .venv/bin/activate
