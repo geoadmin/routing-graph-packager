@@ -60,6 +60,7 @@ jobs:
         sudo add-apt-repository 'deb http://ftp.debian.org/debian sid main'
         sudo apt-get update
         sudo apt-get install -y -qq osmium-tool
+        echo $(osmium --version)
     - name: yapf linting
       run: |
         source .venv/bin/activate
