@@ -81,6 +81,7 @@ jobs:
       run: |
         source .venv/bin/activate
         sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
+        sudo docker volume create routing-packager_packages --driver local --opt type=none --opt device=$PWD --opt o=bind
         pytest --cov=routing_packager_app
     - name: coveralls
       run: |
