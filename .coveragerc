@@ -2,6 +2,9 @@
 branch = True
 omit =
     */__version__.py
+    routing_packager_app/tasks.py
+    routing_packager_app/logger.py
+    routing_packager_app/routers/router_base.py
     */venv/*
     */.venv/*
     */.tox/*
@@ -9,6 +12,9 @@ omit =
 [report]
 omit =
     */__version__.py
+    routing_packager_app/tasks.py
+    routing_packager_app/logger.py
+    routing_packager_app/routers/router_base.py
     */venv/*
     */.venv/*
     */.tox/*
