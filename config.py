@@ -49,7 +49,8 @@ class BaseConfig(object):
     # Dirs
     DATA_DIR = os.getenv('DATA_DIR') or os.path.join(basedir, 'data')
     # if we're inside a docker container, we need to reference the fixed directory instead
-    if os.path.isfile('/.dockerenv'):
+    # Watch out for CI, also runs within docker
+    if os.path.isfile('/.dockerenv') and not os.getenv('CI'):
         DATA_DIR = '/app/data'
 
     # Input PBFs
