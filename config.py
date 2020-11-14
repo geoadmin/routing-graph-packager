@@ -32,17 +32,15 @@ class BaseConfig(object):
     POSTGRES_HOST = os.getenv('POSTGRES_HOST') or 'localhost'
     POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', int())) or 5432
     POSTGRES_DB = os.getenv('POSTGRES_DB') or 'gis'
-    POSTGRES_USER = os.getenv('POSTGRES_USER') or 'admin'
-    POSTGRES_PASS = os.getenv('POSTGRES_PASS') or 'admin'
+    POSTGRES_USER = os.getenv('POSTGRES_USER') or 'docker'
+    POSTGRES_PASS = os.getenv('POSTGRES_PASS') or 'docker'
     SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_URL') or \
         f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
-    REDIS_HOST = os.getenv('REDIS_HOST') or 'localhost'
-    REDIS_PORT = int(os.getenv('REDIS_PORT', int())) or 6379
-    REDIS_URL = f'redis://localhost:6379/0'
+    REDIS_URL = os.getenv('REDIS_URL') or f'redis://localhost:6379/0'
 
     # SMTP
     SMTP_HOST = os.getenv('SMTP_HOST') or 'localhost'
-    SMTP_PORT = int(os.getenv('SMTP_PORT', int())) or 587
+    SMTP_PORT = int(os.getenv('SMTP_PORT', int())) or 1025
     SMTP_FROM = os.getenv('SMTP_FROM') or 'valhalla@kadas.org'
     SMTP_USER = os.getenv('SMTP_USER')
     SMTP_PASS = os.getenv('SMTP_PASS')
@@ -50,13 +48,15 @@ class BaseConfig(object):
 
     # Dirs
     DATA_DIR = os.getenv('DATA_DIR') or os.path.join(basedir, 'data')
-    TEMP_DIR = os.path.join(DATA_DIR, 'temp')
+    # if we're inside a docker container, we need to reference the fixed directory instead
+    if os.path.isfile('/.dockerenv'):
+        DATA_DIR = '/app/data'
 
     # Input PBFs
     ENABLED_PROVIDERS = _get_list_var(os.getenv('ENABLED_PROVIDERS')) or ['osm']
-    OSM_PBF_PATH = os.getenv('OSM_PBF_PATH') or os.path.join(DATA_DIR, 'planet-latest.osm.pbf')
-    TOMTOM_PBF_PATH = os.getenv('TOMTOM_PBF_PATH') or os.path.join(DATA_DIR, 'planet-latest.tomtom.pbf')
-    HERE_PBF_PATH = os.getenv('HERE_PBF_PATH') or os.path.join(DATA_DIR, 'planet-latest.tomtom.pbf')
+    OSM_PBF_PATH = os.path.join(DATA_DIR, os.getenv('OSM_PBF') or 'planet-latest.osm.pbf')
+    TOMTOM_PBF_PATH = os.path.join(DATA_DIR, os.getenv('TOMTOM_PBF') or 'planet-latest.tomtom.pbf')
+    HERE_PBF_PATH = os.path.join(DATA_DIR, os.getenv('HERE_PBF') or 'planet-latest.tomtom.pbf')
 
     # Routers
     ENABLED_ROUTERS = _get_list_var(os.getenv('ENABLED_ROUTERS')) or ['valhalla']
@@ -65,16 +65,16 @@ class BaseConfig(object):
     ORS_IMAGE = os.getenv('ORS_IMAGE') or 'openrouteservice/openrouteservice:latest'
     GRAPHHOPPER_IMAGE = os.getenv('GRAPHHOPPER_IMAGE') or 'graphhopper/graphhopper:latest'
 
-    # create all dirs
-    # temp is for intermediate files, i.e. graph etc
-    # data is for persistent files, i.e. ZIP/TAR files
-    for router in ENABLED_ROUTERS:
-        os.makedirs(os.path.join(DATA_DIR, router), exist_ok=True)
-        os.makedirs(os.path.join(TEMP_DIR, router), exist_ok=True)
-
 
 class DevConfig(BaseConfig):
     REDIS_URL = f'redis://localhost:6379/0'
+
+    OSM_PBF_PATH = "data/andorra-latest.osm.pbf"
+    TOMTOM_PBF_PATH = "data/andorra-latest.osm.pbf"
+    HERE_PBF_PATH = "data/andorra-latest.osm.pbf"
+
+    SMTP_HOST = "localhost"
+    SMTP_PORT = 1025
 
 
 class ProdConfig(BaseConfig):
@@ -83,6 +83,7 @@ class ProdConfig(BaseConfig):
 
 class TestingConfig(BaseConfig):
     TESTING = True
+    FLASK_DEBUG = 0
 
     POSTGRES_HOST = os.getenv('POSTGRES_HOST') or 'localhost'
     POSTGRES_PORT = os.getenv('POSTGRES_PORT') or '5432'
@@ -93,8 +94,13 @@ class TestingConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.getenv('POSTGRES_TEST_URL') or \
         f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB_TEST}'
 
+    DATA_DIR = os.path.join(basedir, 'tests', 'data')
     OSM_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'andorra-200827.osm.pbf')
     TOMTOM_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'liechtenstein-201109.tomtom.pbf')
+    HERE_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'liechtenstein-201109.here.pbf')
+
+    ENABLED_ROUTERS = _get_list_var('valhalla,osrm,ors,graphhopper')
+    ENABLED_PROVIDERS = _get_list_var('osm,tomtom,here')
 
     ADMIN_EMAIL = 'admin@example.org'
     ADMIN_PASS = 'admin'

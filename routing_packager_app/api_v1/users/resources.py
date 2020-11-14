@@ -1,13 +1,13 @@
 from flask import g, current_app
 from flask_restx import Resource, Namespace, fields, reqparse
 from flask_restx.errors import HTTPStatus
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden
-import re
+from werkzeug.exceptions import Conflict, Forbidden
 
 from .models import User
 from . import UserFields
+from .validate import validate_post
 from ...auth.basic_auth import basic_auth
-from ...db_utils import add_or_abort
+from ...utils.db_utils import add_or_abort
 
 # Mandatory, will be added by api_vX.__init__
 ns = Namespace('users', description='User related operations')
@@ -39,19 +39,8 @@ class UserRegistration(Resource):
     @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def post(self):
         """POST a new user. Needs admin privileges"""
-        admin_email = current_app.config['ADMIN_EMAIL']
-        if not admin_email == basic_auth.current_user().email:
-            raise Forbidden("Admin privileges are required to register a new user.")
-
         args = parser.parse_args(strict=True)
-        for arg, value in args.items():
-            if not value:
-                raise BadRequest(f"'{arg}' is required in request.")
-
-        # Validate email
-        email_re = r'^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\D{2,3})+$'
-        if not re.search(email_re, args['email']):
-            raise BadRequest(f'Email \'{args["email"]}\' is invalid.')
+        validate_post(args)
 
         new_user = User(**args)
         add_or_abort(new_user)

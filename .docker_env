@@ -1,0 +1,4 @@
+# for docker-compose, database hosts are the service names in docker-compose.yml
+POSTGRES_HOST=postgis
+SMTP_HOST=fake-smtp-server
+REDIS_URL=redis://redis:6379/0

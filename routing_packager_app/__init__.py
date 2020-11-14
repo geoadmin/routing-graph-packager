@@ -10,16 +10,13 @@ from docker.errors import ImageNotFound, NullResource
 from redis import Redis
 from rq import Queue
 
+from .utils.file_utils import make_directories
+from .constants import CONF_MAPPER
+
 log = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 migrate = Migrate()
-
-CONF_MAPPER = {
-    'development': 'config.DevConfig',
-    'production': 'config.ProdConfig',
-    'testing': 'config.TestingConfig'
-}
 
 
 def create_app(config_string='production'):
@@ -54,6 +51,16 @@ def create_app(config_string='production'):
         log.error(e)
         raise e
 
+    # create all dirs
+    # FIXME: remember inside a container this references /app/data, not the env var!!!
+    data_dir = app.config['DATA_DIR']
+    app.config['TEMP_DIR'] = temp_dir = os.path.join(data_dir, 'temp')
+    make_directories(data_dir, temp_dir, app.config['ENABLED_ROUTERS'])
+
+    for router in app.config['ENABLED_ROUTERS']:
+        os.makedirs(os.path.join(data_dir, router), exist_ok=True)
+        os.makedirs(os.path.join(temp_dir, router), exist_ok=True)
+
     # Flask complains about missing trailing slashes
     app.url_map.strict_slashes = False
 
@@ -67,16 +74,14 @@ def create_app(config_string='production'):
         job_timeout='12h'  # after 12 hours processing the job will be considered as failed
     )
 
-    # Add a master account on first request
+    # Add a master account and all tables before first request
     @app.before_first_request
     def initialize_app():
-        # TODO: remove once released, then migrate will take over this job
-        if config_string == 'development':
-            db.create_all()
+        db.create_all()
         # Make sure g has db
         initialize_request()
 
-        from kadas_routing_http.db_utils import add_admin_user
+        from routing_packager_app.utils.db_utils import add_admin_user
         add_admin_user()
 
     # Add the db to g to avoid circular imports
@@ -87,7 +92,7 @@ def create_app(config_string='production'):
 
     # initialize the API module(s)
     # placed here to avoid circular imports
-    from kadas_routing_http.api_v1 import (bp as api_v1, init_app as init_v1)
+    from routing_packager_app.api_v1 import (bp as api_v1, init_app as init_v1)
 
     init_v1(app)
     app.register_blueprint(api_v1)

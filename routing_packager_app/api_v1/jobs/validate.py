@@ -1,3 +1,5 @@
+import re
+
 from werkzeug.exceptions import BadRequest, Conflict
 from flask import current_app
 
@@ -17,6 +19,13 @@ def validate_post(args):
     for arg, value in args.items():
         if arg != JobFields.DESCRIPTION and not value:
             raise BadRequest(f"'{arg}' is required in request.")
+
+    name = args[JobFields.NAME]
+
+    # Make sure name has no arbitrary (unallowed) characters for the filesystem
+    match = re.match('^[^*&%\/\s]+$', name)
+    if not match:
+        raise BadRequest(f"'name' cannot have characters *, &, /, %.")
 
     # make sure no other combo of name & router & provider exists
     existing_combo: Job = Job.query.filter(
@@ -63,7 +72,10 @@ def _validate_common(args):
             raise BadRequest(
                 f"'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
             )
-        if not all([float(x) for x in bbox_split]):
+        # Raises if float(x) is not possible, e.g. there's a string in bbox_split
+        try:
+            list(map(float, bbox_split))
+        except ValueError:
             raise BadRequest(f"All coordinates in 'bbox' need to be of type float.")
 
     # Intervals must be valid

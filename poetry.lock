@@ -57,7 +57,7 @@ description = "Python package for providing Mozilla's CA Bundle."
 name = "certifi"
 optional = false
 python-versions = "*"
-version = "2020.6.20"
+version = "2020.11.8"
 
 [[package]]
 category = "main"
@@ -98,7 +98,7 @@ version = "7.1.2"
 [[package]]
 category = "dev"
 description = "Cross-platform colored terminal text."
-marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
+marker = "sys_platform == \"win32\""
 name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -456,6 +456,14 @@ python-versions = "*"
 version = "1.5.0"
 
 [[package]]
+category = "main"
+description = "Python bindings for libosmium, the data processing library for OSM data"
+name = "osmium"
+optional = false
+python-versions = ">=3.4"
+version = "3.1.0"
+
+[[package]]
 category = "dev"
 description = "Core utilities for Python packages"
 name = "packaging"
@@ -675,13 +683,13 @@ description = "Python HTTP for Humans."
 name = "requests"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.24.0"
+version = "2.25.0"
 
 [package.dependencies]
 certifi = ">=2017.4.17"
 chardet = ">=3.0.2,<4"
 idna = ">=2.5,<3"
-urllib3 = ">=1.21.1,<1.25.0 || >1.25.0,<1.25.1 || >1.25.1,<1.26"
+urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
 security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
@@ -693,7 +701,7 @@ description = "RQ is a simple, lightweight, library for creating background jobs
 name = "rq"
 optional = false
 python-versions = ">=3.5"
-version = "1.5.2"
+version = "1.6.1"
 
 [package.dependencies]
 click = ">=5.0.0"
@@ -776,38 +784,12 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "0.10.2"
 
 [[package]]
-category = "dev"
-description = "tox is a generic virtualenv management and test command line tool"
-name = "tox"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
-version = "3.20.1"
-
-[package.dependencies]
-colorama = ">=0.4.1"
-filelock = ">=3.0.0"
-packaging = ">=14"
-pluggy = ">=0.12.0"
-py = ">=1.4.17"
-six = ">=1.14.0"
-toml = ">=0.9.4"
-virtualenv = ">=16.0.0,<20.0.0 || >20.0.0,<20.0.1 || >20.0.1,<20.0.2 || >20.0.2,<20.0.3 || >20.0.3,<20.0.4 || >20.0.4,<20.0.5 || >20.0.5,<20.0.6 || >20.0.6,<20.0.7 || >20.0.7"
-
-[package.dependencies.importlib-metadata]
-python = "<3.8"
-version = ">=0.12,<3"
-
-[package.extras]
-docs = ["pygments-github-lexers (>=0.0.5)", "sphinx (>=2.0.0)", "sphinxcontrib-autoprogram (>=0.1.5)", "towncrier (>=18.5.0)"]
-testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pathlib2 (>=2.3.3)", "psutil (>=5.6.1)", "pytest (>=4.0.0)", "pytest-cov (>=2.5.1)", "pytest-mock (>=1.10.0)", "pytest-randomly (>=1.0.0)", "pytest-xdist (>=1.22.2)"]
-
-[[package]]
 category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
-version = "1.25.11"
+version = "1.26.2"
 
 [package.extras]
 brotli = ["brotlipy (>=0.6.0)"]
@@ -927,7 +909,7 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "755242f142fe80d3353aa583debe2f9a88f3a02bc348f3774dd2519d9f43c630"
+content-hash = "67737094b3e2fb58917941fb22c0fa910419e5b55084877e0a701a77f376b874"
 lock-version = "1.0"
 python-versions = "^3.6.1"
 
@@ -953,8 +935,8 @@ attrs = [
     {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
 ]
 certifi = [
-    {file = "certifi-2020.6.20-py2.py3-none-any.whl", hash = "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"},
-    {file = "certifi-2020.6.20.tar.gz", hash = "sha256:5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3"},
+    {file = "certifi-2020.11.8-py2.py3-none-any.whl", hash = "sha256:1f422849db327d534e3d0c5f02a263458c3955ec0aae4ff09b95f195c59f4edd"},
+    {file = "certifi-2020.11.8.tar.gz", hash = "sha256:f05def092c44fbf25834a51509ef6e631dc19765ab8a57b4e7ab85531f0a9cf4"},
 ]
 cffi = [
     {file = "cffi-1.14.3-2-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:3eeeb0405fd145e714f7633a5173318bd88d8bbfc3dd0a5751f8c4f70ae629bc"},
@@ -1218,6 +1200,32 @@ nodeenv = [
     {file = "nodeenv-1.5.0-py2.py3-none-any.whl", hash = "sha256:5304d424c529c997bc888453aeaa6362d242b6b4631e90f3d4bf1b290f1c84a9"},
     {file = "nodeenv-1.5.0.tar.gz", hash = "sha256:ab45090ae383b716c4ef89e690c41ff8c2b257b85b309f01f3654df3d084bd7c"},
 ]
+osmium = [
+    {file = "osmium-3.1.0-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:b83e2f668b1c1f69aee9571a62580a23be4420eaf7e30419520eb420d3a268f1"},
+    {file = "osmium-3.1.0-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:c73ab75148fd079f3d0ee6e69ec638d665feba199dc62e8a11f5c3f396831431"},
+    {file = "osmium-3.1.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:22719008b2631f8c6c3d14bbdfe65f314cefce695e0887149bd0ea120e16fe62"},
+    {file = "osmium-3.1.0-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:44e51d8fa6f505b091799a3a6ed4b1eaaf92d897605bfca85fbafbef4a34ec55"},
+    {file = "osmium-3.1.0-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:c1dda4ac95deebe0a13a1afffcf55a1fc3439997bf24e780a23a605584c95d04"},
+    {file = "osmium-3.1.0-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:fa3e118a41cfbd2539b30760a81dea2e5db9017382fb3357fd604f53cd391922"},
+    {file = "osmium-3.1.0-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:d223328781ace310de51bfb52648b1e95d0360d1c467f9e690df66841ae81d27"},
+    {file = "osmium-3.1.0-cp36-cp36m-win_amd64.whl", hash = "sha256:b026e91007e5a7e09c258c97e1d26797e6776d711ab1dc4d8049065a80e9686c"},
+    {file = "osmium-3.1.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:e39d0b8b9a3ce8f8b086ec33cdcc782adfe194ae1f97c7832f0db84ee4422dad"},
+    {file = "osmium-3.1.0-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:d4a632a51b005cdcc6397c87df69030f87b44ba26aa3df982c98009a37b1471e"},
+    {file = "osmium-3.1.0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:cfd8f75bc9dbc6e0e5d0299d81a29abf6732da52ae665dc6056c5c39a53cc475"},
+    {file = "osmium-3.1.0-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:1fbd3c52c8c16a546021fa8686977df2aa283e8800904c6393a275670b9fa0d6"},
+    {file = "osmium-3.1.0-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:f82e44595b3dc5375d2eb303547ef635accb7bdb4c7c23a33e581ce132edfa92"},
+    {file = "osmium-3.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:4f614088b2aa50bab7b90b5b9ef710de9b74904755ddc89f4ed186f21982d2fa"},
+    {file = "osmium-3.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:2d9f2ff65e2628f9747807e7e3c3ce022a83bd788cdff4e447a41cf6550f730f"},
+    {file = "osmium-3.1.0-cp38-cp38-manylinux1_i686.whl", hash = "sha256:5ab52b4867f25e481dacc2db8af17a4baff6fe09cdbc5bf5bc1a7cc549c29c6b"},
+    {file = "osmium-3.1.0-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:04f8ba3fd87c2273b8ae66749d3d9695a1574f983ef12dd97b9c4a4663c818ae"},
+    {file = "osmium-3.1.0-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:c0c068c5c3437d3926674be640ecb9e100093b0f2a14f9acaf306616a8ead8b0"},
+    {file = "osmium-3.1.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:77c4b9038e83543c078b9efe23720cc6df565c5064a602dadf62e15f97d7fa28"},
+    {file = "osmium-3.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:1115671bc47d3f08f8db15d7b9c1a6a77d8abcebbb9a06dc351b652becd9e38f"},
+    {file = "osmium-3.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:df58bddd01bdb70d126587c77dda3d9f05c287facd9d6ee733250fe52c19adc3"},
+    {file = "osmium-3.1.0-cp39-cp39-manylinux2010_i686.whl", hash = "sha256:1c912d4b3ac6e23296cbd923c0a8960a3a5277bb3fb9423d0323c7631e791bc9"},
+    {file = "osmium-3.1.0-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:ed7870ef352bad8d731b5140a9808c5ca34aa0bc645b7e9b068359a7f3eecb59"},
+    {file = "osmium-3.1.0.tar.gz", hash = "sha256:f19ad99acf2ec002f5a06c4c4f34129e220736c8d0ebb2b61e151dfdcd18545e"},
+]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
@@ -1345,12 +1353,12 @@ redis = [
     {file = "redis-3.5.3.tar.gz", hash = "sha256:0e7e0cfca8660dea8b7d5cd8c4f6c5e29e11f31158c0b0ae91a397f00e5a05a2"},
 ]
 requests = [
-    {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
-    {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
+    {file = "requests-2.25.0-py2.py3-none-any.whl", hash = "sha256:e786fa28d8c9154e6a4de5d46a1d921b8749f8b74e28bde23768e5e16eece998"},
+    {file = "requests-2.25.0.tar.gz", hash = "sha256:7f1a0b932f4a60a1a65caa4263921bb7d9ee911957e0ae4a23a6dd08185ad5f8"},
 ]
 rq = [
-    {file = "rq-1.5.2-py2.py3-none-any.whl", hash = "sha256:6e32a39d467ffc56fc18f0f0f10abd6aa258895dbac03af31e38fe0c2337aab8"},
-    {file = "rq-1.5.2.tar.gz", hash = "sha256:fc23788eedc39cad3c10630af1694a550eba2f8519e57e396fd91b1dba0a7d99"},
+    {file = "rq-1.6.1-py2.py3-none-any.whl", hash = "sha256:023c75993d932fab9cbdc82bbcb819f8b5f677f4b0aeeeecc1270ef6b0918074"},
+    {file = "rq-1.6.1.tar.gz", hash = "sha256:efa9b1b187e618609fc6b47ae5a51613c67c85e0b862509af7d330acba0d1dff"},
 ]
 shapely = [
     {file = "Shapely-1.7.1-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:4c10f317e379cc404f8fc510cd9982d5d3e7ba13a9cfd39aa251d894c6366798"},
@@ -1423,13 +1431,9 @@ toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
 ]
-tox = [
-    {file = "tox-3.20.1-py2.py3-none-any.whl", hash = "sha256:42ce19ce5dc2f6d6b1fdc5666c476e1f1e2897359b47e0aa3a5b774f335d57c2"},
-    {file = "tox-3.20.1.tar.gz", hash = "sha256:4321052bfe28f9d85082341ca8e233e3ea901fdd14dab8a5d3fbd810269fbaf6"},
-]
 urllib3 = [
-    {file = "urllib3-1.25.11-py2.py3-none-any.whl", hash = "sha256:f5321fbe4bf3fefa0efd0bfe7fb14e90909eb62a48ccda331726b4319897dd5e"},
-    {file = "urllib3-1.25.11.tar.gz", hash = "sha256:8d7eaa5a82a1cac232164990f04874c594c9453ec55eef02eab885aa02fc17a2"},
+    {file = "urllib3-1.26.2-py2.py3-none-any.whl", hash = "sha256:d8ff90d979214d7b4f8ce956e80f4028fc6860e4431f731ea4a8c08f23f99473"},
+    {file = "urllib3-1.26.2.tar.gz", hash = "sha256:19188f96923873c92ccb987120ec4acaa12f0461fa9ce5d3d0772bc965a39e08"},
 ]
 virtualenv = [
     {file = "virtualenv-20.1.0-py2.py3-none-any.whl", hash = "sha256:b0011228208944ce71052987437d3843e05690b2f23d1c7da4263fde104c97a2"},

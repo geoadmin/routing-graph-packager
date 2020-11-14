@@ -6,13 +6,14 @@ from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
 
-from ...auth.basic_auth import basic_auth
-from ...constants import STATUSES
-from ...db_utils import add_or_abort, delete_or_abort
 from . import *
 from .models import Job
 from .validate import validate_post, validate_get
-from ...core.geometries.geom_conversions import bbox_to_wkt
+from ...auth.basic_auth import basic_auth
+from ...utils.db_utils import add_or_abort, delete_or_abort
+from ...utils.geom_utils import bbox_to_wkt
+from ...utils.file_utils import make_package_path
+from ...constants import STATUSES
 
 # Mandatory, will be added by api_vX.__init__
 ns = Namespace('jobs', description='Job related operations')
@@ -32,6 +33,7 @@ get_parser.add_argument(JobFields.PROVIDER)
 get_parser.add_argument(JobFields.ROUTER)
 get_parser.add_argument(JobFields.BBOX)
 get_parser.add_argument(JobFields.STATUS)
+get_parser.add_argument(JobFields.INTERVAL)
 
 
 class BboxField(fields.Raw):
@@ -53,6 +55,7 @@ job_get_schema = ns.model(
         JobFields.ROUTER: fields.String(example='valhalla', location='args'),
         JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608', location='args'),
         JobFields.INTERVAL: fields.String(example='daily', location='args'),
+        JobFields.STATUS: fields.String(example='Completed', location='args'),
     }
 )
 
@@ -75,13 +78,15 @@ job_response_schema = ns.clone(
         JobFields.USER_ID:
         fields.Integer(example=0),
         JobFields.STATUS:
-        fields.String(example='completed', enum=STATUSES),
+        fields.String(example='Completed', enum=STATUSES),
         JobFields.RQ_ID:
         fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
         JobFields.CONTAINER_ID:
         fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7'),
         JobFields.LAST_RAN:
-        fields.DateTime(example='')
+        fields.DateTime(example=''),
+        JobFields.PATH:
+        fields.String(example='/root/routing-packager/data/valhalla/valhalla_tomtom_andorra.pbf')
     }, job_base_schema
 )
 
@@ -114,6 +119,10 @@ class Jobs(Resource):
         if provider:
             filters.append(Job.provider == provider)
 
+        interval = args.get(JobFields.INTERVAL)
+        if interval:
+            filters.append(Job.interval == interval)
+
         status = args.get(JobFields.STATUS)
         if status:
             filters.append(Job.status == status)
@@ -132,29 +141,39 @@ class Jobs(Resource):
         from ...tasks import create_package
 
         args = post_parser.parse_args(strict=True)
+        # Sanitize the name field a little
+        args[JobFields.NAME] = args[JobFields.NAME].strip().replace(' ', '_')
         validate_post(args)
+
         router_name = args[JobFields.ROUTER]
+        dataset_name = args[JobFields.NAME]
+        provider = args[JobFields.PROVIDER]
+        compression = args[JobFields.COMPRESSION]
+        bbox = [float(x) for x in args[JobFields.BBOX].split(',')]
 
         current_user = basic_auth.current_user()
 
         job = Job(
-            name=args[JobFields.NAME],
+            name=dataset_name,
             description=args[JobFields.DESCRIPTION],
-            provider=args[JobFields.PROVIDER],
+            provider=provider,
             router=args[JobFields.ROUTER],
             user_id=current_user.id,
             interval=args[JobFields.INTERVAL],
-            status='Starting',
-            compression=args[JobFields.COMPRESSION]
+            status='Queued',
+            compression=compression,
+            bbox=bbox_to_wkt(bbox),
+            path=make_package_path(
+                current_app.config['DATA_DIR'], dataset_name, router_name, provider, compression
+            )
         )
-
-        bbox = [float(x) for x in args[JobFields.BBOX].split(',')]
-        job.set_bbox_wkt(bbox_to_wkt(bbox))
 
         add_or_abort(job)
 
         # launch Redis task and update db entries there
-        current_app.task_queue.enqueue(create_package, router_name, job.id, current_user.email)
+        # for testing we don't want that behaviour
+        if not current_app.testing:  # pragma: no cover
+            current_app.task_queue.enqueue(create_package, router_name, job.id, current_user.email)
 
         return job
 
@@ -180,7 +199,7 @@ class JobSingle(Resource):
         # try to delete the Redis job or don't care if there is none
         try:
             rq_job = RqJob.fetch(db_job.rq_id, connection=current_app.redis)
-            if rq_job.get_status() in ('queued', 'started'):
+            if rq_job.get_status() in ('queued', 'started'):  # pragma: no cover
                 rq_job.delete()
         except NoSuchJobError:
             pass

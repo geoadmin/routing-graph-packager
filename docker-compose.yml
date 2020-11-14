@@ -1,28 +1,85 @@
 volumes:
   postgis-data:
-version: '2.4'
+  packages:  # do not change any detail of this volume
+    driver: local
+    driver_opts:
+      type: none
+      device: $DATA_DIR  # DATA_DIR is the host directory for the data. It has to be in the environment, e.g. in .env file
+      o: bind
+
+# It's important it runs in its own private network, also more secure
+networks:
+  routing-packager:
+
+version: '3.2'
 services:
-  valhalla:
-    image: gisops/valhalla:latest
-    container_name: valhalla
-    volumes:
-      - ./data/graphs/valhalla:/graphs  # don't change the container path
   postgis:
+    image: kartoza/postgis:12.1
+    container_name: routing-packager-postgis
     volumes:
       - postgis-data:/var/lib/postgresql
     environment:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
+    # mostly needed to define the database hosts
+    env_file:
+      - .docker_env
+    networks:
+      - routing-packager
+    ports:
+      - 5555:5432
+    restart: on-failure
   redis:
     image: redis:6.0
-    ports:
-      - 6379:6379
-  kadas-routing-server:
-    image: gisops/kadas-routing-server:latest
-    container_name: kadas-routing-server
-    build:
-      context: .
+    container_name: routing-packager-redis
+      # mostly needed to define the database hosts
+    env_file:
+      - .docker_env
+    networks:
+      - routing-packager
+    restart: on-failure
+  rq-worker:
+    image: gisops/routing-data-packager:latest
+    container_name: routing-packager-worker
+    # only works off the package queue
+    command: /app/.venv/bin/rq worker packaging -u redis://redis:6379
+    # mostly needed to define the database hosts
+    env_file:
+      - .docker_env
+    networks:
+      - routing-packager
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Let Docker use the host docker socket
+      - packages:/app/data
+    depends_on:
+      - postgis
+      - redis
+    restart: on-failure
+  routing-packager-app:
+    image: gisops/routing-data-packager:latest
+    container_name: routing-packager-app
     ports:
       - 5000:5000
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  # Lets Docker use the host docker socket
+      - /var/run/docker.sock:/var/run/docker.sock  # Let Docker use the host docker socket
+      - packages:/app/data
+      # mostly needed to define the database hosts
+    env_file:
+      - .docker_env
+    networks:
+      - routing-packager
+    depends_on:
+      - postgis
+      - redis
+      - rq-worker
+    restart: on-failure
+  # For testing purposes
+  fake-smtp-server:
+    image: reachfive/fake-smtp-server:latest
+    container_name: routing-packager-smtp
+    # You can reach the frontend on localhost:1080
+    ports:
+      - 1080:1080
+    networks:
+      - routing-packager
+    restart: on-failure

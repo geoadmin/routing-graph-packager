@@ -7,7 +7,12 @@ build/
 .tox/
 .coverage
 htmlcov/
+
+.env
 **/*egg-info/
 
-# temp
-.env_local
+Dockerfile
+.git/
+.gitignore
+*.pyc
+*.pyd

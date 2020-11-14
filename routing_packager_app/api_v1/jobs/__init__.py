@@ -12,3 +12,4 @@ class JobFields:
     STATUS = 'status'
     USER_ID = 'user_id'
     LAST_RAN = 'last_ran'
+    PATH = 'path'

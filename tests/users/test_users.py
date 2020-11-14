@@ -5,33 +5,12 @@ from base64 import b64encode
 
 import pytest
 
-from kadas_routing_http.api_v1.users.models import User
+from routing_packager_app.api_v1.users.models import User
+from ..utils import create_new_user
 """Remember that @before_first_request will add an admin user!"""
 
 
-def create_new_user(flask_app_client, data, auth_header, must_succeed=True):
-    """
-    Helper function for valid new user creation.
-    """
-    response = flask_app_client.post('/api/v1/users', headers=auth_header, data=data)
-
-    if must_succeed:
-        assert response.status_code == 200
-        assert response.content_type == 'application/json'
-        assert set(response.json.keys()) >= {'id', 'email'}
-        return response.json['id']
-    return response
-
-
-def delete_users(db, user_ids: List[int]):
-    """Clean up after yourself!"""
-    for idx in user_ids:
-        user = User.query.get(idx)
-        db.session.delete(user)
-    db.session.commit()
-
-
-def test_new_user_creation(flask_app_client, db, basic_auth_header):
+def test_new_user_creation(flask_app_client, basic_auth_header):
     user_id = create_new_user(
         flask_app_client,
         auth_header=basic_auth_header,
@@ -45,10 +24,8 @@ def test_new_user_creation(flask_app_client, db, basic_auth_header):
     assert user1_instance.email == "user1@email.com"
     assert user1_instance.password == "user1_password"
 
-    delete_users(db, [user_id])
 
-
-def test_new_user_creation_duplicate_error(flask_app_client, db, basic_auth_header):
+def test_new_user_creation_duplicate_error(flask_app_client, basic_auth_header):
     # pylint: disable=invalid-name
     user_id = create_new_user(
         flask_app_client,
@@ -70,8 +47,6 @@ def test_new_user_creation_duplicate_error(flask_app_client, db, basic_auth_head
     assert response.status_code == 409
     assert response.content_type == 'application/json'
     assert response.json['error'] == 'Key (email)=(user1@email.com) already exists.'
-
-    delete_users(db, [user_id])
 
 
 def test_new_user_invalid_field_error(flask_app_client, basic_auth_header):
@@ -117,11 +92,11 @@ def test_new_user_wrong_email_error(email, flask_app_client, basic_auth_header):
     assert response.json['error'] == f'Email \'{email}\' is invalid.'
 
 
-def test_new_user_no_admin_error(flask_app_client, db, basic_auth_header):
+def test_new_user_unauthorized(flask_app_client, basic_auth_header):
     email = 'user@email.org'
     password = 'password'
 
-    new_user_id = create_new_user(
+    create_new_user(
         flask_app_client, auth_header=basic_auth_header, data={
             'email': email,
             'password': password
@@ -142,7 +117,20 @@ def test_new_user_no_admin_error(flask_app_client, db, basic_auth_header):
     )
     assert response.status_code == 403
 
-    delete_users(db, [new_user_id])
+
+def test_new_user_forbidden(flask_app_client):
+
+    response = create_new_user(
+        flask_app_client,
+        auth_header={},
+        data={
+            'email': 'soemone@email.org',
+            'password': 'bafa'
+        },
+        must_succeed=False
+    )
+
+    assert response.status_code == 401
 
 
 def test_get_all_users_empty(flask_app_client):
@@ -150,7 +138,7 @@ def test_get_all_users_empty(flask_app_client):
     assert len(flask_app_client.get('/api/v1/users/').json) == 1
 
 
-def test_get_all_users_not_empty(flask_app_client, db, basic_auth_header):
+def test_get_all_users_not_empty(flask_app_client, basic_auth_header):
     user_ids = list()
     for i in range(3, 6):
         idx = create_new_user(
@@ -169,16 +157,12 @@ def test_get_all_users_not_empty(flask_app_client, db, basic_auth_header):
     assert any('user4@email.com' in x['email'] for x in response.json)
 
     search_user = r'^user[3|4|5]@email\.com$'
-    search_pass = '^user[3|4|5]_password$'
     for i in user_ids:
         user = User.query.get(i)
         assert re.search(search_user, user.email)
-        # assert re.search(search_pass, user.password)
-
-    delete_users(db, user_ids)
 
 
-def test_get_single_user(flask_app_client, db, basic_auth_header):
+def test_get_single_user(flask_app_client, basic_auth_header):
     user_id = create_new_user(
         flask_app_client,
         auth_header=basic_auth_header,
@@ -193,8 +177,6 @@ def test_get_single_user(flask_app_client, db, basic_auth_header):
     assert response.status_code == 200
     assert response.content_type == 'application/json'
     assert response.json['email'] == 'userx@email.com'
-
-    delete_users(db, [user_id])
 
 
 def test_get_single_user_not_found(flask_app_client):
@@ -244,7 +226,7 @@ def test_delete_admin_error(flask_app_client, basic_auth_header):
     assert response.json['error'] == "Can't delete admin user."
 
 
-def test_delete_auth_no_admin_error(flask_app_client, db, basic_auth_header):
+def test_delete_auth_no_admin_error(flask_app_client, basic_auth_header):
     email = 'user@email.org'
     password = 'password'
 

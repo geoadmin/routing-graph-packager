@@ -61,7 +61,7 @@ def add_admin_user():
     admin_email = current_app.config['ADMIN_EMAIL']
     admin_pass = current_app.config['ADMIN_PASS']
 
-    from .api_v1.users.models import User
+    from ..api_v1.users.models import User
     if not User.query.filter_by(email=admin_email).first():
         admin_user = User(email=admin_email, password=admin_pass)
         session = g.db.session

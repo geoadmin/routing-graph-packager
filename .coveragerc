@@ -2,13 +2,6 @@
 branch = True
 omit =
     */__version__.py
-    kadas_routing_http/api_v1/jobs/*
-    kadas_routing_http/core/routers/*
-    kadas_routing_http/logger.py
-    kadas_routing_http/cmd_utils.py
-    kadas_routing_http/file_utils.py
-    kadas_routing_http/cli.py
-    kadas_routing_http/tasks.py
     */venv/*
     */.venv/*
     */.tox/*
@@ -16,13 +9,6 @@ omit =
 [report]
 omit =
     */__version__.py
-    kadas_routing_http/api_v1/jobs/*
-    kadas_routing_http/core/routers/*
-    kadas_routing_http/logger.py
-    kadas_routing_http/cmd_utils.py
-    kadas_routing_http/file_utils.py
-    kadas_routing_http/cli.py
-    kadas_routing_http/tasks.py
     */venv/*
     */.venv/*
     */.tox/*

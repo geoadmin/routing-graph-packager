@@ -1,7 +1,7 @@
-from kadas_routing_http import create_app, cli, db
-from kadas_routing_http.api_v1 import User, Job
+from routing_packager_app import create_app, cli, db
+from routing_packager_app.api_v1 import User, Job
 
-app = create_app('production')
+app = create_app()
 cli.register(app)
 
 

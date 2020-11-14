@@ -6,43 +6,32 @@ from werkzeug.exceptions import InternalServerError
 import docker
 from docker.errors import ImageNotFound
 
+from ..constants import DOCKER_VOLUME
+
 docker_clnt = docker.from_env()
 
 
 class RouterBase(ABC):
+    """
+    Base class for all routers.
 
-    DOCKER_TMP = '/tmp'
-
+    Subclasses need to implement the abstract methods.
+    """
     def __init__(self, input_pbf_path):
         self._input_pbf_path = input_pbf_path
         self._graph_dir = os.path.join(current_app.config['TEMP_DIR'], self.name(), 'graph')
-        self._docker_pbf_path = os.path.join(self.DOCKER_TMP, os.path.basename(self._input_pbf_path))
-        self._docker_tiles_dir = os.path.join(self.DOCKER_TMP, 'tiles')
-        self._docker_graph_dir = os.path.join(self.DOCKER_TMP, 'graph')
-
         self._container = None
-        self._volumes = {
-            self._input_pbf_path: {
-                'bind': self._docker_pbf_path,
-                'mode': 'ro'
-            },
-            self._graph_dir: {
-                'bind': self._docker_graph_dir,
-                'mode': 'rw'
-            }
-        }
 
-        # initialize the container to get the container ID
-        self._init_docker(volumes=self._volumes)
+        # It's important to maintain the same directory structure in docker, host etc
+        self._docker_pbf_path = os.path.join(
+            '/app', 'data', 'temp', self.name(), os.path.basename(self._input_pbf_path)
+        )
+        self._docker_graph_dir = os.path.join('/app', 'data', 'temp', self.name(), 'graph')
+        v = docker_clnt.volumes.get(DOCKER_VOLUME)
+        volumes = {v.name: {'bind': '/app/data', 'mode': 'rw'}}
 
-    def _init_docker(self, **kwargs):
-        """
-        Initializes the Docker container on instance creation.
-
-        :raises: InternalServerError
-        """
         try:
-            self._container = docker_clnt.containers.create(self.image, **kwargs)
+            self._container = docker_clnt.containers.create(self.image, volumes=volumes)
         except ImageNotFound:
             raise InternalServerError(f"Docker image {self.image} not found for '{self.name}'")
 
@@ -59,6 +48,7 @@ class RouterBase(ABC):
 
     def cleanup(self):
         """Cleanup operations once the packaging was successful."""
+        self._exec_docker(f"rm -r {self._docker_graph_dir}")
         self._container.remove()
 
     @property

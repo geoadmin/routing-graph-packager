@@ -1,8 +1,8 @@
 import pytest
-from docker.errors import ImageNotFound
+from docker.errors import NullResource
 import os
 
-from kadas_routing_http import CONF_MAPPER, create_app
+from routing_packager_app import CONF_MAPPER, create_app
 
 
 def test_create_app():
@@ -44,7 +44,8 @@ def test_create_app_with_broken_import_config(monkeypatch):
 def test_false_docker_image(monkeypatch):
     from config import TestingConfig
     monkeypatch.setattr(TestingConfig, 'ENABLED_ROUTERS', ['valhalla', 'graphhopper'])
-    with pytest.raises(ImageNotFound):
+    monkeypatch.setattr(TestingConfig, 'GRAPHHOPPER_IMAGE', '')
+    with pytest.raises(NullResource):
         create_app('testing')
 
 

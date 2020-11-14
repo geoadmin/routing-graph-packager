@@ -24,6 +24,15 @@ jobs:
          --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:6.0
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
     - uses: actions/checkout@v2
@@ -64,11 +73,12 @@ jobs:
     - name: yapf linting
       run: |
         source .venv/bin/activate
-        yapf -r -vv --diff -p tests kadas_routing_http config.py http_app.py
+        yapf -r -vv --diff -p tests routing_packager_app config.py http_app.py gunicorn.py
     - name: pytest
       run: |
         source .venv/bin/activate
-        pytest --cov=kadas_routing_http
+        sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
+        pytest --cov=routing_packager_app
     - name: coveralls
       run: |
         source .venv/bin/activate

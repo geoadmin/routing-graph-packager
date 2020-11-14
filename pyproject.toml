@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "kadas-routing-http"
+name = "routing-graph-packager"
 version = "0.1.0"
-description = "Backend to generate Valhalla routing tiles in a job queue."
+description = "Backend to generate packages of routing graphs for FOSS routing engines in a job queue."
 authors = ["Nils Nolde <nils@gis-ops.com>"]
 license = "MIT"
 packages = [
-    { include = "kadas_routing_http" }
+    { include = "routing_packager_app" }
 ]
 
 [tool.poetry.dependencies]
@@ -28,6 +28,7 @@ docker = "^4.3.1"
 gunicorn = "^20.0.4"
 gevent = "^20.6.2"
 rq = "^1.5.2"
+osmium = "^3.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"
@@ -35,7 +36,6 @@ pre-commit = "^2.6.0"
 yapf = "^0.30.0"
 coverage = "^5.2.1"
 coveralls = "^2.1.2"
-tox = "^3.19.0"
 pytest-cov = "^2.10.1"
 
 [build-system]

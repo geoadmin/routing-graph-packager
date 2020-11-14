@@ -1,6 +1,6 @@
 #--- BEGIN Usual Python stuff ---
 FROM python:3.8-slim-buster
-MAINTAINER Nils Nolde <nils@openrouteservice.org>
+MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 # Install poetry
 RUN apt-get update -y > /dev/null && \
@@ -12,11 +12,12 @@ RUN apt-get update -y > /dev/null && \
     . $HOME/.poetry/env && \
     poetry config virtualenvs.create false && \
     poetry config virtualenvs.in-project true && \
+    # remove before going live
     python -m venv .venv
 
 #--- END Usual Python stuff ---
 
-# Install docker
+# Install docker & osmium
 RUN apt-get update -y > /dev/null && \
     apt-get install -y \
         gnupg-agent \
@@ -25,24 +26,27 @@ RUN apt-get update -y > /dev/null && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
     apt-get update -y > /dev/null && \
     apt-get install -y docker-ce docker-ce-cli containerd.io > /dev/null && \
-    systemctl enable docker
+    systemctl enable docker && \
+    # osmium
+    add-apt-repository 'deb http://ftp.debian.org/debian sid main' && \
+    apt-get update -y > /dev/null && \
+    apt-get install -y osmium-tool > /dev/null
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
+COPY . .
 
-# Install dependencies
+# Install dependencies and remove unneeded stuff
 RUN . $HOME/.poetry/env && \
+    python -m venv .venv && \
     . .venv/bin/activate && \
     poetry install --no-interaction --no-ansi && \
+    mkdir -p /app/data && \
     rm -rf /var/lib/apt/lists/*
-COPY config.py .
-COPY kadas_routing_http ./app/
-COPY http_app.py .
-
-RUN mkdir -p /app/data
 
 EXPOSE 5000
+HEALTHCHECK --start-period=5s CMD curl --fail -s http://localhost:5000/api/v1/jobs || exit 1
 
 # Start gunicorn
-ENTRYPOINT ["gunicorn", "--config", "gunicorn.py", "http_app:app"]
+ENTRYPOINT ['/bin/bash', '-c', '"docker_entrypoint.sh"']
+CMD ["/app/.venv/bin/gunicorn", "--config", "gunicorn.py", "http_app:app"]
