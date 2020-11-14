@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from routing_packager_app.api_v1.jobs.models import Job
@@ -218,6 +220,9 @@ def test_get_job(flask_app_client, basic_auth_header):
     job_id = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
 
     r = flask_app_client.get(f'api/v1/jobs/{job_id}')
+    data_dir = flask_app_client.application.config['DATA_DIR']
+
+    print("data_idr: ", data_dir)
 
     assert r.json == {
         **DEFAULT_ARGS_POST,
@@ -226,8 +231,7 @@ def test_get_job(flask_app_client, basic_auth_header):
         "last_ran": None,
         "job_id": None,
         "id": job_id,
-        'path':
-        '/home/nilsnolde/dev/gis-ops/routing-packager/kadas-routing-packager/tests/data/valhalla/valhalla_osm_test/valhalla_osm_test.zip',
+        'path': os.path.join(data_dir, 'valhalla/valhalla_osm_test/valhalla_osm_test.zip'),
         "container_id": None,
         "user_id": 1
     }

@@ -11,3 +11,4 @@ htmlcov/
 
 # temp
 .env_local
+.env
