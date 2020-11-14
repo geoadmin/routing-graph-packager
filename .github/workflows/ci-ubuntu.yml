@@ -62,6 +62,9 @@ jobs:
     - name: Pull image(s)
       run: |
         sudo docker pull gisops/valhalla:latest
+        sudo docker pull graphhopper/graphhopper:latest
+        sudo docker pull openrouteservice/openrouteservice:latest
+        sudo docker pull osrm/osrm-backend:latest
     - name: Install osmium
       run: |
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138

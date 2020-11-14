@@ -48,5 +48,5 @@ EXPOSE 5000
 HEALTHCHECK --start-period=5s CMD curl --fail -s http://localhost:5000/api/v1/jobs || exit 1
 
 # Start gunicorn
-ENTRYPOINT ['/bin/bash', '-c', '"docker_entrypoint.sh"']
-CMD ["/app/.venv/bin/gunicorn", "--config", "gunicorn.py", "http_app:app"]
+ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
+CMD ["app"]

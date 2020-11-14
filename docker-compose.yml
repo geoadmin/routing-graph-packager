@@ -42,7 +42,7 @@ services:
     image: gisops/routing-data-packager:latest
     container_name: routing-packager-worker
     # only works off the package queue
-    command: /app/.venv/bin/rq worker packaging -u redis://redis:6379
+    command: worker
     # mostly needed to define the database hosts
     env_file:
       - .docker_env

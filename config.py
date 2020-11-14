@@ -99,7 +99,7 @@ class TestingConfig(BaseConfig):
     TOMTOM_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'liechtenstein-201109.tomtom.pbf')
     HERE_PBF_PATH = os.path.join(basedir, 'tests', 'data', 'liechtenstein-201109.here.pbf')
 
-    ENABLED_ROUTERS = _get_list_var('valhalla,osrm,ors,graphhopper')
+    ENABLED_ROUTERS = _get_list_var('valhalla,graphhopper,osrm,ors')
     ENABLED_PROVIDERS = _get_list_var('osm,tomtom,here')
 
     ADMIN_EMAIL = 'admin@example.org'

@@ -8,7 +8,7 @@ class AppSmtpHandler(SMTPHandler):
     """The SMTP handler's extended class to write emails in case of events."""
     def getSubject(self, record: logging.LogRecord) -> str:
         """Alters the subject line of the emails."""
-        subject = f'KADAS {record.levelname}: '
+        subject = f'{record.levelname}: '
         if record.levelno == logging.ERROR:
             subject += f'Container ID {record.container_id} for router {record.router} failed'
         # Warning is only emitted in tasks.py, when the deletion fails
