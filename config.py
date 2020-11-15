@@ -20,8 +20,8 @@ class BaseConfig(object):
         'SECRET_KEY'
     ) or '<MMs8?u_;rTt>;LarIGI&FjWhKNSe=%3|W;=DFDqOdx+~-rBS+K=p8#t#9E+;{e$'
 
-    ADMIN_EMAIL = os.getenv('DB_ADMIN_EMAIL') or 'admin@example.org'
-    ADMIN_PASS = os.getenv('DB_ADMIN_PASSWORD') or 'admin'
+    ADMIN_EMAIL = os.getenv('ADMIN_EMAIL') or 'admin@example.org'
+    ADMIN_PASS = os.getenv('ADMIN_PASSWORD') or 'admin'
 
     # Flask
     ERROR_INCLUDE_MESSAGE = False  # No default "message" field in error responses
@@ -44,7 +44,7 @@ class BaseConfig(object):
     SMTP_FROM = os.getenv('SMTP_FROM') or 'valhalla@kadas.org'
     SMTP_USER = os.getenv('SMTP_USER')
     SMTP_PASS = os.getenv('SMTP_PASS')
-    SMTP_SECURE = bool(strtobool(os.getenv('SMTP_SECURE', 'True'))) or False  # evaluates to True
+    SMTP_SECURE = bool(strtobool(os.getenv('SMTP_SECURE', 'False'))) or False  # evaluates to True
 
     # Dirs
     DATA_DIR = os.getenv('DATA_DIR') or os.path.join(basedir, 'data')
@@ -55,9 +55,9 @@ class BaseConfig(object):
 
     # Input PBFs
     ENABLED_PROVIDERS = _get_list_var(os.getenv('ENABLED_PROVIDERS')) or ['osm']
-    OSM_PBF_PATH = os.path.join(DATA_DIR, os.getenv('OSM_PBF') or 'planet-latest.osm.pbf')
-    TOMTOM_PBF_PATH = os.path.join(DATA_DIR, os.getenv('TOMTOM_PBF') or 'planet-latest.tomtom.pbf')
-    HERE_PBF_PATH = os.path.join(DATA_DIR, os.getenv('HERE_PBF') or 'planet-latest.tomtom.pbf')
+    OSM_PBF_PATH = os.path.join(DATA_DIR, os.getenv('OSM_PBF') or 'andorra-latest.osm.pbf')
+    TOMTOM_PBF_PATH = os.path.join(DATA_DIR, os.getenv('TOMTOM_PBF') or 'andorra-latest.tomtom.pbf')
+    HERE_PBF_PATH = os.path.join(DATA_DIR, os.getenv('HERE_PBF') or 'andorra-latest.here.pbf')
 
     # Routers
     ENABLED_ROUTERS = _get_list_var(os.getenv('ENABLED_ROUTERS')) or ['valhalla']

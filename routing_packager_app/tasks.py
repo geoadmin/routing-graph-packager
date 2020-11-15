@@ -21,6 +21,9 @@ from .utils.file_utils import make_tarfile, make_zipfile
 LOGGER = logging.getLogger('packager')
 LOGGER.setLevel(logging.INFO)
 
+# TODO: for update processes, osmium extract is very (unnecessarily) expensive
+# TODO: try to adapt to osmium's "--polygon" option to only extract once
+
 
 def create_package(
     router_name: str, job_id: str, user_email: str, config_string='production', cleanup=True

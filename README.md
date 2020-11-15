@@ -1,68 +1,126 @@
-# Routing Packager HTTP API
+# Routing Graph Packager HTTP API
 
 ![tests](https://github.com/gis-ops/kadas-routing-packager/workflows/tests/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/gis-ops/kadas-routing-packager/badge.svg?branch=master)](https://coveralls.io/github/gis-ops/kadas-routing-packager?branch=master)
 
-**This project is in development, more updates follow soon.**
+A Flask app to schedule the generation of regional/local routing graph packages for open-source routing engines.
 
-## Installation
+Supported routing engines:
+- [Valhalla](https://github.com/valhalla/valhalla)
+- [~~OSRM~~](https://github.com/Project-OSRM/osrm-backend) (coming soon..)
+- [~~Graphhopper~~](https://github.com/graphhopper/graphhopper/) (coming soon..)
+- [~~ORS~~](https://github.com/GIScience/openrouteservice) (coming soon..)
 
-In this project we intentionally don't offer the classic `setuptools` installation and instead rely on [`poetry`](https://python-poetry.org) as package and dependency manager:
+The default road dataset is [OSM](openstreetmap.org). If available, it also supports road datasets of commercial vendors, such as TomTom and HERE, assuming they are provided in the [OSM PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format#).
 
-```bash
-python -m venv .venv
-poetry install [--no-dev]
-```
+The app **does not (yet) update the OSM data**. Consider using our [osm-data-updater](https://github.com/gis-ops/osm-data-updater) project for this job.
 
-Of course, just `pip` works too:
+## Features
 
-```bash
-python -m venv .venv
-pip install -r requirements.txt
-```
+- **user store**: with basic authentication for `POST` and `DELETE` endpoints
+- **bbox cuts**: generate routing packages within a bounding box
+- **job scheduling**: schedule regular jobs, e.g. `daily`, `weekly` etc
+- **asynchronous API**: graph generation is outsourced to a [`RQ`](https://github.com/rq/rq) worker
+- **email notifications**: notifies the requesting user if the job succeeded/failed
 
-### Requirements
+For more details have a look at our [wiki](https://github.com/gis-ops/osm-data-updater/wiki).
 
-- Python >= 3.7
-- `osmium`
-- PostgreSQL database with PostGIS enabled
+## Quick Start
 
-
-### Quick Start
-
-To quickly run the flask app, just type
+First you need to clone the project and download an OSM file:
 
 ```
-flask run
+git clone https://github.com/gis-ops/routing-graph-packager.git
+cd routing-graph-packager && wget http://download.geofabrik.de/europe/andorra-latest.osm.pbf -O ./data/andorra-latest.osm.pbf
 ```
 
-The server will listen at `http://localhost:5000`
+Since the graph generation takes place in docker containers, you'll also need the relevant images (depending on the routing engine you're interested in):
 
-### Configuration
+```
+# Choose any or all of these images
+docker pull gisops/valhalla:latest
+docker pull osrm/osrm-backend:latest
+docker pull graphhopper/graphhopper:latest
+docker pull openrouteservice/openrouteservice:latest
+```
 
-Most of the configuration takes place over environment variables. Flask supports `.env` files in the root directory. The PostgreSQL related variables are named the same as in Kartoza's excellent [PostGIS image](https://github.com/kartoza/docker-postgis).
+The easiest way to quickly start the project is to use `docker-compose`:
 
-For an overview over environment variables and their meaning, see the following table:
+```
+docker-compose up -d
+```
 
-| Variable            | Type | Description                                                                                                                       |
-|---------------------|------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `FLASK_ENV`         | str  | Determines the Flask environment, see the [official documentation](https://flask.palletsprojects.com/en/1.1.x/config/).           |
-| `SECRET_KEY`        | str  | The Flask secret. Even though there's a default, it's **strongly recommended to change this**.                                        |
-| `FLASK_CONFIG`      | str  | Controls the app-specific environment, one of `production`, `development`, `testing`. Default `production`.                             |
-| `DB_ADMIN_EMAIL`    | str  | The email address of the admin user. Acts as user name. Default admin@example.org.                                               |
-| `DB_ADMIN_PASSWORD` | str  | The password of the admin user. Default `admin`.                                                                                   |
-| `POSTGRES_HOST`     | str  | The host of your PostgreSQL installation, e.g. IP or `postgis.example.org`. Default `localhost`.                                  |
-| `POSTGRES_PORT`     | int  | The port of your PostgreSQL installation. Default 5432.                                                                           |
-| `POSTGRES_DB`       | str  | The name of the **existing** database to use. Default `gis`.                                                                      |
-| `POSTGRES_USER`     | str  | The admin user of the **existing** database. Default `admin`.                                                                     |
-| `POSTGRES_PASS`     | str  | The admin password of the **existing** database. Default `admin`.                                                                 |
-| `SMTP_HOST`         | str  | The host name for the SMTP server, e.g. `smtp.gmail.com`. Default `localhost`.                                                    |
-| `SMTP_PORT`         | int  | The port for the SMTP server Default 587.                                                                                         |
-| `SMTP_USER`         | str  | The user name for the email account. If omitted, no authentication will be attempted.                                             |
-| `SMTP_PASS`         | str  | The password for the email account. If omitted, no authentication will be attempted.                                              |
-| `SMTP_SECURE`       | bool | Whether TLS should be used to secure the email communication, `True` or `False` Default `False`.                                  |
-| `ENABLED_PROVIDERS` | str  | The data providers to enable as a comma-delimited string, e.g. `osm,tomtom,here`. Default `osm`.                                  |
-| `ENABLED_ROUTERS`   | str  | The routing engines to enable as a comma-delimited string, e.g. `valhalla,openrouteservice,osrm,graphhopper`. Default `valhalla`. |
-| `VALHALLA_IMAGE`    | str  | The Valhalla Docker image to use in the tile generation. Default `gisops/valhalla:3.0.9`.                                         |                                                                       |
+With the project defaults, you can now make a `POST` request which will generate a graph package in `DATA_DIR`:
 
-## Usage
+```
+curl --location -XPOST 'http://localhost:5000/api/v1/jobs' \
+--header 'Authorization: Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"name": "test",  # name needs to be unique for a specific router & provider
+	"description": "test descr",  
+	"bbox": "1.531906,42.559908,1.6325,42.577608",  # the bbox as minx,miny,maxx,maxy
+	"provider": "osm",  # the dataset provider, needs to be registered in ENABLED_PROVIDERS
+	"router": "valhalla",  # the routing engine, needs to be registered in ENABLED_ROUTERS and the docker image has to be available
+    "compression": "tar.gz",  # the compression method, can be "tar.gz" or "zip"
+    "interval": "daily"  # the update interval, can be one of ["once", "daily", "weekly", "monthly", "yearly"]
+}'
+```
+
+After a minute you should have the graph package available in `./data/valhalla/valhalla_osm_test/`. If not, check the logs of the worker process or the Flask app.
+
+The `routing-packager-worker` container has `cron` jobs running to update the routing packages in `/etc/cron.[daily,weekly,monthly]`.
+
+By default, also a fake SMTP server is started and you can see incoming messages on `http://localhost:1080`.
+
+For full configuration options, please consult our [wiki](https://github.com/gis-ops/osm-data-updater/wiki).
+
+## Concepts
+
+### General
+
+The app is listening on `/api/v1/jobs` for new `POST` requests to generate some graph according to the passed arguments. The lifecycle is as follows:
+
+1. Request is parsed, inserted into the Postgres database and the new entry is immediately returned with all job details as blank fields.
+2. Before returning the response, the graph generation function is queued with `RQ` in a Redis database to dispatch to a worker.
+3. If the worker is currently
+    - **idle**, the queue will immediately start the graph generation:
+        - Pull the job entry from the Postgres database
+        - Update the job's `status` database field along the processing to indicate the current stage 
+        - Cut an extract provided with `bbox` from the configured PBF with `osmium`
+        - Start a docker container which generates the graph with the extracted PBF file
+        - Compress the files as `zip` or `tar.gz` and put them in `$DATA_DIR/<ROUTER>/<JOB_NAME>`, along with a metadata JSON
+        - Clean up temporary files
+    - **busy**, the current job will be put in the queue and will be processed once it reaches the queue's head
+4. Send an email to the requesting user with success or failure notice (including the error message)
+
+### Recurring graph generations
+
+The app is capable of running scheduled updates on registered graph generation jobs. The update frequency is determined by the job entry's `interval` field. Valid values for `interval` are ["once", "daily", "weekly", "monthly", "yearly"], while "once" is never updated.
+
+The app provides a command line interface (`flask update`) to automate the updates:
+
+```
+$PWD/.venv/bin/flask update --help 
+Usage: flask update [OPTIONS] INTERVAL
+
+  Update routing packages according to INTERVALs, one of ['once', 'daily',
+  'weekly', 'monthly', 'yearly'].
+
+Options:
+  -c, --config [development|production|testing]
+                                  Internal option
+  --help                          Show this message and exit.
+```
+
+The script will pull the job entries with matching `INTERVAL` and let the worker spin up the update procedures one-by-one. 
+
+You can find the appropriate scripts in the `./cron` directory. Inside the scripts change the location of the `flask` executable according to your setup and copy them to the respective `cron` folders:
+
+```
+sudo cp ./cron/routing_packager_daily.sh /etc/cron.daily
+sudo cp ./cron/routing_packager_weekly.sh /etc/cron.weekly
+sudo cp ./cron/routing_packager_monthly.sh /etc/cron.monthly
+```
+
+Of course you can also use `crontab` to manage the jobs with more scheduling granularity.

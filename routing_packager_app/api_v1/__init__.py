@@ -23,7 +23,7 @@ api = Api(
     bp,
     authorizations=auth,
     version=__version__,
-    title='KADAS Routing Tile Generator',
+    title='Routing Graph Generator',
     description=__description__
 )
 

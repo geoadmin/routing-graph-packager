@@ -17,17 +17,20 @@ RUN apt-get update -y > /dev/null && \
 
 #--- END Usual Python stuff ---
 
-# Install docker & osmium
+# Install docker, cron & osmium
 RUN apt-get update -y > /dev/null && \
     apt-get install -y \
+        software-properties-common \
         gnupg-agent \
-        software-properties-common > /dev/null && \
+        nano \
+        cron -o APT::Immediate-Configure=0 > /dev/null && \
+    # install docker
     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
     apt-get update -y > /dev/null && \
     apt-get install -y docker-ce docker-ce-cli containerd.io > /dev/null && \
     systemctl enable docker && \
-    # osmium
+    # install osmium
     add-apt-repository 'deb http://ftp.debian.org/debian sid main' && \
     apt-get update -y > /dev/null && \
     apt-get install -y osmium-tool > /dev/null

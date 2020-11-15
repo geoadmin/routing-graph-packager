@@ -27,9 +27,15 @@ class RouterBase(ABC):
             '/app', 'data', 'temp', self.name(), os.path.basename(self._input_pbf_path)
         )
         self._docker_graph_dir = os.path.join('/app', 'data', 'temp', self.name(), 'graph')
-        v = docker_clnt.volumes.get(DOCKER_VOLUME)
-        volumes = {v.name: {'bind': '/app/data', 'mode': 'rw'}}
 
+        # if testing we need to reference the test data directory
+        # else the previously created docker volume
+        host_dir = docker_clnt.volumes.get(DOCKER_VOLUME
+                                           ).name if not current_app.config['TESTING'] else os.path.join(
+                                               current_app.root_path, '..', 'tests', 'data'
+                                           )
+        print(host_dir)
+        volumes = {host_dir: {'bind': '/app/data', 'mode': 'rw'}}
         try:
             self._container = docker_clnt.containers.create(self.image, volumes=volumes)
         except ImageNotFound:
@@ -48,7 +54,7 @@ class RouterBase(ABC):
 
     def cleanup(self):
         """Cleanup operations once the packaging was successful."""
-        self._exec_docker(f"rm -r {self._docker_graph_dir}")
+        self._exec_docker(f"rm -r {self._docker_graph_dir} {self._docker_pbf_path}")
         self._container.remove()
 
     @property
