@@ -3,6 +3,9 @@ POSTGRES_HOST=postgis
 SMTP_HOST=fake-smtp-server
 REDIS_URL=redis://redis:6379/0
 
+ADMIN_EMAIL=admin
+ADMIN_PASS=admin
+
 # Specify your PBFs (if any)
 OSM_PBF=path/to/your.osm.pbf
 #HERE_PBF=/path/to/your.here.pbf
