@@ -54,6 +54,8 @@ services:
     depends_on:
       - postgis
       - redis
+    healthcheck:
+      disable: true
     restart: on-failure
   routing-packager-app:
     image: gisops/routing-data-packager:latest

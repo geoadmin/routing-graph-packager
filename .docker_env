@@ -1,6 +1,13 @@
-#=== START DON'T CHANGE ===
 # for docker-compose, database hosts are the service names in docker-compose.yml
 POSTGRES_HOST=postgis
 SMTP_HOST=fake-smtp-server
 REDIS_URL=redis://redis:6379/0
-#=== END DON'T CHANGE ===
+
+# Specify your PBFs (if any)
+OSM_PBF=path/to/your.osm.pbf
+#HERE_PBF=/path/to/your.here.pbf
+#TOMTOM_PBF=/path/to/your.tomtom.pbf
+
+POSTGRES_DB=gis
+POSTGRES_USER=admin
+POSTGRES_PASS=admin
