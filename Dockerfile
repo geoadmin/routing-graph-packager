@@ -17,7 +17,7 @@ RUN apt-get update -y > /dev/null && \
 
 #--- END Usual Python stuff ---
 
-# Install docker, cron & osmium
+# Install docker, cron, osmctools & osmium
 RUN apt-get update -y > /dev/null && \
     apt-get install -y \
         software-properties-common \
@@ -33,7 +33,7 @@ RUN apt-get update -y > /dev/null && \
     # install osmium
     add-apt-repository 'deb http://ftp.debian.org/debian sid main' && \
     apt-get update -y > /dev/null && \
-    apt-get install -y osmium-tool > /dev/null
+    apt-get install -y osmium-tool osmctools > /dev/null
 
 WORKDIR /app
 

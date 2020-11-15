@@ -3,7 +3,7 @@
 ![tests](https://github.com/gis-ops/kadas-routing-packager/workflows/tests/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/gis-ops/kadas-routing-packager/badge.svg?branch=master)](https://coveralls.io/github/gis-ops/kadas-routing-packager?branch=master)
 
-A Flask app to schedule the generation of regional/local routing graph packages for open-source routing engines.
+A Flask app to schedule the generation of updated regional/local routing graph packages for open-source routing engines.
 
 Supported routing engines:
 - [Valhalla](https://github.com/valhalla/valhalla)
@@ -13,7 +13,7 @@ Supported routing engines:
 
 The default road dataset is [OSM](openstreetmap.org). If available, it also supports road datasets of commercial vendors, such as TomTom and HERE, assuming they are provided in the [OSM PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format#).
 
-The app **does not (yet) update the OSM data**. Consider using our [osm-data-updater](https://github.com/gis-ops/osm-data-updater) project for this job.
+For more details have a look at our [wiki](https://github.com/gis-ops/osm-data-updater/wiki).
 
 ## Features
 
@@ -50,7 +50,7 @@ The easiest way to quickly start the project is to use `docker-compose`:
 docker-compose up -d
 ```
 
-With the project defaults, you can now make a `POST` request which will generate a graph package in `DATA_DIR`:
+With the project defaults, you can now make a `POST` request which will generate a graph package in `DATA_DIR` from Andorra:
 
 ```
 curl --location -XPOST 'http://localhost:5000/api/v1/jobs' \
@@ -70,6 +70,8 @@ curl --location -XPOST 'http://localhost:5000/api/v1/jobs' \
 After a minute you should have the graph package available in `./data/valhalla/valhalla_osm_test/`. If not, check the logs of the worker process or the Flask app.
 
 The `routing-packager-worker` container has `cron` jobs running to update the routing packages in `/etc/cron.[daily,weekly,monthly]`.
+
+The `routing-packager-app` container running the HTTP API has a `cron` job which runs daily updates of the OSM PBF file, where the update extent can be clipped to a bounding box (see the [wiki](https://github.com/gis-ops/osm-data-updater/wiki/Configuration#complete-list) for details).
 
 By default, also a fake SMTP server is started and you can see incoming messages on `http://localhost:1080`.
 
@@ -93,6 +95,28 @@ The app is listening on `/api/v1/jobs` for new `POST` requests to generate some 
         - Clean up temporary files
     - **busy**, the current job will be put in the queue and will be processed once it reaches the queue's head
 4. Send an email to the requesting user with success or failure notice (including the error message)
+
+### Update OSM PBF file
+
+To update the OSM PBF file in regular intervals, you can schedule a `cron` job using the `./cron/routing_packager_update_osm.sh` script:
+
+```
+./cron/routing_packager_update_osm.sh --interval daily --bbox 1.531906,42.559908,1.6325,42.577608 --pbf data/andorrra-latest.osm.pbf
+```
+
+The arguments are:
+- `--interval`: determines the granularity of the PBF file updates. One of ["minutely", "hourly", "daily", "weekly"]. Default "daily".
+- `--box`: clip the PBF file updates to a bbox extent, i.e. "minx,miny,maxx,maxy". Default "1.531906,42.559908,1.6325,42.577608".
+- `--pbf`: the full path to the PBF file which needs updates. Default "/app/data/andorra-latest.osm.pbf".
+
+To install the script in your `crontab` to run every night at 3 am, you could do
+
+```
+cmd="/app/cron/routing_packager_update_osm.sh -i daily -b 1.531906,42.559908,1.6325,42.577608 -p data/andorra-latest.osm.pbf"
+(crontab -l || true; echo "0 3 * * * ${cmd} > /proc/1/fd/1 2>&1") | crontab -
+```
+
+This step is not necessary when running the stack with [`docker-compose`](https://github.com/gis-ops/routing-graph-packager/wiki/Installation#docker-installation).
 
 ### Recurring graph generations
 
@@ -124,3 +148,5 @@ sudo cp ./cron/routing_packager_monthly.sh /etc/cron.monthly
 ```
 
 Of course you can also use `crontab` to manage the jobs with more scheduling granularity.
+
+This step is not necessary when running the stack with [`docker-compose`](https://github.com/gis-ops/routing-graph-packager/wiki/Installation#docker-installation).
