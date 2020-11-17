@@ -11,9 +11,9 @@ cmd=${1}
 # either starts a worker or the app itself
 if [ "${cmd}" == 'worker' ]; then
   # register the cron scripts
-  register_cron_script "0 6 * * *", "/app/cron/routing_packager_daily.sh"
-  register_cron_script "0 7 * * 7", "/app/cron/routing_packager_weekly.sh"
-  register_cron_script "0 8 1 * *", "/app/cron/routing_packager_monthly.sh"
+  register_cron_script "0 6 * * *" "/app/cron/routing_packager_daily.sh"
+  register_cron_script "0 7 * * 7" "/app/cron/routing_packager_weekly.sh"
+  register_cron_script "0 8 1 * *" "/app/cron/routing_packager_monthly.sh"
   service cron start
 
   # Start the worker
