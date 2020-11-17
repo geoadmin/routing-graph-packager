@@ -37,7 +37,18 @@ def register(app):
             print(f"Queueing job {job.id} by {job.users.email}.")
             # Todo: needs adaptation on arguments for create_package
             app.task_queue.enqueue(
-                create_package, job.router, job.id, job.users.email, config_string=config
+                create_package,
+                job.id,
+                job.name,
+                job.description,
+                job.router,
+                job.provider,
+                wkbe_to_geom(job.bbox),
+                job.path,
+                job.pbf_path,
+                job.compression,
+                job.users.email,
+                config_string=config
             )
 
     return update

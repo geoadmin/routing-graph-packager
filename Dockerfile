@@ -23,6 +23,7 @@ RUN apt-get update -y > /dev/null && \
         software-properties-common \
         gnupg-agent \
         nano \
+        jq \
         cron -o APT::Immediate-Configure=0 > /dev/null && \
     # install docker
     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
