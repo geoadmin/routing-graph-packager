@@ -41,7 +41,7 @@ def create_app(config_string='production'):
         app.config['TOMTOM_DIR'] = tomtom_dir = os.path.join(data_dir, 'tomtom')
         app.config['HERE_DIR'] = here_dir = os.path.join(data_dir, 'here')
         for expected_dir in (osm_dir, tomtom_dir, here_dir):
-            if not os.path.isdir(expected_dir) or not os.listdir(expected_dir):
+            if not os.path.isdir(expected_dir):
                 raise FileNotFoundError(
                     f"Provider directory doesn't exist, please create it and put some PBF files there: {expected_dir}"
                 )
