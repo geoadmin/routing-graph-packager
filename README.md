@@ -20,6 +20,7 @@ For more details have a look at our [wiki](https://github.com/gis-ops/routing-gr
 - **user store**: with basic authentication for `POST` and `DELETE` endpoints
 - **bbox cuts**: generate routing packages within a bounding box
 - **job scheduling**: schedule regular jobs, e.g. `daily`, `weekly` etc
+- **data updater**: includes a daily OSM updater
 - **asynchronous API**: graph generation is outsourced to a [`RQ`](https://github.com/rq/rq) worker
 - **email notifications**: notifies the requesting user if the job succeeded/failed
 
