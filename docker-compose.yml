@@ -38,8 +38,8 @@ services:
     networks:
       - routing-packager
     restart: on-failure
-  rq-worker:
-    image: gisops/routing-data-packager:latest
+  worker:
+    image: gisops/routing-graph-packager:latest
     container_name: routing-packager-worker
     # only works off the package queue
     command: worker
@@ -57,8 +57,8 @@ services:
     healthcheck:
       disable: true
     restart: on-failure
-  routing-packager-app:
-    image: gisops/routing-data-packager:latest
+  app:
+    image: gisops/routing-graph-packager:latest
     container_name: routing-packager-app
     ports:
       - 5000:5000
@@ -75,7 +75,7 @@ services:
       - redis
       - rq-worker
     restart: on-failure
-  # For testing purposes
+# For testing purposes
   fake-smtp-server:
     image: reachfive/fake-smtp-server:latest
     container_name: routing-packager-smtp

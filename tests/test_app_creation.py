@@ -14,12 +14,8 @@ def test_create_app_passing_flask_config_name(monkeypatch, flask_config_name):
     if flask_config_name != 'testing':
         from config import ProdConfig, DevConfig
         for c in (ProdConfig, DevConfig):
-            monkeypatch.setattr(
-                c, 'OSM_PBF_PATH', os.path.join('tests', 'data', 'andorra-200827.osm.pbf')
-            )
-            monkeypatch.setattr(
-                c, 'TOMTOM_PBF_PATH', os.path.join('tests', 'data', 'liechtenstein-201109.tomtom.pbf')
-            )
+            monkeypatch.setattr(c, 'DATA_DIR', "./data")
+            monkeypatch.setattr(c, 'ENABLED_PROVIDERS', ["osm", "tomtom", "here"])
     create_app(config_string=flask_config_name)
 
 
@@ -46,11 +42,4 @@ def test_false_docker_image(monkeypatch):
     monkeypatch.setattr(TestingConfig, 'ENABLED_ROUTERS', ['valhalla', 'graphhopper'])
     monkeypatch.setattr(TestingConfig, 'GRAPHHOPPER_IMAGE', '')
     with pytest.raises(NullResource):
-        create_app('testing')
-
-
-def test_false_pbf_path(monkeypatch):
-    from config import TestingConfig
-    monkeypatch.setattr(TestingConfig, 'OSM_PBF_PATH', '/some/path')
-    with pytest.raises(FileNotFoundError):
         create_app('testing')

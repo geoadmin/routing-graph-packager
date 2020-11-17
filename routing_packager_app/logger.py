@@ -10,12 +10,12 @@ class AppSmtpHandler(SMTPHandler):
         """Alters the subject line of the emails."""
         subject = f'{record.levelname}: '
         if record.levelno == logging.ERROR:
-            subject += f'Container ID {record.container_id} for router {record.router} failed'
+            subject += f"{record.user}'s job {record.job_id} failed"
         # Warning is only emitted in tasks.py, when the deletion fails
         elif record.levelno == logging.WARNING:
             subject += f"{record.user}'s job {record.job_id} was stopped and deleted"
         elif record.levelno == logging.INFO:
-            subject += f'Job {record.job_id} by {record.user}'
+            subject += f"{record.user}'s job {record.job_id} succeeded"
         else:
             raise NotImplemented(f"Logger level {record.levelno} is not implemented for this handler.")
 

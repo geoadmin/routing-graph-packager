@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from flask import current_app
 from werkzeug.exceptions import InternalServerError
 
 from .utils import create_new_job, DEFAULT_ARGS_POST
@@ -8,75 +9,72 @@ from routing_packager_app.tasks import create_package
 from routing_packager_app.utils.file_utils import make_package_path
 
 
+def create_package_params(j):
+    data_dir = current_app.config['DATA_DIR']
+
+    result_path = make_package_path(data_dir, j["name"], j["router"], j["provider"], j["compression"])
+
+    return (
+        j["id"], j["name"], j["description"], j["router"], j["provider"],
+        [float(x) for x in j["bbox"].split(',')
+         ], result_path, j['pbf_path'], j['compression'], current_app.config['ADMIN_EMAIL']
+    )
+
+
 @pytest.mark.parametrize('provider', ['osm', 'tomtom'])
 def test_create_package(provider, flask_app_client, basic_auth_header, delete_jobs, handle_dirs):
-    job_id = create_new_job(
+
+    bbox = [1.542892, 42.508552, 1.574821, 42.53082]
+    job = create_new_job(
         flask_app_client,
         {
             **DEFAULT_ARGS_POST,
             "name": provider,
-            "bbox": '1.542892,42.508552,1.574821,42.53082',  # needs to be a real Andorra extent
+            "bbox": ','.join([str(x) for x in bbox]),  # needs to be a real Andorra extent
         },
         basic_auth_header
     )
 
-    create_package(
-        DEFAULT_ARGS_POST['router'],
-        job_id,
-        flask_app_client.application.config['ADMIN_EMAIL'],
-        config_string='testing'
-    )
+    create_package(*create_package_params(job), config_string='testing')
 
 
 @pytest.mark.parametrize('compression', ['zip', 'tar.gz'])
 def test_create_package_compressions(
-    compression, flask_app_client, basic_auth_header, monkeypatch, tmp_path, delete_jobs, handle_dirs
+    compression, flask_app_client, basic_auth_header, monkeypatch, delete_jobs, handle_dirs
 ):
-
-    job_id = create_new_job(
+    job = create_new_job(
         flask_app_client,
         {
             **DEFAULT_ARGS_POST,
             "name": compression,
             "compression": compression,
-            "bbox": '1.531906,42.559908,1.6325,42.577608',  # needs to be a real Andorra extent
+            "bbox": '1.542892,42.508552,1.574821,42.53082',  # needs to be a real Andorra extent
         },
         basic_auth_header
     )
 
-    create_package(
-        DEFAULT_ARGS_POST['router'],
-        job_id,
-        flask_app_client.application.config['ADMIN_EMAIL'],
-        config_string='testing'
-    )
+    create_package(*create_package_params(job), config_string='testing')
 
 
-def test_create_package_invalid_pbf(
-    flask_app_client, basic_auth_header, monkeypatch, tmp_path, delete_jobs, handle_dirs
+def test_create_package_missing_pbf(
+    flask_app_client, basic_auth_header, monkeypatch, delete_jobs, handle_dirs
 ):
-    router = DEFAULT_ARGS_POST['router']
+    job1 = create_new_job(
+        flask_app_client, {
+            **DEFAULT_ARGS_POST, "bbox": '1.542892,42.508552,1.574821,42.53082'
+        }, basic_auth_header
+    )
+    create_package(*create_package_params(job1), config_string='testing')
 
-    # First create a fake file
-    tmp_dir = tmp_path / router
-    tmp_dir.mkdir()
-    fp = tmp_dir / 'test.pbf'
-    fp.write_text('blabla')
-
-    # Change the PBF Path
-    from config import TestingConfig
-    monkeypatch.setattr(TestingConfig, 'OSM_PBF_PATH', fp)
-
-    job_id = create_new_job(flask_app_client, {**DEFAULT_ARGS_POST}, basic_auth_header)
+    # delete the PBF
+    os.remove(job1["pbf_path"])
 
     with pytest.raises(InternalServerError) as e:
-        create_package(
-            router, job_id, flask_app_client.application.config['ADMIN_EMAIL'], config_string='testing'
-        )
+        create_package(*create_package_params(job1), config_string='testing')
 
 
 def test_create_package_empty_pbf(flask_app_client, basic_auth_header, delete_jobs, handle_dirs):
-    job_id = create_new_job(
+    job = create_new_job(
         flask_app_client,
         {
             **DEFAULT_ARGS_POST,
@@ -86,12 +84,7 @@ def test_create_package_empty_pbf(flask_app_client, basic_auth_header, delete_jo
     )
 
     with pytest.raises(InternalServerError):
-        create_package(
-            DEFAULT_ARGS_POST['router'],
-            job_id,
-            flask_app_client.application.config['ADMIN_EMAIL'],
-            config_string='testing'
-        )
+        create_package(*create_package_params(job), config_string='testing')
 
 
 def test_create_package_check_dirs(flask_app_client, basic_auth_header, delete_jobs, handle_dirs):
@@ -100,7 +93,7 @@ def test_create_package_check_dirs(flask_app_client, basic_auth_header, delete_j
     name = 'test'
     compression = 'zip'
 
-    job_id = create_new_job(
+    job = create_new_job(
         flask_app_client,
         {
             **DEFAULT_ARGS_POST,
@@ -113,20 +106,14 @@ def test_create_package_check_dirs(flask_app_client, basic_auth_header, delete_j
         basic_auth_header
     )
 
-    create_package(
-        DEFAULT_ARGS_POST['router'],
-        job_id,
-        flask_app_client.application.config['ADMIN_EMAIL'],
-        config_string='testing',
-        cleanup=False
-    )
+    create_package(*create_package_params(job), config_string='testing', cleanup=False)
 
     app = flask_app_client.application
     data_dir = app.config['DATA_DIR']
     temp_dir = app.config['TEMP_DIR']
 
     # osmium's output
-    cut_pbf_path = os.path.join(temp_dir, router, f'{router}_{provider}_cut.pbf')
+    cut_pbf_path = os.path.join(data_dir, provider, f'{job["id"]}.{provider}.pbf')
     assert os.path.isfile(cut_pbf_path), f'{cut_pbf_path} doesnt exist'
 
     # temp graphs/tiles

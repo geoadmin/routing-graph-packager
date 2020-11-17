@@ -26,6 +26,7 @@ def make_package_path(base_dir, name, router, provider, extension):
     :param str name: The dataset name, e.g. moldavia
     :param str router: The router name, e.g. valhalla
     :param str provider: The provider's name, e.g. osm
+    :param str extension: The package's compression, e.g. tar.gz
 
     :returns: The full path to the data package
     """
@@ -36,6 +37,13 @@ def make_package_path(base_dir, name, router, provider, extension):
     os.makedirs(out_dir, exist_ok=True)
 
     return os.path.join(out_dir, file_name + f".{extension}")
+
+
+def _get_package_dir(base_dir, name, router, provider):
+    file_name = '_'.join([router, provider, name])
+
+    # also create a folder with the same name
+    out_dir = os.path.join(base_dir, router, file_name)
 
 
 def make_tarfile(out_fp, source_dir):
@@ -55,7 +63,7 @@ def make_zipfile(out_fp, source_dir):
     Adds *source_dir* to a Zip file called *out_fp*.
 
     :param str out_fp: full path to the resulting Zip file.
-    :param str source_dir: full path the directory which needs zipping.
+    :param str source_dir: full path of the directory which needs zipping.
     """
     archive = zipfile.ZipFile(out_fp, "w", zipfile.ZIP_DEFLATED)
     if os.path.isdir(source_dir):

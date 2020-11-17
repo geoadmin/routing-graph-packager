@@ -22,6 +22,8 @@ migrate = Migrate()
 def create_app(config_string='production'):
     """Factory to create contextful apps."""
     app = Flask(__name__)
+    # Flask complains about missing trailing slashes
+    app.url_map.strict_slashes = False
 
     config_env = os.getenv('FLASK_CONFIG')
     config_string = config_env or config_string
@@ -29,49 +31,60 @@ def create_app(config_string='production'):
     # some quick sanity checks
     try:
         app.config.from_object(CONF_MAPPER[config_string])  # throws KeyError
+
+        # Some runtime config variables for flask
+        app.config['FLASK_CONFIG'] = config_string
+        # FIXME: remember inside a container this references /app/data, not the env var!!!
+        data_dir = app.config['DATA_DIR']
+        app.config['TEMP_DIR'] = temp_dir = os.path.join(data_dir, 'temp')
+        app.config['OSM_DIR'] = osm_dir = os.path.join(data_dir, 'osm')
+        app.config['TOMTOM_DIR'] = tomtom_dir = os.path.join(data_dir, 'tomtom')
+        app.config['HERE_DIR'] = here_dir = os.path.join(data_dir, 'here')
+        for expected_dir in (osm_dir, tomtom_dir, here_dir):
+            if not os.path.isdir(expected_dir) or not os.listdir(expected_dir):
+                raise FileNotFoundError(
+                    f"Provider directory doesn't exist, please create it and put some PBF files there: {expected_dir}"
+                )
+    except KeyError:
+        raise KeyError(
+            f"'FLASK_CONFIG' needs to be one of testing, development, production. '{config_env}' is invalid."
+        )
+    try:
+        # do the PBFs exist?
         for provider in app.config['ENABLED_PROVIDERS']:
-            env_var = provider.upper() + '_PBF_PATH'
-            if not os.path.exists(app.config[env_var]):
-                raise FileNotFoundError(f"{env_var} '{app.config[env_var]}' doesn't exist.")
+            provider_dir = app.config[provider.upper() + '_DIR']
+            provider_pbfs = list()
+            for fn in os.listdir(provider_dir):
+                fp = os.path.join(provider_dir, fn)
+                if os.path.isfile(fp) and fp.endswith('.pbf'):
+                    provider_pbfs.append(fn)
+            if len(provider_pbfs) == 0:
+                raise FileNotFoundError(f"No PBFs for {provider} in {provider_dir}")
+            log.info("PBFs registered for {}:\n{}".format(provider, "\n".join(provider_pbfs)))
         # Are all Docker images installed?
-        enabled_routers = app.config['ENABLED_ROUTERS']
         docker_clnt = docker.from_env()
-        for r in enabled_routers:
+        for r in app.config['ENABLED_ROUTERS']:
             env_var = f'{r.upper()}_IMAGE'
             docker_clnt.images.get(app.config.get(env_var))  # Throws ImageNotFound error
         # osmium is needed too
         if not which('osmium'):
             raise FileNotFoundError('"osmium" is not installed or not added to PATH.')
-    except KeyError:
-        log.error(
-            f"'FLASK_CONFIG' needs to be one of testing, development, production. '{config_env}' is invalid."
-        )
-        raise
     except (NullResource, ImageNotFound, FileNotFoundError) as e:
         log.error(e)
         raise e
 
     # create all dirs
-    # FIXME: remember inside a container this references /app/data, not the env var!!!
-    data_dir = app.config['DATA_DIR']
-    app.config['TEMP_DIR'] = temp_dir = os.path.join(data_dir, 'temp')
     make_directories(data_dir, temp_dir, app.config['ENABLED_ROUTERS'])
-
-    for router in app.config['ENABLED_ROUTERS']:
-        os.makedirs(os.path.join(data_dir, router), exist_ok=True)
-        os.makedirs(os.path.join(temp_dir, router), exist_ok=True)
-
-    # Flask complains about missing trailing slashes
-    app.url_map.strict_slashes = False
 
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    # Put Redis as an app attribute to reference easier in other modules
     app.redis = Redis.from_url(app.config['REDIS_URL'])
     app.task_queue = Queue(
         'packaging',
         connection=app.redis,
-        job_timeout='12h'  # after 12 hours processing the job will be considered as failed
+        default_timeout='12h'  # after 12 hours processing the job will be considered as failed
     )
 
     # Add a master account and all tables before first request

@@ -1,6 +1,6 @@
 #--- BEGIN Usual Python stuff ---
 FROM python:3.8-slim-buster
-MAINTAINER Nils Nolde <nils@gis-ops.com>
+LABEL maintainer=nils@gis-ops.com
 
 # Install poetry
 RUN apt-get update -y > /dev/null && \

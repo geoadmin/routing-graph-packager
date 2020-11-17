@@ -1,6 +1,6 @@
 from typing import List
 
-from shapely.geometry import box, mapping
+from shapely.geometry import box, mapping, Polygon
 from geoalchemy2.shape import to_shape, WKBElement
 
 
@@ -39,6 +39,18 @@ def bbox_to_wkt(bbox):
     :rtype: str
     """
     return box(*bbox).wkt
+
+
+def bbox_to_geom(bbox):
+    """
+    Convert a bbox to a shapely geometry.
+
+    :param List[float] bbox: the bbox as a list of floats in [minx, miny, maxx, maxy].
+
+    :returns: shapely Polygon
+    :rtype: Polygon
+    """
+    return box(*bbox)
 
 
 def wkbe_to_wkt(wkbe):

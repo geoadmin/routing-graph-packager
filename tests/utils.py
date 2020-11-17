@@ -1,8 +1,13 @@
 import json
+import os
+from typing import List, Tuple
 
 from flask import Response
 from flask.testing import Client
 from werkzeug.utils import cached_property
+import osmium
+
+from routing_packager_app.utils.cmd_utils import exec_cmd
 
 DEFAULT_ARGS_POST = {
     "name": f"test",
@@ -48,5 +53,84 @@ def create_new_job(client: Client, data, auth_header, must_succeed=True):
     if must_succeed:
         assert response.status_code == 200, f"status code was {response.status_code} with {response.data}"
         assert response.content_type == 'application/json'
-        return response.json['id']
+        return response.json
     return response
+
+
+def make_pbfs(dirname, feats):
+
+    pbf_paths = dict()
+
+    extract_cmd = "osmium extract --bbox {bbox} -o {out_file} {in_file} --set-bounds"
+    for i, e in feats.items():
+        fn = f"{i}.pbf"
+        fp = str(dirname / fn)
+        writer = OSMWriter(fp)
+        for idx, node in enumerate(e):
+            writer.add_node(idx, node)
+        writer.close()
+
+        # when extracting it sets the bounds we need
+        fn_e = f"new_{fn}"
+        fp_e = str(dirname / fn_e)
+        bbox_str = ','.join([str(x) for x in (*e[0], *e[1])])
+        proc = exec_cmd(extract_cmd.format(bbox=bbox_str, out_file=fp_e, in_file=fp))
+        proc.wait()
+        os.remove(fp)
+
+        pbf_paths[i] = fp_e
+
+    return pbf_paths
+
+
+class OSMWriter(osmium.SimpleHandler):
+    """Osmium Handler to write features to OSM file."""
+
+    OSM_BASIC = {"version": 1, "changeset": 1, "timestamp": "2019-08-21T17:40:04Z"}
+
+    def __init__(self, out_path):
+        """
+        Writes nodes, ways (and relations) to a user defined OSM file.
+
+        :param out_path: Full path for the output file. The file ending determines the file format, .xml/.pbf.
+        :type out_path: str
+        """
+        super(OSMWriter, self).__init__()
+        self.writer = osmium.SimpleWriter(str(out_path))
+
+    def add_node(self, id, location):
+        """
+        Writes a node to the OSM file.
+
+        :param int id: Optional ID to give to node. Important for junction nodes. Simple integer if not provided.
+        :param List[float]|Tuple[float] location: X, Y tuple of node
+        """
+        node = osmium.osm.mutable.Node(location=location, id=id, **self.OSM_BASIC)
+
+        self.writer.add_node(node)
+
+    def add_way(self, id, node_ids, tags):
+        """
+        Writes a way to the OSM file.
+
+        :param List[int]|Tuple[int] node_ids: List of ID of nodes in geographical order.
+        :param dict tags: OSM tags to give to the way. Values have to be casted to string.
+        """
+
+        way = osmium.osm.mutable.Way(nodes=node_ids, tags=tags, id=id, **self.OSM_BASIC)
+        self.writer.add_way(way)
+
+    def add_relation(self, id, members, tags=None):
+        """
+        Writes a relation to the OSM file.
+
+        :param List[Tuple[str, str, str]] members: list of members accepted by osmium.osm.mutable.Relation in the form:
+            [(type, id, role), (type, id, role), ...]
+        :param dict tags: OSM tags
+        """
+
+        relation = osmium.osm.mutable.Relation(members=members, tags=tags, id=id, **self.OSM_BASIC)
+        self.writer.add_relation(relation)
+
+    def close(self):
+        self.writer.close()

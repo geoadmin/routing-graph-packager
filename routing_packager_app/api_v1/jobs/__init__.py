@@ -11,5 +11,7 @@ class JobFields:
     CONTAINER_ID = 'container_id'
     STATUS = 'status'
     USER_ID = 'user_id'
-    LAST_RAN = 'last_ran'
+    LAST_STARTED = 'last_started'
+    LAST_FINISHED = 'last_finished'
     PATH = 'path'
+    PBF_PATH = 'pbf_path'

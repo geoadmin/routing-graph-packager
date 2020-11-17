@@ -3,17 +3,17 @@ import os
 import pytest
 
 from routing_packager_app.api_v1.jobs.models import Job
-from routing_packager_app.constants import INTERVALS, COMPRESSIONS, Routers, Providers, STATUSES
+from routing_packager_app.constants import INTERVALS, COMPRESSIONS, ROUTERS, PROVIDERS, STATUSES
 from routing_packager_app.utils.file_utils import make_package_path
 from ..utils import create_new_job, DEFAULT_ARGS_POST
 
 
-@pytest.mark.parametrize('router', [e.value for e in Routers])
-@pytest.mark.parametrize('provider', [e.value for e in Providers])
+@pytest.mark.parametrize('router', ROUTERS)
+@pytest.mark.parametrize('provider', PROVIDERS)
 @pytest.mark.parametrize('interval', INTERVALS)
 @pytest.mark.parametrize('compression', COMPRESSIONS)
 def test_post_job(router, provider, interval, compression, flask_app_client, basic_auth_header):
-    job_id = create_new_job(
+    job = create_new_job(
         flask_app_client,
         auth_header=basic_auth_header,
         data={
@@ -24,7 +24,7 @@ def test_post_job(router, provider, interval, compression, flask_app_client, bas
         }
     )
 
-    job_inst: Job = Job.query.get(job_id)
+    job_inst: Job = Job.query.get(job['id'])
 
     assert job_inst.router == router
     assert job_inst.provider == provider
@@ -33,6 +33,9 @@ def test_post_job(router, provider, interval, compression, flask_app_client, bas
     assert job_inst.status == 'Queued'
     assert job_inst.description == DEFAULT_ARGS_POST['description']
     assert job_inst.user_id == 1
+
+    pbf_dir = flask_app_client.application.config[provider.upper() + '_DIR']
+    assert job_inst.pbf_path == os.path.join(pbf_dir, f"{job_inst.id}.{provider}.pbf")
 
     dataset_path = make_package_path(
         flask_app_client.application.config['DATA_DIR'], job_inst.name, router, provider,
@@ -112,14 +115,14 @@ def test_job_bad_name(flask_app_client, basic_auth_header):
 
 def test_post_job_existing_job_combo(flask_app_client, basic_auth_header):
     # First a job
-    job_id = create_new_job(flask_app_client, auth_header=basic_auth_header, data=DEFAULT_ARGS_POST)
+    job = create_new_job(flask_app_client, auth_header=basic_auth_header, data=DEFAULT_ARGS_POST)
 
     r = create_new_job(
         flask_app_client, auth_header=basic_auth_header, data=DEFAULT_ARGS_POST, must_succeed=False
     )
 
     assert r.status_code == 409
-    assert str(job_id) in r.json['error']
+    assert str(job['id']) in r.json['error']
 
 
 def test_post_job_forbidden(flask_app_client):
@@ -217,30 +220,33 @@ def test_get_jobs_bad_status(flask_app_client):
 
 
 def test_get_job(flask_app_client, basic_auth_header):
-    job_id = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
+    job = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
 
-    r = flask_app_client.get(f'api/v1/jobs/{job_id}')
+    r = flask_app_client.get(f'api/v1/jobs/{job["id"]}').json
+
     data_dir = flask_app_client.application.config['DATA_DIR']
+    provider = DEFAULT_ARGS_POST['provider']
 
-    print("data_idr: ", data_dir)
+    del r['last_started']
 
-    assert r.json == {
+    assert {
         **DEFAULT_ARGS_POST,
         "bbox": "0.0,0.0,1.0,1.0",  # App returns floats
         "status": 'Queued',
-        "last_ran": None,
+        "last_finished": None,
+        "pbf_path": os.path.join(data_dir, provider, f"{r['id']}.{provider}.pbf"),
         "job_id": None,
-        "id": job_id,
+        "id": job["id"],
         'path': os.path.join(data_dir, 'valhalla/valhalla_osm_test/valhalla_osm_test.zip'),
         "container_id": None,
         "user_id": 1
-    }
+    } == r
 
 
 def test_delete_job(flask_app_client, basic_auth_header):
-    job_id = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
+    job = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
 
-    r = flask_app_client.delete(f'api/v1/jobs/{job_id}', headers=basic_auth_header)
+    r = flask_app_client.delete(f'api/v1/jobs/{job["id"]}', headers=basic_auth_header)
 
     assert r.data == b''
     assert r.status_code == 204

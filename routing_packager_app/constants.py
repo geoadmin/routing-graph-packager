@@ -14,9 +14,13 @@ class Providers(Enum):
     HERE = 'here'
 
 
+ROUTERS = [e.value for e in Routers]
+
+PROVIDERS = [e.value for e in Providers]
+
 STATUSES = ['Queued', 'Extracting', 'Tiling', 'Failed', 'Deleted', 'Completed']
 
-INTERVALS = ['once', 'daily', 'weekly', 'monthly', 'yearly']
+INTERVALS = ['once', 'daily', 'weekly', 'monthly']
 
 COMPRESSIONS = ['zip', 'tar.gz']
 

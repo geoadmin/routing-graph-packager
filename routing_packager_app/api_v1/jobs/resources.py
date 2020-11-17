@@ -1,19 +1,24 @@
-from flask import current_app
+from datetime import datetime
+import os
+
+from flask import current_app, g
 from flask_restx import Resource, Namespace, fields, reqparse
 from flask_restx.errors import HTTPStatus
 from sqlalchemy import func
 from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
+from werkzeug.exceptions import InternalServerError
 
 from . import *
 from .models import Job
 from .validate import validate_post, validate_get
+from ...osmium import get_pbfs_by_area
 from ...auth.basic_auth import basic_auth
 from ...utils.db_utils import add_or_abort, delete_or_abort
-from ...utils.geom_utils import bbox_to_wkt
+from ...utils.geom_utils import bbox_to_wkt, bbox_to_geom
 from ...utils.file_utils import make_package_path
-from ...constants import STATUSES
+from ...constants import STATUSES, ROUTERS, PROVIDERS, INTERVALS
 
 # Mandatory, will be added by api_vX.__init__
 ns = Namespace('jobs', description='Job related operations')
@@ -49,16 +54,6 @@ class BboxField(fields.Raw):
         return ','.join([str(x) for x in bbox])
 
 
-job_get_schema = ns.model(
-    'JobGet', {
-        JobFields.PROVIDER: fields.String(example='osm', location='args'),
-        JobFields.ROUTER: fields.String(example='valhalla', location='args'),
-        JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608', location='args'),
-        JobFields.INTERVAL: fields.String(example='daily', location='args'),
-        JobFields.STATUS: fields.String(example='Completed', location='args'),
-    }
-)
-
 job_base_schema = ns.model(
     'JobBase', {
         JobFields.NAME: fields.String(example='Switzerland'),
@@ -83,10 +78,14 @@ job_response_schema = ns.clone(
         fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
         JobFields.CONTAINER_ID:
         fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7'),
-        JobFields.LAST_RAN:
-        fields.DateTime(example=''),
+        JobFields.LAST_STARTED:
+        fields.DateTime(example='2020-11-16T13:03:31.598Z'),
+        JobFields.LAST_FINISHED:
+        fields.DateTime(example='2020-11-16T13:06:33.310Z'),
         JobFields.PATH:
-        fields.String(example='/root/routing-packager/data/valhalla/valhalla_tomtom_andorra.pbf')
+        fields.String(example='/root/routing-packager/data/valhalla/valhalla_tomtom_andorra.zip'),
+        JobFields.PBF_PATH:
+        fields.String(example='/root/routing-packager/data/osm/cut_andorra-latest.osm.pbf')
     }, job_base_schema
 )
 
@@ -95,8 +94,35 @@ job_response_schema = ns.clone(
 @ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
 class Jobs(Resource):
     """Manipulates User table"""
+    @ns.doc(
+        params={
+            JobFields.ROUTER: {
+                'in': 'query',
+                'description': 'Filter for routing engine.',
+                "enum": ROUTERS
+            },
+            JobFields.PROVIDER: {
+                'in': 'query',
+                'description': 'Filter for data provider.',
+                "enum": PROVIDERS
+            },
+            JobFields.BBOX: {
+                'in': 'query',
+                'description': 'Filter for bbox, e.g. "0.531906,4559908,0.6325,42.577608".'
+            },
+            JobFields.INTERVAL: {
+                'in': 'query',
+                'description': 'Filter for update interval.',
+                "enum": INTERVALS
+            },
+            JobFields.STATUS: {
+                'in': 'query',
+                'description': 'Filter for job status.',
+                "enum": STATUSES
+            }
+        }
+    )
     @ns.marshal_list_with(job_response_schema)
-    @ns.expect(job_get_schema)
     def get(self):
         """GET all jobs."""
         args = get_parser.parse_args()
@@ -150,30 +176,44 @@ class Jobs(Resource):
         provider = args[JobFields.PROVIDER]
         compression = args[JobFields.COMPRESSION]
         bbox = [float(x) for x in args[JobFields.BBOX].split(',')]
+        description = args[JobFields.DESCRIPTION]
 
         current_user = basic_auth.current_user()
 
+        data_dir = current_app.config['DATA_DIR']
+        result_path = make_package_path(data_dir, dataset_name, router_name, provider, compression)
+
         job = Job(
             name=dataset_name,
-            description=args[JobFields.DESCRIPTION],
+            description=description,
             provider=provider,
-            router=args[JobFields.ROUTER],
+            router=router_name,
             user_id=current_user.id,
             interval=args[JobFields.INTERVAL],
             status='Queued',
             compression=compression,
             bbox=bbox_to_wkt(bbox),
-            path=make_package_path(
-                current_app.config['DATA_DIR'], dataset_name, router_name, provider, compression
-            )
+            path=result_path,
+            last_started=datetime.utcnow()
         )
 
         add_or_abort(job)
 
+        # Ugly but hey.. We ideally have the output PBF named after the job ID
+        pbf_path = os.path.join(data_dir, provider, f"{job.id}.{provider}.pbf")
+        job.set_pbf_path(pbf_path)
+        session = g.db.session
+        session.add(job)
+        session.commit()
+
         # launch Redis task and update db entries there
         # for testing we don't want that behaviour
         if not current_app.testing:  # pragma: no cover
-            current_app.task_queue.enqueue(create_package, router_name, job.id, current_user.email)
+            current_app.task_queue.enqueue(
+                create_package, job.id, dataset_name, description, router_name, provider, bbox,
+                result_path, pbf_path, compression, current_user.email,
+                current_app.config['FLASK_CONFIG']
+            )
 
         return job
 

@@ -68,6 +68,8 @@ def handle_dirs(flask_app):
     )
     yield
     for e in os.listdir(main_dir):
+        if e in ['osm', 'tomtom', 'here']:
+            continue
         p = os.path.join(main_dir, e)
         if os.path.isdir(p):
             shutil.rmtree(p, ignore_errors=True)
