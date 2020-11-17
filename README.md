@@ -119,7 +119,7 @@ The app is listening on `/api/v1/jobs` for new `POST` requests to generate some 
     - **idle**, the queue will immediately start the graph generation:
         - Pull the job entry from the Postgres database
         - Update the job's `status` database field along the processing to indicate the current stage
-				- If the current job has not been processed before:
+		- If the current job has not been processed before:
         	- Cut an extract provided with `bbox` from the most optimal PBF file (the smallest one containing all of the job's `bbox`) with `osmium`
         - Start a docker container which generates the graph with the job's PBF file
         - Compress the files as `zip` or `tar.gz` and put them in `$DATA_DIR/<ROUTER>/<JOB_NAME>`, along with a metadata JSON
