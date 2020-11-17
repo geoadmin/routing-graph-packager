@@ -28,7 +28,7 @@ services:
       - routing-packager
     ports:
       - 5555:5432
-    restart: on-failure
+    restart: always
   redis:
     image: redis:6.0
     container_name: routing-packager-redis
@@ -37,7 +37,7 @@ services:
       - .docker_env
     networks:
       - routing-packager
-    restart: on-failure
+    restart: always
   worker:
     image: gisops/routing-graph-packager:latest
     container_name: routing-packager-worker
@@ -56,7 +56,7 @@ services:
       - redis
     healthcheck:
       disable: true
-    restart: on-failure
+    restart: always
   app:
     image: gisops/routing-graph-packager:latest
     container_name: routing-packager-app
@@ -73,8 +73,8 @@ services:
     depends_on:
       - postgis
       - redis
-      - rq-worker
-    restart: on-failure
+      - worker
+    restart: always
 # For testing purposes
   fake-smtp-server:
     image: reachfive/fake-smtp-server:latest
@@ -84,4 +84,4 @@ services:
       - 1080:1080
     networks:
       - routing-packager
-    restart: on-failure
+    restart: always
