@@ -1,5 +1,7 @@
 from click.testing import CliRunner
 
+from routing_packager_app.api_v1 import Job
+from routing_packager_app.cli import _sort_jobs
 from routing_packager_app.cli import register
 from .utils import create_new_job, DEFAULT_ARGS_POST
 
@@ -26,3 +28,20 @@ def test_register(flask_app_client, basic_auth_header, script_info, delete_jobs)
 
     if result.exit_code or result.exception:
         raise RuntimeError(f"CLI test wasn't successful. Some hints maybe:\n{result.stdout}")
+
+
+def test_sort_jobs(flask_app_client, basic_auth_header):
+    bboxes = ('0,0,3,3', '0,0,1,1', '0,0,2,2')
+    for bbox in bboxes:
+        create_new_job(
+            flask_app_client, {
+                **DEFAULT_ARGS_POST, "name": bbox,
+                "description": 'blablablabla',
+                "bbox": bbox
+            }, basic_auth_header
+        )
+
+    jobs = Job.query.filter_by(description='blablablabla').all()
+
+    ordered_jobs = _sort_jobs(jobs)
+    assert [1, 3, 2] == [x.id for x in ordered_jobs]

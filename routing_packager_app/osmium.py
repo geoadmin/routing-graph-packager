@@ -4,13 +4,9 @@ from typing import List
 import osmium
 from shapely.geometry import box, Polygon
 from shapely.ops import transform
-from pyproj import Transformer, CRS
 
 from .utils.cmd_utils import exec_cmd
-
-TRANSFORMATION = Transformer.from_crs(
-    CRS.from_authority('EPSG', 4326), CRS.from_authority('ESRI', 54009), always_xy=True
-).transform
+from .utils.geom_utils import WGS_TO_MOLLWEIDE
 
 
 def get_pbfs_by_area(pbf_dir, job_bbox):
@@ -30,7 +26,7 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
     :returns: The full path of the PBF file which fits the job's bbox and has the smallest area
     :rtype: List[List[str, int]]
     """
-    job_bbox_proj = transform(TRANSFORMATION, job_bbox)
+    job_bbox_proj = transform(WGS_TO_MOLLWEIDE, job_bbox)
     pbf_bbox_areas = {}
     for fn in os.listdir(pbf_dir):
         if not fn.endswith('.pbf'):
@@ -46,7 +42,7 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
             pbf_bbox_osmium.top_right.lon,
             pbf_bbox_osmium.top_right.lat,
         )
-        pbf_bbox_proj = transform(TRANSFORMATION, pbf_bbox_geom)
+        pbf_bbox_proj = transform(WGS_TO_MOLLWEIDE, pbf_bbox_geom)
         # Only keep the PBF bboxes which contain the job's bbox
         if not pbf_bbox_proj.contains(job_bbox_proj):
             continue

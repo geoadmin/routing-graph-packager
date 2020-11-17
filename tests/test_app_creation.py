@@ -15,7 +15,7 @@ def test_create_app_passing_flask_config_name(monkeypatch, flask_config_name):
         from config import ProdConfig, DevConfig
         new_data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
         for c in (ProdConfig, DevConfig):
-            monkeypatch.setattr(c, 'DATA_DIR', os.path.join(new_data_dir, "data"))
+            monkeypatch.setattr(c, 'DATA_DIR', new_data_dir)
             monkeypatch.setattr(c, 'ENABLED_PROVIDERS', ["osm", "tomtom", "here"])
     create_app(config_string=flask_config_name)
 

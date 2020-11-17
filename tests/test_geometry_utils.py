@@ -3,21 +3,6 @@ import pytest
 from routing_packager_app.utils import geom_utils
 
 
-def test_bbox_to_geojson():
-    bbox = [1.0, 2.0, 3.0, 4.0]
-
-    gj = geom_utils.bbox_to_geojson(bbox)
-
-    assert len(gj['coordinates'][0]) == 5
-
-
-def test_bbox_to_geojson_error():
-    bbox = [1, 2, 3]
-
-    with pytest.raises(TypeError):
-        geom_utils.bbox_to_geojson(bbox)
-
-
 def test_bbox_to_wkt():
     bbox = [1.0, 2.0, 3.0, 4.0]
 
