@@ -40,11 +40,6 @@ def create_app(config_string='production'):
         app.config['OSM_DIR'] = osm_dir = os.path.join(data_dir, 'osm')
         app.config['TOMTOM_DIR'] = tomtom_dir = os.path.join(data_dir, 'tomtom')
         app.config['HERE_DIR'] = here_dir = os.path.join(data_dir, 'here')
-        for expected_dir in (osm_dir, tomtom_dir, here_dir):
-            if not os.path.isdir(expected_dir):
-                raise FileNotFoundError(
-                    f"Provider directory doesn't exist, please create it and put some PBF files there: {expected_dir}"
-                )
     except KeyError:
         raise KeyError(
             f"'FLASK_CONFIG' needs to be one of testing, development, production. '{config_env}' is invalid."
@@ -60,7 +55,6 @@ def create_app(config_string='production'):
                     provider_pbfs.append(fn)
             if len(provider_pbfs) == 0:
                 raise FileNotFoundError(f"No PBFs for {provider} in {provider_dir}")
-            log.info("PBFs registered for {}:\n{}".format(provider, "\n".join(provider_pbfs)))
         # Are all Docker images installed?
         docker_clnt = docker.from_env()
         for r in app.config['ENABLED_ROUTERS']:

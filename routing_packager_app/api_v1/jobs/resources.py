@@ -244,6 +244,8 @@ class JobSingle(Resource):
         except NoSuchJobError:
             pass
 
+        if os.path.exists(db_job.pbf_path):
+            os.remove(db_job.pbf_path)
         delete_or_abort(db_job)
 
         return '', HTTPStatus.NO_CONTENT
