@@ -68,11 +68,12 @@ def create_package(
     succeeded = False
 
     # Huge try/except to make sure we only have to write a failure once.
-    # Only raise HTTPErrors so we can distinguish a job deletion from a
-    # processing failure.
+    # Processing failures only raise HTTPErrors. If a job got deleted while it
+    # was in the queue or even already running, any other exception will be thrown.
+    # That way we can distinguish between the two scenarios and send emails accordingly.
     try:
         if not job:
-            raise InternalServerError(f"Job {job_id} doesn't exist anymore in the database.")
+            raise Exception(f"Job {job_id} doesn't exist anymore in the database.")
         last_finished = job.last_finished
 
         in_pbf_dir = app.config[provider.upper() + '_DIR']
