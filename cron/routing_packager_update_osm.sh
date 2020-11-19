@@ -46,22 +46,28 @@ counter=0
 for f in $pbf_expansion
 do
   fn=$(basename "${f}")
+  echo "$(date "+%Y-%m-%d %H:%M:%S") Updating ${fn}..."
   pbf_name_updated="updated_${fn}"
   pbf_updated="${pbf_dir}/${pbf_name_updated}"
 
   # Extract the bbox with osmium
   bbox=$(osmium fileinfo -j ${f} | jq .header.boxes[0])
+  # Warn if bbox is not populated in PBF and continue with next
+  # Otherwise osmupdate would pull ALL planet changes into this PBF
+  [[ -z "$bbox" ]] && echo "bbox of ${f} is empty" && continue
   # Sanitize the bbox string
   bbox_sanitized=${bbox//[$'\t\r\n ']}
 
   # Only keep the temp files if it's not the last PBF
   (( counter++ ))
   if [[ $counter != "${pbf_count}" ]]; then
-    osmupdate -v --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
+    osmupdate --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
   else
-    osmupdate -v ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
+    osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
     rm -r osmupdate_temp || true
   fi
+
+  echo "$(date "+%Y-%m-%d %H:%M:%S") SUCCESS"
 
   # finally overwrite the previous file
   mv "${pbf_updated}" "${f}"
