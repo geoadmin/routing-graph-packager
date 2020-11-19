@@ -31,8 +31,8 @@ def register(app):
         help='Internal option'
     )
     def update(interval, config):
-        f"""Update routing packages according to INTERVALs, one of {INTERVALS}."""
-        jobs = _sort_jobs(Job.query.filter_by(interval=interval).all())
+        """Update routing packages according to INTERVALs, one of ["daily", "weekly", "monthly"]."""
+        jobs = _sort_jobs(Job.query.filter_by(interval=interval, status='Completed').all())
         for job in jobs:
             print(f"Queueing job {job.id} by {job.users.email}.")
             # Todo: needs adaptation on arguments for create_package
