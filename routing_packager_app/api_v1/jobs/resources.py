@@ -8,15 +8,13 @@ from sqlalchemy import func
 from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
-from werkzeug.exceptions import InternalServerError
 
 from . import *
 from .models import Job
 from .validate import validate_post, validate_get
-from ...osmium import get_pbfs_by_area
 from ...auth.basic_auth import basic_auth
 from ...utils.db_utils import add_or_abort, delete_or_abort
-from ...utils.geom_utils import bbox_to_wkt, bbox_to_geom
+from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
 from ...constants import STATUSES, ROUTERS, PROVIDERS, INTERVALS
 
@@ -244,8 +242,8 @@ class JobSingle(Resource):
         except NoSuchJobError:
             pass
 
+        delete_or_abort(db_job)
         if os.path.exists(db_job.pbf_path):
             os.remove(db_job.pbf_path)
-        delete_or_abort(db_job)
 
         return '', HTTPStatus.NO_CONTENT

@@ -25,9 +25,6 @@ from .osmium import get_pbfs_by_area, extract_proc
 LOGGER = logging.getLogger('packager')
 LOGGER.setLevel(logging.INFO)
 
-# TODO: for update processes, osmium extract is very (unnecessarily) expensive
-# TODO: try to adapt to osmium's "--polygon" option to only extract once
-
 
 def create_package(
     job_id: int,
