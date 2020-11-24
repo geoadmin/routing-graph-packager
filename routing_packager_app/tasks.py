@@ -173,8 +173,8 @@ def create_package(
     dirname = os.path.dirname(result_path)
     # Splits the first
     fname_sanitized = fname.split(os.extsep, 1)[0]
-    with open(os.path.join(dirname, fname_sanitized + '.json'), 'w') as f:
-        f.write(json.dumps(j, indent=2))
+    with open(os.path.join(dirname, fname_sanitized + '.json'), 'w', encoding='utf8') as f:
+        json.dump(j, f, indent=2, ensure_ascii=False)
 
     # only clean up if successful, otherwise retain the container for debugging
     if cleanup:

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from shapely.geometry import box, mapping, Polygon
 from geoalchemy2.shape import to_shape, WKBElement
@@ -43,3 +43,15 @@ def wkbe_to_geom(wkbe):
     :rtype: Polygon
     """
     return to_shape(wkbe)
+
+
+def wkbe_to_bbox(wkbe):
+    """
+    Converts a geoalchemy2 :class:`WKBElement` to a list of bbox coordinates.
+
+    :param WKBElement wkbe: The record.
+
+    :returns: The bbox coordinates in [minx, miny, maxx, maxy].
+    :rtype: Tuple[float]
+    """
+    return to_shape(wkbe).bounds

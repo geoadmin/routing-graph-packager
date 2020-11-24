@@ -6,7 +6,7 @@ from shapely.ops import transform
 from .api_v1 import Job
 from .tasks import create_package
 from .constants import INTERVALS, CONF_MAPPER
-from .utils.geom_utils import wkbe_to_geom, WGS_TO_MOLLWEIDE
+from .utils.geom_utils import wkbe_to_bbox, wkbe_to_geom, WGS_TO_MOLLWEIDE
 
 
 def _sort_jobs(jobs: List[Job]):
@@ -34,8 +34,6 @@ def register(app):
         """Update routing packages according to INTERVALs, one of ["daily", "weekly", "monthly"]."""
         jobs = _sort_jobs(Job.query.filter_by(interval=interval, status='Completed').all())
         for job in jobs:
-            print(f"Queueing job {job.id} by {job.users.email}.")
-            # Todo: needs adaptation on arguments for create_package
             app.task_queue.enqueue(
                 create_package,
                 job.id,
@@ -43,7 +41,7 @@ def register(app):
                 job.description,
                 job.router,
                 job.provider,
-                wkbe_to_geom(job.bbox),
+                wkbe_to_bbox(job.bbox),
                 job.path,
                 job.pbf_path,
                 job.compression,

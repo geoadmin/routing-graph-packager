@@ -2,7 +2,7 @@
 
 usage()
 {
-    echo "usage: routing_packager_update_osm.sh --interval -i [minutely|hourly|*daily*|weekly] --dir-pbf -d /app/data/osm"
+    echo "usage: routing_packager_update_osm.sh --interval/-i [minutely|hourly|*daily*|weekly] --dir-pbf/-d /app/data/osm"
 }
 
 interval=daily
@@ -64,7 +64,8 @@ do
     osmupdate --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
   else
     osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
-    rm -r osmupdate_temp || true
+    # just in case osmupdate didn't delete the fairly big osmupdate_temp folder
+    [[ -d osmupdate_temp ]] && rm -r osmupdate_temp || true
   fi
 
   echo "$(date "+%Y-%m-%d %H:%M:%S") SUCCESS"

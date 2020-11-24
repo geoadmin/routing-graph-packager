@@ -78,8 +78,6 @@ The `routing-packager-app` container running the HTTP API has a `cron` job which
 
 By default, also a fake SMTP server is started and you can see incoming messages on `http://localhost:1080`.
 
-To set up regular updates for the registered graphs, see below.
-
 For full configuration options, please consult our [wiki](https://github.com/gis-ops/routing-graph-packager/wiki/Configuration#complete-list).
 
 ## Concepts
