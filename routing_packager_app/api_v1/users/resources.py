@@ -65,6 +65,8 @@ class UserSingle(Resource):
     @basic_auth.login_required
     @ns.doc(security='basic')
     @ns.response(HTTPStatus.NO_CONTENT, 'Success, no content.')
+    @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
+    @ns.response(HTTPStatus.FORBIDDEN, 'Access forbidden.')
     @ns.response(HTTPStatus.CONFLICT, 'Conflict detected.')
     def delete(self, id):
         """DELETE a user. Needs admin privileges."""

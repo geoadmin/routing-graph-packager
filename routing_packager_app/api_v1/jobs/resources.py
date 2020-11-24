@@ -157,6 +157,7 @@ class Jobs(Resource):
     @ns.doc(security='basic')
     @ns.expect(job_base_schema)
     @ns.marshal_with(job_response_schema)
+    @ns.response(HTTPStatus.FORBIDDEN, 'Access forbidden.')
     @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def post(self):
         """POST a new job. Needs admin privileges."""
@@ -229,6 +230,7 @@ class JobSingle(Resource):
     @basic_auth.login_required
     @ns.doc(security='basic')
     @ns.response(HTTPStatus.NO_CONTENT, 'Success, no content.')
+    @ns.response(HTTPStatus.FORBIDDEN, 'Access forbidden.')
     @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def delete(self, id):
         """DELETE a single job. Will also stop the job if it's in progress. Needs admin privileges."""
