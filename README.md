@@ -1,7 +1,7 @@
 # Routing Graph Packager HTTP API
 
-![tests](https://github.com/gis-ops/kadas-routing-packager/workflows/tests/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/gis-ops/kadas-routing-packager/badge.svg?branch=master)](https://coveralls.io/github/gis-ops/kadas-routing-packager?branch=master)
+![tests](https://github.com/gis-ops/routing-graph-packager/workflows/tests/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/gis-ops/routing-graph-packager/badge.svg)](https://coveralls.io/github/gis-ops/routing-graph-packager)
 
 A Flask app to schedule the generation of updated regional/local routing graph packages for open-source routing engines from a variety of data sources.
 

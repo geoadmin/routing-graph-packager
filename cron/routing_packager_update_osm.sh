@@ -43,10 +43,12 @@ fi
 pbf_expansion="${pbf_dir}/*.pbf"
 pbf_count=$(ls $pbf_expansion | wc -l)
 counter=0
+
+echo "$(date "+%Y-%m-%d %H:%M:%S") Updating PBFs in ${pbf_dir}"
+
 for f in $pbf_expansion
 do
   fn=$(basename "${f}")
-  echo "$(date "+%Y-%m-%d %H:%M:%S") Updating ${fn}..."
   pbf_name_updated="updated_${fn}"
   pbf_updated="${pbf_dir}/${pbf_name_updated}"
 
@@ -61,14 +63,12 @@ do
   # Only keep the temp files if it's not the last PBF
   (( counter++ ))
   if [[ $counter != "${pbf_count}" ]]; then
-    osmupdate --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
+    osmupdate --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || echo "Couldn't update ${fn}" && exit 1
   else
-    osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || exit 1
+    osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || echo "Couldn't update ${fn}" && exit 1
     # just in case osmupdate didn't delete the fairly big osmupdate_temp folder
     [[ -d osmupdate_temp ]] && rm -r osmupdate_temp || true
   fi
-
-  echo "$(date "+%Y-%m-%d %H:%M:%S") SUCCESS"
 
   # finally overwrite the previous file
   mv "${pbf_updated}" "${f}"
