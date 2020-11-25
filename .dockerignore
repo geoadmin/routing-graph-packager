@@ -7,12 +7,25 @@ build/
 .tox/
 .coverage
 htmlcov/
+tests/
+CHANGELOG.md
+README.md
+CONTRIBUTING.md
+**/*.yaml
+.style.yapf
+docker-compose.yml
 
 .env
+.docker_env
+**/*.pbf
+**/*.json
+**/*.gz
+**/*.zip
 **/*egg-info/
 
 Dockerfile
 .git/
 .gitignore
+.github/
 *.pyc
 *.pyd

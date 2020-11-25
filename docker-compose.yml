@@ -51,6 +51,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # Let Docker use the host docker socket
       - packages:/app/data
+      - $PWD/.docker_env:/app/.env  # Worker needs access to .env file
     depends_on:
       - postgis
       - redis

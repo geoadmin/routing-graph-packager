@@ -37,9 +37,9 @@ def create_app(config_string='production'):
         # FIXME: remember inside a container this references /app/data, not the env var!!!
         data_dir = app.config['DATA_DIR']
         app.config['TEMP_DIR'] = temp_dir = os.path.join(data_dir, 'temp')
-        app.config['OSM_DIR'] = osm_dir = os.path.join(data_dir, 'osm')
-        app.config['TOMTOM_DIR'] = tomtom_dir = os.path.join(data_dir, 'tomtom')
-        app.config['HERE_DIR'] = here_dir = os.path.join(data_dir, 'here')
+        app.config['OSM_DIR'] = os.path.join(data_dir, 'osm')
+        app.config['TOMTOM_DIR'] = os.path.join(data_dir, 'tomtom')
+        app.config['HERE_DIR'] = os.path.join(data_dir, 'here')
     except KeyError:
         raise KeyError(
             f"'FLASK_CONFIG' needs to be one of testing, development, production. '{config_env}' is invalid."
