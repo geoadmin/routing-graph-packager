@@ -26,10 +26,18 @@ while [ "$1" != "" ]; do
     shift
 done
 
-# Validate at least the interval
+# Validate the interval
 if ! [[ "$interval" =~ ^(minutely|hourly|daily|weekly)$ ]]; then
   echo "argument --interval '${interval}' is not a valid option."
   usage
+  exit 1
+fi
+
+# Validate if there's PBF files
+pbf_expansion="${pbf_dir}/*.pbf"
+pbf_count=$(ls $pbf_expansion | wc -l)
+if [[ $pbf_count == 0 ]]; then
+  echo "No PBF files in ${pbf_dir}."
   exit 1
 fi
 
@@ -40,12 +48,9 @@ elif [[ $interval =~ ^(daily|weekly)$ ]]; then
   opts+='--day'
 fi
 
-pbf_expansion="${pbf_dir}/*.pbf"
-pbf_count=$(ls $pbf_expansion | wc -l)
-counter=0
-
 echo "$(date "+%Y-%m-%d %H:%M:%S") Updating PBFs in ${pbf_dir}"
 
+counter=0
 for f in $pbf_expansion
 do
   fn=$(basename "${f}")
@@ -63,9 +68,18 @@ do
   # Only keep the temp files if it's not the last PBF
   (( counter++ ))
   if [[ $counter != "${pbf_count}" ]]; then
-    osmupdate --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || echo "Couldn't update ${fn}" && exit 1
+    update_cmd=$(osmupdate --keep-tempfiles ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}")
+    # exit if the last command failed
+    if ! $update_cmd; then
+      echo "Couldn't update OSM file ${fn} with command ${update_cmd}."
+      continue
+    fi
   else
-    osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}" || echo "Couldn't update ${fn}" && exit 1
+    update_cmd=$(osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}")
+    if ! $update_cmd; then
+      echo "Couldn't update OSM file ${fn} with command ${update_cmd}."
+      continue
+    fi
     # just in case osmupdate didn't delete the fairly big osmupdate_temp folder
     [[ -d osmupdate_temp ]] && rm -r osmupdate_temp || true
   fi

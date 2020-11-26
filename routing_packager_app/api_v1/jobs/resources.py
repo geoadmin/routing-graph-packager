@@ -9,14 +9,14 @@ from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
 
-from . import *
+from . import JobFields
 from .models import Job
 from .validate import validate_post, validate_get
 from ...auth.basic_auth import basic_auth
 from ...utils.db_utils import add_or_abort, delete_or_abort
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
-from ...constants import STATUSES, ROUTERS, PROVIDERS, INTERVALS
+from ...constants import *
 
 # Mandatory, will be added by api_vX.__init__
 ns = Namespace('jobs', description='Job related operations')
@@ -56,11 +56,11 @@ job_base_schema = ns.model(
     'JobBase', {
         JobFields.NAME: fields.String(example='Switzerland'),
         JobFields.DESCRIPTION: fields.String(example='OSM road network of Switzerland'),
-        JobFields.PROVIDER: fields.String(example='osm'),
-        JobFields.ROUTER: fields.String(example='valhalla'),
+        JobFields.PROVIDER: fields.String(example=Providers.OSM.value),
+        JobFields.ROUTER: fields.String(example=Routers.VALHALLA.value),
         JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608'),
-        JobFields.INTERVAL: fields.String(example='daily'),
-        JobFields.COMPRESSION: fields.String(example='zip')
+        JobFields.INTERVAL: fields.String(example=Intervals.DAILY.value),
+        JobFields.COMPRESSION: fields.String(example=Compressions.ZIP.value)
     }
 )
 
@@ -71,7 +71,7 @@ job_response_schema = ns.clone(
         JobFields.USER_ID:
         fields.Integer(example=0),
         JobFields.STATUS:
-        fields.String(example='Completed', enum=STATUSES),
+        fields.String(example=Statuses.COMPLETED.value),
         JobFields.RQ_ID:
         fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
         JobFields.CONTAINER_ID:

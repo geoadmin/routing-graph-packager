@@ -10,7 +10,6 @@ from rq.job import Job
 from flask_sqlalchemy import SessionBase
 from werkzeug.exceptions import InternalServerError, HTTPException
 from docker.errors import ImageNotFound
-from shapely import wkb
 from shapely.geometry import Polygon
 from osmium.io import Reader
 
@@ -21,6 +20,7 @@ from .routers import get_router
 from .utils.file_utils import make_tarfile, make_zipfile
 from .utils.geom_utils import bbox_to_geom
 from .osmium import get_pbfs_by_area, extract_proc
+from .constants import *
 
 LOGGER = logging.getLogger('packager')
 LOGGER.setLevel(logging.INFO)
@@ -71,7 +71,7 @@ def create_package(
     try:
         if not job:
             raise Exception(f"Job {job_id} doesn't exist anymore in the database.")
-        last_finished = job.last_finished
+        job_status = job.status
 
         in_pbf_dir = app.config[provider.upper() + '_DIR']
 
@@ -89,7 +89,7 @@ def create_package(
         # 2. Smth went wrong in the pbf update or job deletion procedure
         if not os.path.isfile(in_pbf_path):
             # First take care of 2.
-            if last_finished:
+            if job_status == Statuses.COMPLETED.value:
                 raise InternalServerError(
                     f"Job {job_id} couldn't find its corresponding PBF file {in_pbf_path}"
                 )
@@ -103,7 +103,7 @@ def create_package(
             # Cut the PBF to the bbox extent (osmium availability is checked in __init__.py)
             osmium_proc = extract_proc(bbox_geom, best_pbf_path, in_pbf_path)
 
-            job.set_status('Extracting')
+            job.set_status(Statuses.EXTRACTING.value)
             session.commit()
 
             # Let osmium cut the local PBF
@@ -118,7 +118,7 @@ def create_package(
                     f"'osmium': Apparently bbox {bbox} is not within the extent of {in_pbf_path}"
                 )
 
-        job.set_status('Tiling')
+        job.set_status(Statuses.TILING.value)
         session.commit()
 
         try:
@@ -128,13 +128,13 @@ def create_package(
         except ImageNotFound:
             raise InternalServerError(f"Docker image {router.image} not found.'")
 
-        job.set_status('Completed')
+        job.set_status(Statuses.COMPLETED.value)
         session.commit()
 
         succeeded = True
     # catch all exceptions we're actually aware of
     except HTTPException as e:
-        job.set_status('Failed')
+        job.set_status(Statuses.FAILED.value)
         session.commit()
         LOGGER.error(e.description, extra=dict(user=user_email, job_id=job_id))
 
@@ -155,9 +155,9 @@ def create_package(
         app_ctx.pop()
 
     # Write dataset to disk
-    if compression == 'zip':
+    if compression == Compressions.ZIP.value:
         make_zipfile(result_path, router.graph_dir)
-    elif compression == 'tar.gz':
+    elif compression == Compressions.TARGZ.value:
         make_tarfile(result_path, router.graph_dir)
 
     # Create the meta JSON

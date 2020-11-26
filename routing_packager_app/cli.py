@@ -5,7 +5,7 @@ from shapely.ops import transform
 
 from .api_v1 import Job
 from .tasks import create_package
-from .constants import INTERVALS, CONF_MAPPER
+from .constants import INTERVALS, Statuses, CONF_MAPPER
 from .utils.geom_utils import wkbe_to_bbox, wkbe_to_geom, WGS_TO_MOLLWEIDE
 
 
@@ -22,7 +22,7 @@ def register(app):
     """
     @app.cli.command('update')
     @click.argument('interval', type=click.Choice(INTERVALS))
-    # Only for testing
+    # Solely to set the right environment for testing
     @click.option(
         '--config',
         '-c',
@@ -32,7 +32,7 @@ def register(app):
     )
     def update(interval, config):
         """Update routing packages according to INTERVALs, one of ["daily", "weekly", "monthly"]."""
-        jobs = _sort_jobs(Job.query.filter_by(interval=interval, status='Completed').all())
+        jobs = _sort_jobs(Job.query.filter_by(interval=interval, status=Statuses.COMPLETED.value).all())
         for job in jobs:
             app.task_queue.enqueue(
                 create_package,

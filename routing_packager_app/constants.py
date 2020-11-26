@@ -14,15 +14,36 @@ class Providers(Enum):
     HERE = 'here'
 
 
+class Statuses(Enum):
+    QUEUED = 'Queued'
+    EXTRACTING = 'Extracting'
+    TILING = 'Tiling'
+    FAILED = 'Failed'
+    DELETED = 'Deleted'
+    COMPLETED = 'Completed'
+
+
+class Intervals(Enum):
+    ONCE = 'once'
+    DAILY = 'daily'
+    WEEKLY = 'weekly'
+    MONTHLY = 'monthly'
+
+
+class Compressions(Enum):
+    ZIP = 'zip'
+    TARGZ = 'tar.gz'
+
+
 ROUTERS = [e.value for e in Routers]
 
 PROVIDERS = [e.value for e in Providers]
 
-STATUSES = ['Queued', 'Extracting', 'Tiling', 'Failed', 'Deleted', 'Completed']
+STATUSES = [e.value for e in Statuses]
 
-INTERVALS = ['once', 'daily', 'weekly', 'monthly']
+INTERVALS = [e.value for e in Intervals]
 
-COMPRESSIONS = ['zip', 'tar.gz']
+COMPRESSIONS = [e.value for e in Compressions]
 
 CONF_MAPPER = {
     'development': 'config.DevConfig',
