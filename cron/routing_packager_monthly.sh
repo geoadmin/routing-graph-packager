@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-/app/.venv/bin/flask update monthly
+cd /app && .venv/bin/flask update monthly
