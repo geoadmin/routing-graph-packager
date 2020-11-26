@@ -89,6 +89,7 @@ job_response_schema = ns.clone(
 
 
 @ns.route('/')
+@ns.response(HTTPStatus.BAD_REQUEST, 'Invalid request parameters.')
 @ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
 class Jobs(Resource):
     """Manipulates User table"""

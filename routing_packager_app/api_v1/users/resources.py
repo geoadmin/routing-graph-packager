@@ -35,6 +35,7 @@ class UserRegistration(Resource):
     @ns.doc(security='basic')
     @ns.expect(user_body_schema)
     @ns.marshal_with(user_response_schema)
+    @ns.response(HTTPStatus.BAD_REQUEST, 'Invalid request parameters.')
     @ns.response(HTTPStatus.CONFLICT, 'User already exists.')
     @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def post(self):
