@@ -58,6 +58,7 @@ def script_info(flask_app):
     return ScriptInfo(create_app=lambda info: flask_app)
 
 
+# Creates needed directories and removes them after the test function
 @pytest.yield_fixture(scope='function')
 def handle_dirs(flask_app):
     main_dir = flask_app.config['DATA_DIR']

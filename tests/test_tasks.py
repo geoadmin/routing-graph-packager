@@ -4,21 +4,9 @@ import pytest
 from flask import current_app
 from werkzeug.exceptions import InternalServerError
 
-from .utils import create_new_job, DEFAULT_ARGS_POST
+from .utils import create_new_job, DEFAULT_ARGS_POST, create_package_params
 from routing_packager_app.tasks import create_package
 from routing_packager_app.utils.file_utils import make_package_path
-
-
-def create_package_params(j):
-    data_dir = current_app.config['DATA_DIR']
-
-    result_path = make_package_path(data_dir, j["name"], j["router"], j["provider"], j["compression"])
-
-    return (
-        j["id"], j["name"], j["description"], j["router"], j["provider"],
-        [float(x) for x in j["bbox"].split(',')
-         ], result_path, j['pbf_path'], j['compression'], current_app.config['ADMIN_EMAIL']
-    )
 
 
 @pytest.mark.parametrize('provider', ['osm', 'tomtom'])

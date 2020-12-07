@@ -2,12 +2,13 @@ import json
 import os
 from typing import List, Tuple
 
-from flask import Response
+from flask import Response, current_app
 from flask.testing import Client
 from werkzeug.utils import cached_property
 import osmium
 
 from routing_packager_app.utils.cmd_utils import exec_cmd
+from routing_packager_app.utils.file_utils import make_package_path
 
 DEFAULT_ARGS_POST = {
     "name": f"test",
@@ -58,6 +59,16 @@ def create_new_job(client: Client, data, auth_header, must_succeed=True):
 
 
 def make_pbfs(dirname, feats):
+    """
+    Creates PBFs in the specified directory from a dict of {id: [[x1, y1],[x2, y2]]}.
+
+    :param str dirname: The output directory path
+    :param dict feats: The virtual OSM features' coordinates in a dictionary.
+        The keys will be the same as in the output.
+
+    :returns: The dictionary with same keys as the input and the resulting full PBF paths as values.
+    :rtype: dict
+    """
 
     pbf_paths = dict()
 
@@ -134,3 +145,23 @@ class OSMWriter(osmium.SimpleHandler):
 
     def close(self):
         self.writer.close()
+
+
+def create_package_params(j):
+    """
+    Create the parameters for create_package task
+
+    :param dict j: The job response in JSON
+
+    :returns: Tuple with all parameters inside
+    :rtype: tuple
+    """
+    data_dir = current_app.config['DATA_DIR']
+
+    result_path = make_package_path(data_dir, j["name"], j["router"], j["provider"], j["compression"])
+
+    return (
+        j["id"], j["name"], j["description"], j["router"], j["provider"],
+        [float(x) for x in j["bbox"].split(',')
+         ], result_path, j['pbf_path'], j['compression'], current_app.config['ADMIN_EMAIL']
+    )

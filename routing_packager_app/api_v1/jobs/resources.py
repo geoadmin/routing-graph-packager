@@ -1,21 +1,24 @@
 from datetime import datetime
 import os
+import json
 
 from flask import current_app, g
-from flask_restx import Resource, Namespace, fields, reqparse
+from flask_restx import Resource, Namespace, fields, reqparse, abort
 from flask_restx.errors import HTTPStatus
+from werkzeug.exceptions import InternalServerError
 from sqlalchemy import func
 from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
 
-from . import JobFields
+from . import JobFields, OsmFields
 from .models import Job
 from .validate import validate_post, validate_get
 from ...auth.basic_auth import basic_auth
 from ...utils.db_utils import add_or_abort, delete_or_abort
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
+from ...osmium import fileinfo_proc
 from ...constants import *
 
 # Mandatory, will be added by api_vX.__init__
@@ -250,3 +253,46 @@ class JobSingle(Resource):
             os.remove(db_job.pbf_path)
 
         return '', HTTPStatus.NO_CONTENT
+
+
+osm_response_schema = ns.model(
+    'OsmModel', {
+        OsmFields.FILEPATH: fields.String(example='data/osm/andorra-latest-test.osm.pbf'),
+        OsmFields.TIMESTAMP: fields.String(example='2020-12-07T15:46:52Z'),
+        OsmFields.BBOX: fields.String(example='1.531906,42.559908,1.6325,42.577608'),
+        OsmFields.SIZE: fields.Integer(example=275483)
+    }
+)
+
+
+@ns.route('/<int:id>/data/pbf')
+@ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
+@ns.response(HTTPStatus.NOT_FOUND, 'Unknown OSM file')
+class OsmSingle(Resource):
+    """Get or delete single jobs"""
+    @ns.marshal_with(osm_response_schema)
+    def get(self, id):
+        """GET info about a job's OSM file."""
+        job = Job.query.get_or_404(id)
+        pbf_path = job.pbf_path
+
+        # Bail if it doesn't exist
+        if not os.path.exists(pbf_path):
+            abort(code=HTTPStatus.NOT_FOUND, error=f'OSM file for job {job.id} not found.')
+
+        osmium_proc = fileinfo_proc(pbf_path)
+        stdout, _ = osmium_proc.communicate()
+
+        # Sanitize osmium's response to relevant fields
+        osmium_out = json.loads(stdout)
+
+        response = dict()
+        response['filepath'] = osmium_out['file']['name']
+        response['size'] = osmium_out['file']['size']
+        response['timestamp'] = osmium_out['header']['option']['osmosis_replication_base_url']
+
+        # Ouput bbox as string like the other endpoints
+        bbox = [str(x) for x in osmium_out['header']['boxes'][0]]
+        response['bbox'] = ','.join(bbox)
+
+        return response

@@ -15,3 +15,11 @@ class JobFields:
     LAST_FINISHED = 'last_finished'
     PATH = 'path'
     PBF_PATH = 'pbf_path'
+
+
+# The fields of the JSON response of "osmium fileinfo -j"
+class OsmFields:
+    FILEPATH = 'filepath'
+    SIZE = 'size'
+    BBOX = 'bbox'
+    TIMESTAMP = 'timestamp'

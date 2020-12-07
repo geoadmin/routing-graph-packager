@@ -39,13 +39,6 @@ def make_package_path(base_dir, name, router, provider, extension):
     return os.path.join(out_dir, file_name + f".{extension}")
 
 
-def _get_package_dir(base_dir, name, router, provider):
-    file_name = '_'.join([router, provider, name])
-
-    # also create a folder with the same name
-    out_dir = os.path.join(base_dir, router, file_name)
-
-
 def make_tarfile(out_fp, source_dir):
     """
     Adds *source_dir* to a gzipped Tar file called *out_fp*.

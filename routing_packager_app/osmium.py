@@ -1,5 +1,6 @@
 import os
 from typing import List
+from datetime import datetime
 
 import osmium
 from shapely.geometry import box, Polygon
@@ -68,6 +69,28 @@ def extract_proc(bbox, in_pbf_path, out_pbf_path):
     """
     minx, miny, maxx, maxy = bbox.bounds
 
-    cmd = f"osmium extract --set-bounds --strategy=complete_ways --bbox={minx},{miny},{maxx},{maxy} -o {out_pbf_path} -O {in_pbf_path}"
+    # we only support timestamp for now
+    timestamp = datetime.now().replace(microsecond=0).isoformat()
+    headers = f'--output-header=osmosis_replication_base_url={timestamp}Z'
+
+    strategy = 'complete_ways'
+    bbox = f'{minx},{miny},{maxx},{maxy}'
+
+    cmd = f"osmium extract {headers} --set-bounds --strategy={strategy} --bbox={bbox} -o {out_pbf_path} -O {in_pbf_path}"
+
+    return exec_cmd(cmd)
+
+
+def fileinfo_proc(in_pbf_path):
+    """
+    Returns a :class:`subprocess.Popen` instance to use osmium to run "fileinfo -j" on the supplied OSM file.
+
+    :param str in_pbf_path: The full PBF path.
+
+    :returns: The subprocess calling osmium.
+    :rtype: subprocess.Popen
+    """
+
+    cmd = f"osmium fileinfo -j {in_pbf_path}"
 
     return exec_cmd(cmd)

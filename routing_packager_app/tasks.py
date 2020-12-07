@@ -107,9 +107,9 @@ def create_package(
             session.commit()
 
             # Let osmium cut the local PBF
-            osmium_status = osmium_proc.wait()
-            if osmium_status:  # pragma: no cover
-                raise InternalServerError(f"'osmium': {osmium_proc.stderr.read().decode()}")
+            _, osmium_stderr = osmium_proc.communicate()
+            if osmium_stderr:  # pragma: no cover
+                raise InternalServerError(f"'osmium': {json.loads(osmium_stderr)}")
 
             # Check validity
             osmium_reader = Reader(in_pbf_path)
