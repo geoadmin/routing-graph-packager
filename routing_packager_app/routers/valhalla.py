@@ -3,7 +3,8 @@ import os
 from collections import defaultdict
 
 from .router_base import RouterBase
-from ..constants import Routers
+from ..constants import Routers, Compressions
+from ..utils.file_utils import make_tarfile, make_zipfile
 
 
 class Valhalla(RouterBase):
@@ -14,7 +15,7 @@ class Valhalla(RouterBase):
     def build_graph(self):
         # tile_dir is the only required config
         config = defaultdict(dict)
-        config["mjolnir"]["tile_dir"] = self._docker_graph_dir
+        config["mjolnir"]["tile_dir"] = os.path.join(self._docker_graph_dir, 'valhalla_tiles')
 
         # Add optional things, don't test for now
         valhalla_dir = os.path.join('/app', 'data', 'valhalla')
@@ -35,3 +36,10 @@ class Valhalla(RouterBase):
         cmd = f"valhalla_build_tiles --inline-config '{json.dumps(config)}'" \
               f" {self._docker_pbf_path}"
         return self._exec_docker(cmd)
+
+    def make_package(self, out_path, compression):
+        if compression == Compressions.ZIP.value:
+            make_zipfile(out_path, self._graph_dir)
+        elif compression == Compressions.TARGZ.value:
+            in_path = os.path.join(self._graph_dir, 'valhalla_tiles')
+            make_tarfile(out_path, in_path)

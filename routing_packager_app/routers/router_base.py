@@ -76,3 +76,7 @@ class RouterBase(ABC):
     @abstractmethod
     def build_graph(self):
         pass
+
+    @abstractmethod
+    def make_package(self, path, compression):
+        pass

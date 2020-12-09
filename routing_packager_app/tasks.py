@@ -155,10 +155,7 @@ def create_package(
         app_ctx.pop()
 
     # Write dataset to disk
-    if compression == Compressions.ZIP.value:
-        make_zipfile(result_path, router.graph_dir)
-    elif compression == Compressions.TARGZ.value:
-        make_tarfile(result_path, router.graph_dir)
+    router.make_package(result_path, compression)
 
     # Create the meta JSON
     fname = os.path.basename(result_path)
