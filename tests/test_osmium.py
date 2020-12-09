@@ -53,7 +53,7 @@ def test_pbf_endpoint_success(tmpdir, flask_app_client, basic_auth_header, delet
         assert isinstance(r[f], str)
         assert len(r[f]) > 0
     assert 'size' in r
-    assert r['size'] == 76746
+    assert r['size'] in range(76700, 76800)
 
     os.remove(job['pbf_path'])
 

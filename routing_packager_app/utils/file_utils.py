@@ -46,7 +46,7 @@ def make_tarfile(out_fp, source_dir):
     :param str out_fp: full path to the resulting Tar file.
     :param str source_dir: full path the directory which needs zipping.
     """
-    with tarfile.open(out_fp, "w:gz") as tar:
+    with tarfile.open(out_fp, "w") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 

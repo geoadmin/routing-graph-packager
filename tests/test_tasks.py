@@ -26,7 +26,7 @@ def test_create_package(provider, flask_app_client, basic_auth_header, delete_jo
     create_package(*create_package_params(job), config_string='testing')
 
 
-@pytest.mark.parametrize('compression', ['zip', 'tar.gz'])
+@pytest.mark.parametrize('compression', ['zip', 'tar'])
 def test_create_package_compressions(
     compression, flask_app_client, basic_auth_header, monkeypatch, delete_jobs, handle_dirs
 ):

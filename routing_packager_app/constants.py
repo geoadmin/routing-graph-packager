@@ -32,7 +32,7 @@ class Intervals(Enum):
 
 class Compressions(Enum):
     ZIP = 'zip'
-    TARGZ = 'tar.gz'
+    TAR = 'tar'
 
 
 ROUTERS = [e.value for e in Routers]
