@@ -3,17 +3,16 @@ import os
 import json
 
 from flask import current_app, g
-from flask_restx import Resource, Namespace, fields, reqparse, abort
+from flask_restx import Resource, Namespace, reqparse, abort
 from flask_restx.errors import HTTPStatus
-from werkzeug.exceptions import InternalServerError
 from sqlalchemy import func
-from geoalchemy2.shape import to_shape
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
 
-from . import JobFields, OsmFields
+from . import JobFields
 from .models import Job
 from .validate import validate_post, validate_get
+from .schemas import job_base_schema, job_response_schema, osm_response_schema
 from ...auth.basic_auth import basic_auth
 from ...utils.db_utils import add_or_abort, delete_or_abort
 from ...utils.geom_utils import bbox_to_wkt
@@ -41,54 +40,9 @@ get_parser.add_argument(JobFields.BBOX)
 get_parser.add_argument(JobFields.STATUS)
 get_parser.add_argument(JobFields.INTERVAL)
 
+job_base_model = ns.model('JobBase', job_base_schema)
 
-class BboxField(fields.Raw):
-    __schema_type__ = 'string'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def format(self, value):
-        geom = to_shape(value)
-        bbox = geom.bounds
-
-        return ','.join([str(x) for x in bbox])
-
-
-job_base_schema = ns.model(
-    'JobBase', {
-        JobFields.NAME: fields.String(example='Switzerland'),
-        JobFields.DESCRIPTION: fields.String(example='OSM road network of Switzerland'),
-        JobFields.PROVIDER: fields.String(example=Providers.OSM.value),
-        JobFields.ROUTER: fields.String(example=Routers.VALHALLA.value),
-        JobFields.BBOX: BboxField(example='1.531906,42.559908,1.6325,42.577608'),
-        JobFields.INTERVAL: fields.String(example=Intervals.DAILY.value),
-        JobFields.COMPRESSION: fields.String(example=Compressions.ZIP.value)
-    }
-)
-
-job_response_schema = ns.clone(
-    'JobResp', {
-        JobFields.ID:
-        fields.Integer(example=0),
-        JobFields.USER_ID:
-        fields.Integer(example=0),
-        JobFields.STATUS:
-        fields.String(example=Statuses.COMPLETED.value),
-        JobFields.RQ_ID:
-        fields.String(example='ac277aaa-c6e1-4660-9a43-38864ccabd42', attribute='rq_id'),
-        JobFields.CONTAINER_ID:
-        fields.String(example='6f5747f3cb03cc9add39db9b737d4138fcc1d821319cdf3ec0aea5735f3652c7'),
-        JobFields.LAST_STARTED:
-        fields.DateTime(example='2020-11-16T13:03:31.598Z'),
-        JobFields.LAST_FINISHED:
-        fields.DateTime(example='2020-11-16T13:06:33.310Z'),
-        JobFields.PATH:
-        fields.String(example='/root/routing-packager/data/valhalla/valhalla_tomtom_andorra.zip'),
-        JobFields.PBF_PATH:
-        fields.String(example='/root/routing-packager/data/osm/cut_andorra-latest.osm.pbf')
-    }, job_base_schema
-)
+job_response_model = ns.clone('JobResp', job_response_schema, job_base_model)
 
 
 @ns.route('/')
@@ -124,7 +78,7 @@ class Jobs(Resource):
             }
         }
     )
-    @ns.marshal_list_with(job_response_schema)
+    @ns.marshal_list_with(job_response_model)
     def get(self):
         """GET all jobs."""
         args = get_parser.parse_args()
@@ -159,8 +113,8 @@ class Jobs(Resource):
 
     @basic_auth.login_required
     @ns.doc(security='basic')
-    @ns.expect(job_base_schema)
-    @ns.marshal_with(job_response_schema)
+    @ns.expect(job_base_model)
+    @ns.marshal_with(job_response_model)
     @ns.response(HTTPStatus.FORBIDDEN, 'Access forbidden.')
     @ns.response(HTTPStatus.UNAUTHORIZED, 'Invalid/missing basic authorization.')
     def post(self):
@@ -226,7 +180,7 @@ class Jobs(Resource):
 @ns.response(HTTPStatus.NOT_FOUND, 'Unknown job id.')
 class JobSingle(Resource):
     """Get or delete single jobs"""
-    @ns.marshal_with(job_response_schema)
+    @ns.marshal_with(job_response_model)
     def get(self, id):
         """GET a single job."""
         return Job.query.get_or_404(id)
@@ -255,22 +209,15 @@ class JobSingle(Resource):
         return '', HTTPStatus.NO_CONTENT
 
 
-osm_response_schema = ns.model(
-    'OsmModel', {
-        OsmFields.FILEPATH: fields.String(example='data/osm/andorra-latest-test.osm.pbf'),
-        OsmFields.TIMESTAMP: fields.String(example='2020-12-07T15:46:52Z'),
-        OsmFields.BBOX: fields.String(example='1.531906,42.559908,1.6325,42.577608'),
-        OsmFields.SIZE: fields.Integer(example=275483)
-    }
-)
+osm_response_model = ns.model('OsmModel', osm_response_schema)
 
 
 @ns.route('/<int:id>/data/pbf')
 @ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown error.')
-@ns.response(HTTPStatus.NOT_FOUND, 'Unknown OSM file')
+@ns.response(HTTPStatus.NOT_FOUND, 'Unknown job id.')
 class OsmSingle(Resource):
-    """Get or delete single jobs"""
-    @ns.marshal_with(osm_response_schema)
+    """Interact with a job's OSM file."""
+    @ns.marshal_with(osm_response_model)
     def get(self, id):
         """GET info about a job's OSM file."""
         job = Job.query.get_or_404(id)
