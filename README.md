@@ -127,3 +127,11 @@ The app is listening on `/api/v1/jobs` for new `POST` requests to generate some 
 4. Send an email to the requesting user with success or failure notice (including the error message)
 
 At this point you didn't set up regular graph updates yet. Refer to the [wiki Update Data section](https://github.com/gis-ops/routing-graph-packager/wiki/Data%20Updates) for that.
+
+### Routing engines
+
+This project tries to take over router-specific settings and workflows as much as possible. However, some routing engines have optional configuration settings which are hard to automate. 
+
+One such example is Valhalla: _optionally_ you can enable Valhalla to consider country-specific information (e.g. borders, legal driving side) and timezones (to enable time-aware restrictions).
+
+Refer to our [wiki](https://github.com/gis-ops/routing-graph-packager/wiki) for more details on what to do. 
