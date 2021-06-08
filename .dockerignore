@@ -16,12 +16,12 @@ CONTRIBUTING.md
 docker-compose.yml
 
 .env
-.docker_env
 **/*.pbf
 **/*.json
 **/*.gz
 **/*.zip
 **/*egg-info/
+ssl/
 
 Dockerfile
 .git/

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "routing-graph-packager"
-version = "0.1.0"
+version = "1.0.0b"
 description = "Backend to generate packages of routing graphs for FOSS routing engines in a job queue."
 authors = ["Nils Nolde <nils@gis-ops.com>"]
 license = "MIT"

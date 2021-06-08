@@ -23,8 +23,17 @@ elif [ "${cmd}" == 'app' ]; then
   register_cron_script "0 3 * * *" "/app/cron/routing_packager_update_osm.sh -i daily -d /app/data/osm"
   service cron start
 
+  # SSL? Provided by .docker_env with path mapped in docker-compose.yml
+  opts=''
+  if [ -n "${SSL_CERT}" ] && [ -n "${SSL_KEY}" ]; then
+    opts="--certfile ${SSL_CERT} --keyfile ${SSL_KEY}"
+    echo "Provided SSL certificate ${SSL_CERT} with SSL key ${SSL_KEY}."
+  else
+    echo "No SSL configured."
+  fi
+
   # Start the gunicorn server
-  /app/.venv/bin/gunicorn --config gunicorn.py http_app:app
+  bash -c "/app/.venv/bin/gunicorn --config gunicorn.py ${opts} http_app:app"
 else
   echo "Command ${cmd} not recognized. Choose from 'worker' or 'app'"
 fi

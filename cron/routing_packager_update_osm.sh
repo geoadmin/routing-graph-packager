@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# Author: Nils Nolde <nils@gis-ops.com>
+# Updated: 15-12-2020
+# License: MIT
+#
+# Update OSM PBF files in batch by specifying a folder and a fixed update interval
+#
+# Put in cron, e.g.
+# (crontab -l || true; echo "0 3 * * * /path/to/this/script.sh > /some_log.txt") | crontab -
+#
+
 usage()
 {
     echo "usage: routing_packager_update_osm.sh --interval/-i [minutely|hourly|*daily*|weekly] --dir-pbf/-d /app/data/osm"
