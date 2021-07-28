@@ -1,10 +1,13 @@
 import os
 from abc import ABC, abstractmethod
+from time import sleep
+from typing import Optional
 
 from flask import current_app
 from werkzeug.exceptions import InternalServerError
 import docker
 from docker.errors import ImageNotFound
+from docker.models.containers import Container
 
 from ..constants import DOCKER_VOLUME
 
@@ -36,7 +39,9 @@ class RouterBase(ABC):
                                            )
         volumes = {host_dir: {'bind': '/app/data', 'mode': 'rw'}}
         try:
-            self._container = docker_clnt.containers.create(self.image, volumes=volumes)
+            self._container: Optional[Container] = docker_clnt.containers.create(
+                self.image, volumes=volumes, command="tail -f /dev/null"
+            )
         except ImageNotFound:
             raise InternalServerError(f"Docker image {self.image} not found for '{self.name}'")
 
