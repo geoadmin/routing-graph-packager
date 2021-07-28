@@ -22,7 +22,9 @@ docker-compose.yml
 **/*.zip
 **/*egg-info/
 ssl/
-scan*.csv
+scan*.txt
+*.csv
+*.xlsx
 
 Dockerfile
 .git/

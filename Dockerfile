@@ -56,6 +56,7 @@ RUN . $HOME/.poetry/env && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get -y dist-upgrade && \
     # apt-get -y purge click git pip redis && \
+    python -m pip uninstall -y pip && \
     apt-get -y autoremove
 
 EXPOSE 5000
