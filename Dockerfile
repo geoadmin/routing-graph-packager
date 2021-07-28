@@ -1,5 +1,5 @@
 #--- BEGIN Usual Python stuff ---
-FROM python:3.8-slim-buster
+FROM python:3.9-slim-buster
 LABEL maintainer=nils@gis-ops.com
 
 # Install poetry
@@ -53,7 +53,10 @@ RUN . $HOME/.poetry/env && \
     . .venv/bin/activate && \
     poetry install --no-interaction --no-ansi --no-dev && \
     mkdir -p /app/data && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get -y dist-upgrade && \
+    # apt-get -y purge click git pip redis && \
+    apt-get -y autoremove
 
 EXPOSE 5000
 HEALTHCHECK --start-period=5s CMD curl --fail -s http://localhost:5000/api/v1/jobs || exit 1

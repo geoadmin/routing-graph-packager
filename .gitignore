@@ -9,6 +9,8 @@ build/
 htmlcov/
 **/*egg-info/
 
+scan*.csv
+
 # temp
 .env_local
 .env
