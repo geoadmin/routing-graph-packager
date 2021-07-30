@@ -1,6 +1,6 @@
 # Routing Graph Packager HTTP API
 
-![tests](https://github.com/gis-ops/routing-graph-packager/workflows/tests/badge.svg)
+[![tests](https://github.com/geoadmin/routing-graph-packager/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/geoadmin/routing-graph-packager/actions/workflows/test-ubuntu.yml)
 [![Coverage Status](https://coveralls.io/repos/github/gis-ops/routing-graph-packager/badge.svg)](https://coveralls.io/github/gis-ops/routing-graph-packager)
 
 A Flask app to schedule the generation of updated regional/local routing graph packages for open-source routing engines from a variety of data sources.
