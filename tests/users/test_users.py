@@ -251,8 +251,6 @@ def test_admin_user_created(flask_app_client, flask_app):
     expected_email = flask_app.config['ADMIN_EMAIL']
     expected_pass = flask_app.config['ADMIN_PASS']
 
-    print(expected_email, expected_pass)
-
     response = flask_app_client.get('/api/v1/users')
     assert response.json[0]['email'] == expected_email
 
