@@ -9,6 +9,10 @@ build/
 htmlcov/
 **/*egg-info/
 
+scan*.txt
+*.csv
+*.xlsx
+
 # temp
 .env_local
 .env

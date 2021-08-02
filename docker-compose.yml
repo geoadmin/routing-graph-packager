@@ -63,18 +63,21 @@ services:
     container_name: routing-packager-app
     ports:
       - 5000:5000
+    env_file:
+      - .docker_env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # Let Docker use the host docker socket
       - packages:/app/data
+      - $PWD/ssl:/app/ssl  # optional SSL certificate for gunicorn
       # mostly needed to define the database hosts
-    env_file:
-      - .docker_env
     networks:
       - routing-packager
     depends_on:
       - postgis
       - redis
       - worker
+    healthcheck:
+      disable: true
     restart: always
 # For testing purposes
   fake-smtp-server:

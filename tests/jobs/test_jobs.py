@@ -8,16 +8,17 @@ from routing_packager_app.utils.file_utils import make_package_path
 from ..utils import create_new_job, DEFAULT_ARGS_POST
 
 
-@pytest.mark.parametrize('router', ROUTERS)
+# TODO: disable tests for (so far) unsupported routers
+# @pytest.mark.parametrize('router', ROUTERS)
 @pytest.mark.parametrize('provider', PROVIDERS)
 @pytest.mark.parametrize('interval', INTERVALS)
 @pytest.mark.parametrize('compression', COMPRESSIONS)
-def test_post_job(router, provider, interval, compression, flask_app_client, basic_auth_header):
+def test_post_job(provider, interval, compression, flask_app_client, basic_auth_header):
     job = create_new_job(
         flask_app_client,
         auth_header=basic_auth_header,
         data={
-            **DEFAULT_ARGS_POST, "router": router,
+            **DEFAULT_ARGS_POST, "router": 'valhalla',
             "provider": provider,
             "interval": interval,
             "compression": compression
@@ -26,7 +27,8 @@ def test_post_job(router, provider, interval, compression, flask_app_client, bas
 
     job_inst: Job = Job.query.get(job['id'])
 
-    assert job_inst.router == router
+    # TODO: re-enable when other routers should be tested
+    # assert job_inst.router == router
     assert job_inst.provider == provider
     assert job_inst.interval == interval
     assert job_inst.compression == compression
@@ -38,7 +40,7 @@ def test_post_job(router, provider, interval, compression, flask_app_client, bas
     assert job_inst.pbf_path == os.path.join(pbf_dir, f"{job_inst.id}.{provider}.pbf")
 
     dataset_path = make_package_path(
-        flask_app_client.application.config['DATA_DIR'], job_inst.name, router, provider,
+        flask_app_client.application.config['DATA_DIR'], job_inst.name, 'valhalla', provider,
         job_inst.compression
     )
     assert job_inst.path == dataset_path
@@ -134,45 +136,44 @@ def test_post_job_forbidden(flask_app_client):
 
 
 def test_get_jobs_all(flask_app_client, basic_auth_header):
-    for router in ['valhalla', 'osrm', 'ors']:
-        for provider in ['tomtom', 'osm']:
-            for interval in ['once', 'daily']:
-                for bbox in ['0,0,1,1', '2,2,3,3']:
-                    r = create_new_job(
-                        flask_app_client,
-                        data={
-                            **DEFAULT_ARGS_POST, "name": f"{router}, {provider}, {interval}, {bbox}",
-                            "provider": provider,
-                            "router": router,
-                            "interval": interval,
-                            "bbox": bbox
-                        },
-                        auth_header=basic_auth_header,
-                        must_succeed=False
-                    )
+    for provider in ['tomtom', 'osm']:
+        for interval in ['once', 'daily']:
+            for bbox in ['0,0,1,1', '2,2,3,3']:
+                r = create_new_job(
+                    flask_app_client,
+                    data={
+                        **DEFAULT_ARGS_POST, "name": f"{provider}, {interval}, {bbox}",
+                        "provider": provider,
+                        "router": 'valhalla',
+                        "interval": interval,
+                        "bbox": bbox
+                    },
+                    auth_header=basic_auth_header,
+                    must_succeed=False
+                )
 
     # First get all 24 results
     r = flask_app_client.get('/api/v1/jobs')
-    assert len(r.json) == 24
+    assert len(r.json) == 8
 
     # Then test all query string parameters
     r = flask_app_client.get('/api/v1/jobs', query_string={"interval": 'once'})
-    assert len(r.json) == 12
+    assert len(r.json) == 4
 
     r = flask_app_client.get('/api/v1/jobs', query_string={"router": 'valhalla'})
     assert len(r.json) == 8
 
     r = flask_app_client.get('/api/v1/jobs', query_string={"provider": 'tomtom'})
-    assert len(r.json) == 12
+    assert len(r.json) == 4
 
     r = flask_app_client.get('/api/v1/jobs', query_string={"status": 'Queued'})
-    assert len(r.json) == 24
+    assert len(r.json) == 8
 
     r = flask_app_client.get('/api/v1/jobs', query_string={"status": 'Extracting'})
     assert len(r.json) == 0
 
     r = flask_app_client.get('/api/v1/jobs', query_string={"bbox": '0,0,1.5,1.5'})
-    assert len(r.json) == 12
+    assert len(r.json) == 4
 
 
 @pytest.mark.parametrize(
