@@ -45,8 +45,8 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
         )
         pbf_bbox_proj = transform(WGS_TO_MOLLWEIDE, pbf_bbox_geom)
         # Only keep the PBF bboxes which contain the job's bbox
-        if not pbf_bbox_proj.contains(job_bbox_proj):
-            continue
+        #if not pbf_bbox_proj.contains(job_bbox_proj):
+        #    continue
         pbf_bbox_areas[fp] = pbf_bbox_proj.area
 
     if not pbf_bbox_areas:
