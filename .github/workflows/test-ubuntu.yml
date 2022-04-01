@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04]
-        python_version: [3.7, 3.8, 3.9]
+        python_version: [3.7, 3.8, 3.9, 3.10]
     services:
       postgres:
         image: kartoza/postgis:12.1
@@ -84,10 +84,10 @@ jobs:
         sudo apt-get install -y -qq osmium-tool osmctools
         echo $(osmium --version)
 
-    - name: yapf linting
+    - name: linting
       run: |
         source .venv/bin/activate
-        yapf -r -vv --diff -p tests routing_packager_app config.py http_app.py gunicorn.py
+        pre-commit run --all-files
 
     - name: pytest
       run: |

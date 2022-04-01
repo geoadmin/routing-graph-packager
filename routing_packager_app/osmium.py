@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List  # noqa: F401
 from datetime import datetime
 
 import osmium
@@ -31,7 +31,7 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
     pbf_bbox_areas = {}
     areas = ""
     for fn in os.listdir(pbf_dir):
-        if not fn.endswith('.pbf'):
+        if not fn.endswith(".pbf"):
             continue
 
         fp = os.path.join(pbf_dir, fn)
@@ -73,10 +73,10 @@ def extract_proc(bbox, in_pbf_path, out_pbf_path):
 
     # we only support timestamp for now
     timestamp = datetime.now().replace(microsecond=0).isoformat()
-    headers = f'--output-header=osmosis_replication_base_url={timestamp}Z'
+    headers = f"--output-header=osmosis_replication_base_url={timestamp}Z"
 
-    strategy = 'complete_ways'
-    bbox = f'{minx},{miny},{maxx},{maxy}'
+    strategy = "complete_ways"
+    bbox = f"{minx},{miny},{maxx},{maxy}"
 
     cmd = f"osmium extract {headers} --set-bounds --strategy={strategy} --bbox={bbox} -o {out_pbf_path} -O {in_pbf_path}"
 

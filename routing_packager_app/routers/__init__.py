@@ -1,5 +1,3 @@
-from typing import List
-
 from routing_packager_app.constants import Routers
 from .valhalla import Valhalla
 

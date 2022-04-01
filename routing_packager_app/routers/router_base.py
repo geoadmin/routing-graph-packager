@@ -1,6 +1,5 @@
 import os
 from abc import ABC, abstractmethod
-from time import sleep
 from typing import Optional
 
 from flask import current_app
@@ -20,24 +19,26 @@ class RouterBase(ABC):
 
     Subclasses need to implement the abstract methods.
     """
+
     def __init__(self, provider, input_pbf_path):
         self._input_pbf_path = input_pbf_path
-        self._graph_dir = os.path.join(current_app.config['TEMP_DIR'], self.name(), 'graph')
+        self._graph_dir = os.path.join(current_app.config["TEMP_DIR"], self.name(), "graph")
         self._container = None
 
         # It's important to maintain the same directory structure in docker, host etc
         self._docker_pbf_path = os.path.join(
-            '/app', 'data', provider, os.path.basename(self._input_pbf_path)
+            "/app", "data", provider, os.path.basename(self._input_pbf_path)
         )
-        self._docker_graph_dir = os.path.join('/app', 'data', 'temp', self.name(), 'graph')
+        self._docker_graph_dir = os.path.join("/app", "data", "temp", self.name(), "graph")
 
         # if testing we need to reference the test data directory
         # else the previously created docker volume
-        host_dir = docker_clnt.volumes.get(DOCKER_VOLUME
-                                           ).name if not current_app.config['TESTING'] else os.path.join(
-                                               current_app.root_path, '..', 'tests', 'data'
-                                           )
-        volumes = {host_dir: {'bind': '/app/data', 'mode': 'rw'}}
+        host_dir = (
+            docker_clnt.volumes.get(DOCKER_VOLUME).name
+            if not current_app.config["TESTING"]
+            else os.path.join(current_app.root_path, "..", "tests", "data")
+        )
+        volumes = {host_dir: {"bind": "/app/data", "mode": "rw"}}
         try:
             self._container: Optional[Container] = docker_clnt.containers.create(
                 self.image, volumes=volumes, command="tail -f /dev/null"
@@ -63,7 +64,7 @@ class RouterBase(ABC):
 
     @property
     def image(self):
-        return current_app.config[f'{self.name().upper()}_IMAGE']
+        return current_app.config[f"{self.name().upper()}_IMAGE"]
 
     @property
     def container_id(self):

@@ -1,5 +1,5 @@
-__version__ = '0.1.0'
-__api_suffix__ = 'v1'
+__version__ = "0.1.0"
+__api_suffix__ = "v1"
 __description__ = """App to generate routing graph packages for FOSS routing engines, featuring:
 
 - email notification on final job status

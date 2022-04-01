@@ -7,4 +7,4 @@ cli.register(app)
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User, 'Job': Job}
+    return {"db": db, "User": User, "Job": Job}
