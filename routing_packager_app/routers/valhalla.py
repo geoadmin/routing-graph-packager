@@ -31,7 +31,7 @@ class Valhalla(RouterBase):
             config['mjolnir']['timezone'] = '/app/data/valhalla/timezones.sqlite'
 
         elevation_path = os.path.join(valhalla_host_dir, 'elevation')  # pragma: no cover
-        if os.path.exists(timezone_path):
+        if os.path.exists(elevation_path):
             config['additional_data']['elevation'] = '/app/data/valhalla/elevation'
 
         # Stitch command and add inline config

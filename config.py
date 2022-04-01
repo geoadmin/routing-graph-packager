@@ -30,7 +30,7 @@ class BaseConfig(object):
     DATA_DIR = os.getenv('DATA_DIR') or os.path.join(basedir, 'data')
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
-    if os.path.isfile('/.dockerenv') and not os.getenv('CI'):
+    if os.path.isdir('/app/data') and not os.getenv('CI', None):
         DATA_DIR = '/app/data'
 
     ENABLED_PROVIDERS = _get_list_var(os.getenv('ENABLED_PROVIDERS')) or ['osm']
