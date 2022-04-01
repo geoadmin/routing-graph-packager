@@ -25,7 +25,7 @@ def test_register(flask_app_client, basic_auth_header, script_info, delete_jobs)
     result = runner.invoke(update_f, ["daily", "--config", "testing"], obj=script_info)
 
     if result.exit_code or result.exception:
-        raise RuntimeError(f"CLI test wasn't successful. Some hints maybe:\n{result.stdout}")
+        raise RuntimeError(f"CLI test wasn't successful. Some hints maybe:\n{result.exception}")
 
 
 def test_sort_jobs(flask_app_client, basic_auth_header):

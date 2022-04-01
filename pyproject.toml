@@ -9,35 +9,34 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
-flask = "^1.1.2"
-flask-sqlalchemy = "^2.4.4"
-SQLAlchemy = "~1.3.0"  # >= 1.4.0 changed a lot and breaks this project currently
-psycopg2-binary = "^2.8.5"
+python = "^3.8"
+flask = "^2.1.1"
+flask-sqlalchemy = "^2.5.1"
+SQLAlchemy = "~1.4.34"  # >= 1.4.0 changed a lot and breaks this project currently
 flask-cors = "^3.0.8"
-GeoAlchemy2 = "^0.8.4"
-flask-migrate = "^2.5.3"
-wheel = "^0.35.1"
-python-dotenv = "^0.14.0"
-flask-restx = "^0.2.0"
-requests = "^2.24.0"
-sqlalchemy-utils = "^0.36.8"
-passlib = "^1.7.2"
-Flask-HTTPAuth = "^4.1.0"
-shapely = "^1.7.1"
-docker = "^4.3.1"
-gunicorn = "^20.0.4"
-gevent = "^20.6.2"
-rq = "^1.5.2"
-osmium = "^3.1.0"
-pyproj = "^3.0.0"
+GeoAlchemy2 = "^0.11.1"
+wheel = "^0.37.1"
+python-dotenv = "^0.20.0"
+flask-restx = {git = "https://github.com/stacywsmith/flask-restx.git", rev = "041b1f074a32891c2359607b349bbc9d1ee4b374"}  # wait for release of bug fix: https://github.com/python-restx/flask-restx/pull/423
+requests = "^2.27.1"
+sqlalchemy-utils = "^0.38.2"
+passlib = "^1.7.4"
+Flask-HTTPAuth = "^4.5.0"
+shapely = "^1.8.1"
+docker = "^5.0.3"
+gunicorn = "^20.1.0"
+gevent = "^21.12.0"
+rq = "^1.10.1"
+osmium = "^3.3.0"
+pyproj = "^3.3.0"
+psycopg2-binary = "^2.9.3"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.0.1"
-pre-commit = "^2.6.0"
-coverage = "^5.2.1"
-coveralls = "^2.1.2"
-pytest-cov = "^2.10.1"
+pytest = "^7.1.1"
+pre-commit = "^2.17.0"
+coverage = "^6.3.2"
+coveralls = "^3.3.1"
+pytest-cov = "^3.0.0"
 
 [build-system]
 requires = ["poetry>=1.0.0"]

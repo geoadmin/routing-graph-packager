@@ -1,5 +1,5 @@
 #--- BEGIN Usual Python stuff ---
-FROM python:3.9-slim-buster
+FROM python:3.10-slim-bullseye
 LABEL maintainer=nils@gis-ops.com
 
 # Install poetry
@@ -21,14 +21,17 @@ RUN apt-get update -y > /dev/null && \
 RUN apt-get update -y > /dev/null && \
     apt-get install -y --fix-missing \
         software-properties-common \
-        gnupg-agent \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release \
         nano \
         jq \
         cron -o APT::Immediate-Configure=0 > /dev/null && \
     # install docker & osmium
     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
-    add-apt-repository 'deb http://ftp.debian.org/debian sid main' && \
     apt-get update -y > /dev/null && \
     apt-get install -y docker-ce docker-ce-cli containerd.io osmium-tool osmctools > /dev/null && \
     systemctl enable docker

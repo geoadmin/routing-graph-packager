@@ -36,7 +36,7 @@ def create_new_user(flask_app_client, data, auth_header, must_succeed=True):
     """
     Helper function for valid new user creation.
     """
-    response = flask_app_client.post("/api/v1/users", headers=auth_header, data=data)
+    response = flask_app_client.post("/api/v1/users", headers=auth_header, json=data)
 
     if must_succeed:
         assert (
@@ -52,7 +52,7 @@ def create_new_job(client: Client, data, auth_header, must_succeed=True):
     """
     Helper function for valid new job creation.
     """
-    response = client.post("/api/v1/jobs", headers=auth_header, data=data)
+    response = client.post("/api/v1/jobs", headers=auth_header, json=data)
 
     if must_succeed:
         assert (

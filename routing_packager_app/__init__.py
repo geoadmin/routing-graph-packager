@@ -4,7 +4,6 @@ import logging
 
 from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 import docker
 from docker.errors import ImageNotFound, NullResource
 from redis import Redis
@@ -16,7 +15,6 @@ from .constants import CONF_MAPPER
 log = logging.getLogger(__name__)
 
 db = SQLAlchemy()
-migrate = Migrate()
 
 
 def create_app(config_string="production"):
@@ -72,7 +70,6 @@ def create_app(config_string="production"):
 
     # Initialize extensions
     db.init_app(app)
-    migrate.init_app(app, db)
     # Put Redis as an app attribute to reference easier in other modules
     app.redis = Redis.from_url(app.config["REDIS_URL"])
     app.task_queue = Queue(

@@ -126,7 +126,7 @@ def test_get_jobs_all(flask_app_client, basic_auth_header):
     for provider in ["tomtom", "osm"]:
         for interval in ["once", "daily"]:
             for bbox in ["0,0,1,1", "2,2,3,3"]:
-                r = create_new_job(
+                create_new_job(
                     flask_app_client,
                     data={
                         **DEFAULT_ARGS_POST,
@@ -140,8 +140,9 @@ def test_get_jobs_all(flask_app_client, basic_auth_header):
                     must_succeed=False,
                 )
 
-    # First get all 24 results
+    # First get all 8 results
     r = flask_app_client.get("/api/v1/jobs")
+    print(r)
     assert len(r.json) == 8
 
     # Then test all query string parameters

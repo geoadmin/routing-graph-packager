@@ -57,7 +57,7 @@ def basic_auth_header(flask_app: Flask):
 # For testing cli
 @pytest.fixture
 def script_info(flask_app):
-    return ScriptInfo(create_app=lambda info: flask_app)
+    return ScriptInfo(create_app=lambda: flask_app)
 
 
 # Creates needed directories and removes them after the test function
