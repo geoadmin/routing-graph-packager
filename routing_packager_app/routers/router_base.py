@@ -5,8 +5,9 @@ from typing import Optional
 from flask import current_app
 from werkzeug.exceptions import InternalServerError
 import docker
-from docker.errors import ImageNotFound
+from docker.errors import ImageNotFound, APIError as DockerApiError
 from docker.models.containers import Container
+from requests.exceptions import HTTPError
 
 from ..constants import DOCKER_VOLUME
 
@@ -41,10 +42,12 @@ class RouterBase(ABC):
         volumes = {host_dir: {"bind": "/app/data", "mode": "rw"}}
         try:
             self._container: Optional[Container] = docker_clnt.containers.create(
-                self.image, volumes=volumes, command="tail -f /dev/null"
+                self.image, volumes=volumes, entrypoint="tail -f /dev/null"
             )
         except ImageNotFound:
             raise InternalServerError(f"Docker image {self.image} not found for '{self.name}'")
+        except (DockerApiError, HTTPError) as e:
+            raise InternalServerError(f"Container {self._container.id}: {e}")
 
     def _exec_docker(self, cmd):
         """
