@@ -1,14 +1,15 @@
 from logging.handlers import SMTPHandler
 import logging
-from typing import List
+from typing import List  # noqa: F401
 
 
-#https://stackoverflow.com/a/9236722/2582935
+# https://stackoverflow.com/a/9236722/2582935
 class AppSmtpHandler(SMTPHandler):
     """The SMTP handler's extended class to write emails in case of events."""
+
     def getSubject(self, record: logging.LogRecord) -> str:
         """Alters the subject line of the emails."""
-        subject = f'{record.levelname}: '
+        subject = f"{record.levelname}: "
         if record.levelno == logging.ERROR:
             subject += f"{record.user}'s job {record.job_id} failed"
         # Warning is only emitted in tasks.py, when the deletion fails
@@ -17,7 +18,9 @@ class AppSmtpHandler(SMTPHandler):
         elif record.levelno == logging.INFO:
             subject += f"{record.user}'s job {record.job_id} succeeded"
         else:
-            raise NotImplemented(f"Logger level {record.levelno} is not implemented for this handler.")
+            raise NotImplementedError(
+                f"Logger level {record.levelno} is not implemented for this handler."
+            )
 
         return subject
 
@@ -44,15 +47,15 @@ def get_smtp_details(config, toaddrs):
     #         toaddrs.append(config['ADMIN_EMAIL'])
 
     conf = dict(
-        mailhost=(config['SMTP_HOST'], config['SMTP_PORT']),
-        fromaddr=config['SMTP_FROM'],
+        mailhost=(config["SMTP_HOST"], config["SMTP_PORT"]),
+        fromaddr=config["SMTP_FROM"],
         toaddrs=toaddrs,
-        subject=''
+        subject="",
     )
 
-    if config['SMTP_USER'] and config['SMTP_PASS']:  # pragma: no cover
-        conf['credentials'] = (config['SMTP_USER'], config['SMTP_PASS'])
-    if config['SMTP_SECURE']:
-        conf['secure'] = tuple()
+    if config["SMTP_USER"] and config["SMTP_PASS"]:  # pragma: no cover
+        conf["credentials"] = (config["SMTP_USER"], config["SMTP_PASS"])
+    if config["SMTP_SECURE"]:
+        conf["secure"] = tuple()
 
     return conf

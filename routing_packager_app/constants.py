@@ -2,37 +2,37 @@ from enum import Enum
 
 
 class Routers(Enum):
-    VALHALLA = 'valhalla'
-    ORS = 'ors'
-    OSRM = 'osrm'
-    GRAPHHOPPER = 'graphhopper'
+    VALHALLA = "valhalla"
+    ORS = "ors"
+    OSRM = "osrm"
+    GRAPHHOPPER = "graphhopper"
 
 
 class Providers(Enum):
-    OSM = 'osm'
-    TOMTOM = 'tomtom'
-    HERE = 'here'
+    OSM = "osm"
+    TOMTOM = "tomtom"
+    HERE = "here"
 
 
 class Statuses(Enum):
-    QUEUED = 'Queued'
-    EXTRACTING = 'Extracting'
-    TILING = 'Tiling'
-    FAILED = 'Failed'
-    DELETED = 'Deleted'
-    COMPLETED = 'Completed'
+    QUEUED = "Queued"
+    EXTRACTING = "Extracting"
+    TILING = "Tiling"
+    FAILED = "Failed"
+    DELETED = "Deleted"
+    COMPLETED = "Completed"
 
 
 class Intervals(Enum):
-    ONCE = 'once'
-    DAILY = 'daily'
-    WEEKLY = 'weekly'
-    MONTHLY = 'monthly'
+    ONCE = "once"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
 
 
 class Compressions(Enum):
-    ZIP = 'zip'
-    TAR = 'tar'
+    ZIP = "zip"
+    TAR = "tar"
 
 
 ROUTERS = [e.value for e in Routers]
@@ -46,9 +46,9 @@ INTERVALS = [e.value for e in Intervals]
 COMPRESSIONS = [e.value for e in Compressions]
 
 CONF_MAPPER = {
-    'development': 'config.DevConfig',
-    'production': 'config.ProdConfig',
-    'testing': 'config.TestingConfig'
+    "development": "config.DevConfig",
+    "production": "config.ProdConfig",
+    "testing": "config.TestingConfig",
 }
 
-DOCKER_VOLUME = 'routing-packager_packages'
+DOCKER_VOLUME = "routing-packager_packages"

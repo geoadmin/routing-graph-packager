@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List  # noqa: F401
 from datetime import datetime
 
 import osmium
@@ -27,11 +27,10 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
     :returns: The full path of the PBF file which fits the job's bbox and has the smallest area
     :rtype: List[List[str, int]]
     """
-    job_bbox_proj = transform(WGS_TO_MOLLWEIDE, job_bbox)
+    job_bbox_proj: Polygon = transform(WGS_TO_MOLLWEIDE, job_bbox)
     pbf_bbox_areas = {}
-    areas = ""
     for fn in os.listdir(pbf_dir):
-        if not fn.endswith('.pbf'):
+        if not fn.endswith(".pbf"):
             continue
 
         fp = os.path.join(pbf_dir, fn)
@@ -44,15 +43,13 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
             pbf_bbox_osmium.top_right.lon,
             pbf_bbox_osmium.top_right.lat,
         )
-        pbf_bbox_proj = transform(WGS_TO_MOLLWEIDE, pbf_bbox_geom)
-        areas = areas + " " + pbf_bbox_proj
-        # Only keep the PBF bboxes which contain the job's bbox
+        pbf_bbox_proj: Polygon = transform(WGS_TO_MOLLWEIDE, pbf_bbox_geom)
         if not pbf_bbox_proj.contains(job_bbox_proj):
             continue
         pbf_bbox_areas[fp] = pbf_bbox_proj.area
 
     if not pbf_bbox_areas:
-        raise FileNotFoundError(f"No PBF found for bbox {job_bbox} in pbf areas: {areas}.")
+        raise FileNotFoundError(f"No PBF found for bbox {job_bbox}.")
 
     # Return the filepath with the minimum area of the matching ones
     return sorted(pbf_bbox_areas.items(), key=lambda x: x[1])
@@ -73,10 +70,10 @@ def extract_proc(bbox, in_pbf_path, out_pbf_path):
 
     # we only support timestamp for now
     timestamp = datetime.now().replace(microsecond=0).isoformat()
-    headers = f'--output-header=osmosis_replication_base_url={timestamp}Z'
+    headers = f"--output-header=osmosis_replication_base_url={timestamp}Z"
 
-    strategy = 'complete_ways'
-    bbox = f'{minx},{miny},{maxx},{maxy}'
+    strategy = "complete_ways"
+    bbox = f"{minx},{miny},{maxx},{maxy}"
 
     cmd = f"osmium extract {headers} --set-bounds --strategy={strategy} --bbox={bbox} -o {out_pbf_path} -O {in_pbf_path}"
 

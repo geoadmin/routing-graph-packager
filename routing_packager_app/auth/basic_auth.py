@@ -19,6 +19,7 @@ def verify(email, password):
         return False
 
     from ..api_v1.users.models import User
+
     registered_user: User = User.query.filter_by(email=email).first()
     if not registered_user or not registered_user.password == password:
         return False
@@ -29,7 +30,7 @@ def verify(email, password):
 @basic_auth.error_handler
 def auth_error(status):
     """Customize the error response of this package to our common schema."""
-    msg = 'Access denied.'
+    msg = "Access denied."
     # 401
     if status == HTTPStatus.UNAUTHORIZED:
         msg = "Missing Basic Auth authorization header."

@@ -6,7 +6,7 @@ from typing import List
 import shutil
 
 from rq import get_current_job
-from rq.job import Job
+from rq.job import Job as RqJob
 from flask_sqlalchemy import SessionBase
 from werkzeug.exceptions import InternalServerError, HTTPException
 from docker.errors import ImageNotFound
@@ -14,19 +14,18 @@ from shapely.geometry import Polygon
 from osmium.io import Reader
 
 from . import create_app, db
-from .api_v1.jobs.models import Job
+from .api_v1.jobs.models import Job as DbJob
 from .logger import AppSmtpHandler, get_smtp_details
 from .routers import get_router
-from .utils.file_utils import make_tarfile, make_zipfile
 from .utils.geom_utils import bbox_to_geom
 from .osmium import get_pbfs_by_area, extract_proc
 from .constants import *
 
-LOGGER = logging.getLogger('packager')
+LOGGER = logging.getLogger("packager")
 LOGGER.setLevel(logging.INFO)
 
 
-def create_package(
+def create_package(  # noqa: C901
     job_id: int,
     job_name: str,
     description: str,
@@ -37,8 +36,8 @@ def create_package(
     in_pbf_path: str,
     compression: str,
     user_email: str,
-    config_string='production',
-    cleanup=True
+    config_string="production",
+    cleanup=True,
 ):
     """
     Creates a routing package and puts it in a defined folder.
@@ -61,7 +60,7 @@ def create_package(
 
     bbox_geom: Polygon = bbox_to_geom(bbox)
 
-    job = Job.query.get(job_id)
+    job = DbJob.query.get(job_id)
     succeeded = False
 
     # Huge try/except to make sure we only have to write a failure once.
@@ -73,12 +72,12 @@ def create_package(
             raise Exception(f"Job {job_id} doesn't exist anymore in the database.")
         job_status = job.status
 
-        in_pbf_dir = app.config[provider.upper() + '_DIR']
+        in_pbf_dir = app.config[provider.upper() + "_DIR"]
 
         router = get_router(router_name, provider, in_pbf_path)
 
         # Set Redis job ID and container ID
-        rq_job: Job = get_current_job()
+        rq_job: RqJob = get_current_job()
         # testing has no access to a real queue
         if not app.testing:  # pragma: no cover
             job.set_rq_id(rq_job.id)
@@ -140,7 +139,7 @@ def create_package(
 
         raise
     # any other exception is assumed to be a deleted job and will only be logged/email sent
-    except Exception as e:  # pragma: no cover
+    except Exception:  # pragma: no cover
         msg = f"Job {job_id} by {user_email} was deleted."
         LOGGER.warning(msg, extra=dict(user=user_email, job_id=job_id))
         raise
@@ -165,12 +164,12 @@ def create_package(
         "name": job_name,
         "description": description,
         "extent": ",".join([str(f) for f in bbox]),
-        "last_modified": str(datetime.utcnow())
+        "last_modified": str(datetime.utcnow()),
     }
     dirname = os.path.dirname(result_path)
     # Splits the first
     fname_sanitized = fname.split(os.extsep, 1)[0]
-    with open(os.path.join(dirname, fname_sanitized + '.json'), 'w', encoding='utf8') as f:
+    with open(os.path.join(dirname, fname_sanitized + ".json"), "w", encoding="utf8") as f:
         json.dump(j, f, indent=2, ensure_ascii=False)
 
     # only clean up if successful, otherwise retain the container for debugging
@@ -178,8 +177,5 @@ def create_package(
         router.cleanup()
     LOGGER.info(
         f"Job {job_id} by {user_email} finished successfully. Find the new dataset in {result_path}",
-        extra={
-            "job_id": job_id,
-            "user": user_email
-        }
+        extra={"job_id": job_id, "user": user_email},
     )

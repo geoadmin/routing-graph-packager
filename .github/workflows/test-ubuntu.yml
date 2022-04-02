@@ -10,11 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
-        python_version: [3.7, 3.8, 3.9]
+    runs-on: ubuntu-20.04
     services:
       postgres:
         image: kartoza/postgis:12.1
@@ -43,16 +39,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python_version }}
+    - name: Set up Python 3.10
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python_version }}
-
-    # From https://github.com/python-poetry/poetry/actions
-    - name: Get full python version
-      id: full-python-version
-      run: |
-        echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
+        python-version: '3.10'
 
     - name: Install and set up Poetry
       run: |
@@ -64,7 +54,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: .venv
-        key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+        key: venv-3.10-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       run: |
@@ -77,29 +67,25 @@ jobs:
 
     - name: Install osmium
       run: |
-        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
-        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC
-        sudo add-apt-repository 'deb http://ftp.debian.org/debian sid main'
         sudo apt-get update
         sudo apt-get install -y -qq osmium-tool osmctools
         echo $(osmium --version)
 
-    - name: yapf linting
+    - name: linting
       run: |
         source .venv/bin/activate
-        yapf -r -vv --diff -p tests routing_packager_app config.py http_app.py gunicorn.py
+        pre-commit run --all-files
 
-    - name: pytest
+    - name: pytest and coverage
       run: |
         source .venv/bin/activate
         sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
         sudo docker volume create routing-packager_packages --driver local --opt type=none --opt device=$PWD --opt o=bind
         pytest --cov=routing_packager_app --ignore=tests/test_tasks.py
+        coverage lcov --include "routing_packager_app/*"
 
     - name: coveralls
-      run: |
-        source .venv/bin/activate
-        coveralls
-
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./coverage.lcov

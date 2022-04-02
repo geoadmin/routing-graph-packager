@@ -5,10 +5,10 @@ from ... import db
 
 class Job(db.Model):
 
-    __tablename__ = 'jobs'
+    __tablename__ = "jobs"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     rq_id = db.Column(db.String, nullable=True)
     container_id = db.Column(db.String, nullable=True)
     name = db.Column(db.String, nullable=False)
@@ -25,7 +25,7 @@ class Job(db.Model):
     pbf_path = db.Column(db.String, nullable=True)
 
     def __repr__(self):  # pragma: no cover
-        s = f'<Job id={self.id} name={self.name} status={self.status} interval={self.interval} provider={self.provider} router={self.router} compression={self.compression}>'
+        s = f"<Job id={self.id} name={self.name} status={self.status} interval={self.interval} provider={self.provider} router={self.router} compression={self.compression}>"
         return s
 
     def set_status(self, status: str):

@@ -23,14 +23,15 @@ def validate_post(args):
     name = args[JobFields.NAME]
 
     # Make sure name has no arbitrary (unallowed) characters for the filesystem
-    match = re.match('^[^*&%\/\s]+$', name)
+    match = re.match("^[^*&%/]+$", name)
     if not match:
-        raise BadRequest(f"'name' cannot have characters *, &, /, %.")
+        raise BadRequest("'name' cannot have characters *, &, /, %.")
 
     # make sure no other combo of name & router & provider exists
     existing_combo: Job = Job.query.filter(
-        Job.name == args[JobFields.NAME], Job.provider == args[JobFields.PROVIDER],
-        Job.router == args[JobFields.ROUTER]
+        Job.name == args[JobFields.NAME],
+        Job.provider == args[JobFields.PROVIDER],
+        Job.router == args[JobFields.ROUTER],
     ).first()
     if existing_combo:
         raise Conflict(
@@ -54,12 +55,12 @@ def validate_get(args):
 
 def _validate_common(args):
     # Routers must be valid
-    allowed_routers = current_app.config['ENABLED_ROUTERS']
+    allowed_routers = current_app.config["ENABLED_ROUTERS"]
     router = args.get(JobFields.ROUTER)
     if router and router not in allowed_routers:
         raise BadRequest(f"'router' must be one of the 'ENABLED_ROUTERS': {allowed_routers}")
 
-    allowed_providers = current_app.config['ENABLED_PROVIDERS']
+    allowed_providers = current_app.config["ENABLED_PROVIDERS"]
     provider = args.get(JobFields.PROVIDER)
     if provider and provider not in allowed_providers:
         raise BadRequest(f"'provider' must be one of 'ENABLED_PROVIDERS': {allowed_providers}.")
@@ -67,16 +68,16 @@ def _validate_common(args):
     # bbox must be 4 floats
     bbox = args.get(JobFields.BBOX)
     if bbox:
-        bbox_split = bbox.split(',')
+        bbox_split = bbox.split(",")
         if not len(bbox_split) == 4:
             raise BadRequest(
-                f"'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
+                "'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
             )
         # Raises if float(x) is not possible, e.g. there's a string in bbox_split
         try:
             list(map(float, bbox_split))
         except ValueError:
-            raise BadRequest(f"All coordinates in 'bbox' need to be of type float.")
+            raise BadRequest("All coordinates in 'bbox' need to be of type float.")
 
     # Intervals must be valid
     interval = args.get(JobFields.INTERVAL)

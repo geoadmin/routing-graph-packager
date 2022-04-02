@@ -1,57 +1,53 @@
 from typing import List, Tuple
 
-from shapely.geometry import box, mapping, Polygon
+from shapely.geometry import box, Polygon
 from geoalchemy2.shape import to_shape, WKBElement
 from pyproj import Transformer, CRS
 
 WGS_TO_MOLLWEIDE = Transformer.from_crs(
-    CRS.from_authority('EPSG', 4326), CRS.from_authority('ESRI', 54009), always_xy=True
+    CRS.from_authority("EPSG", 4326), CRS.from_authority("ESRI", 54009), always_xy=True
 ).transform
 
 
-def bbox_to_wkt(bbox):
+def bbox_to_wkt(bbox: List[float]) -> str:
     """
     Convert a bbox to WKT.
 
-    :param List[float] bbox: the bbox as a list of floats in [minx, miny, maxx, maxy].
+    :param bbox: the bbox as a list of floats in [minx, miny, maxx, maxy].
 
     :returns: WKT representation
-    :rtype: str
     """
     return box(*bbox).wkt
 
 
-def bbox_to_geom(bbox):
+def bbox_to_geom(bbox: List[float]) -> Polygon:
     """
     Convert a bbox to a shapely geometry.
 
-    :param List[float] bbox: the bbox as a list of floats in [minx, miny, maxx, maxy].
+    :param bbox: the bbox as a list of floats in [minx, miny, maxx, maxy].
 
     :returns: shapely Polygon
-    :rtype: Polygon
     """
     return box(*bbox)
 
 
-def wkbe_to_geom(wkbe):
+def wkbe_to_geom(wkbe: WKBElement) -> Polygon:
     """
     Converts a geoalchemy2 :class:`WKBElement` to a shapely geometry.
 
-    :param WKBElement wkbe: The record.
+    :param wkbe: The record.
 
     :returns: The shapely polygon
-    :rtype: Polygon
     """
     return to_shape(wkbe)
 
 
-def wkbe_to_bbox(wkbe):
+def wkbe_to_bbox(wkbe: WKBElement) -> Tuple[float]:
     """
     Converts a geoalchemy2 :class:`WKBElement` to a list of bbox coordinates.
 
-    :param WKBElement wkbe: The record.
+    :param wkbe: The record.
 
     :returns: The bbox coordinates in [minx, miny, maxx, maxy].
-    :rtype: Tuple[float]
     """
     return to_shape(wkbe).bounds

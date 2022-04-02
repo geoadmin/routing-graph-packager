@@ -20,15 +20,16 @@ def register(app):
     """
     Registers the flask command
     """
-    @app.cli.command('update')
-    @click.argument('interval', type=click.Choice(INTERVALS))
+
+    @app.cli.command("update")
+    @click.argument("interval", type=click.Choice(INTERVALS))
     # Solely to set the right environment for testing
     @click.option(
-        '--config',
-        '-c',
+        "--config",
+        "-c",
         type=click.Choice(tuple(CONF_MAPPER.keys())),
-        default='production',
-        help='Internal option'
+        default="production",
+        help="Internal option",
     )
     def update(interval, config):
         """Update routing packages according to INTERVALs, one of ["daily", "weekly", "monthly"]."""
@@ -46,7 +47,7 @@ def register(app):
                 job.pbf_path,
                 job.compression,
                 job.users.email,
-                config_string=config
+                config_string=config,
             )
 
     return update
