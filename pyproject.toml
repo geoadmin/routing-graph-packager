@@ -18,7 +18,6 @@ GeoAlchemy2 = "^0.11.1"
 wheel = "^0.37.1"
 python-dotenv = "^0.20.0"
 # wait for release of bug fix: https://github.com/python-restx/flask-restx/pull/423
-flask-restx = {git = "https://github.com/stacywsmith/flask-restx.git", rev = "041b1f074a32891c2359607b349bbc9d1ee4b374"}
 requests = "^2.27.1"
 sqlalchemy-utils = "^0.38.2"
 passlib = "^1.7.4"
@@ -31,6 +30,7 @@ rq = "^1.10.1"
 osmium = "^3.3.0"
 pyproj = "^3.3.0"
 psycopg2-binary = "^2.9.3"
+flask-restx = {git = "https://github.com/stacywsmith/flask-restx.git", rev = "bugfix/handle_werkzeug_request_get_json_change"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
