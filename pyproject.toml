@@ -12,7 +12,7 @@ packages = [
 python = "^3.8"
 flask = "^2.1.1"
 flask-sqlalchemy = "^2.5.1"
-SQLAlchemy = "~1.4.34"  # >= 1.4.0 changed a lot and breaks this project currently
+SQLAlchemy = "^1.4.34"  # >= 1.4.0 changed a lot and breaks this project currently
 flask-cors = "^3.0.8"
 GeoAlchemy2 = "^0.11.1"
 wheel = "^0.37.1"
