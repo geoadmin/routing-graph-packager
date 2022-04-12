@@ -21,13 +21,12 @@ RUN apt-get update -y > /dev/null && \
 RUN apt-get update -y > /dev/null && \
     apt-get install -y --fix-missing \
         software-properties-common \
-        apt-transport-https \
-        ca-certificates \
-        curl \
         gnupg \
         lsb-release \
         nano \
         jq \
+        git \
+        npm \
         cron -o APT::Immediate-Configure=0 > /dev/null && \
     # install docker & osmium
     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
@@ -52,15 +51,20 @@ COPY . .
 
 # Install dependencies and remove unneeded stuff
 RUN . $HOME/.poetry/env && \
-    python -m venv .venv && \
     . .venv/bin/activate && \
     poetry install --no-interaction --no-ansi --no-dev && \
-    mkdir -p /app/data && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get -y dist-upgrade && \
-    # apt-get -y purge click git pip redis && \
-    python -m pip uninstall -y pip && \
-    apt-get -y autoremove
+    mkdir -p /app/data
+
+# the current fork's branch doesn't have
+RUN git clone https://github.com/python-restx/flask-restx && cd flask-restx && \
+    pip install ".[dev]" && \
+    restx_static="../.venv/lib/python3.10/site-packages/flask_restx/static" && \
+    inv assets && \
+    mkdir $restx_static && \
+    ls -l ./node_modules/swagger-ui-dist && \
+    /bin/bash -c "cp ./node_modules/swagger-ui-dist/{swagger-ui*.{css,js}{,.map},favicon*.png,oauth2-redirect.html} ${restx_static}" && \
+    cp ./node_modules/typeface-droid-sans/index.css $restx_static/droid-sans.css && \
+    cp -R ./node_modules/typeface-droid-sans/files $restx_static
 
 EXPOSE 5000
 HEALTHCHECK --start-period=5s CMD curl --fail -s http://localhost:5000/api/v1/jobs || exit 1
