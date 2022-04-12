@@ -12,7 +12,7 @@ from routing_packager_app.utils.file_utils import make_directories
 from . import utils
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.yield_fixture(scope="function", autouse=True)
 def delete_jobs():
     yield
     Job.query.delete()

@@ -1,7 +1,6 @@
 import os
 
 import pytest
-from werkzeug.exceptions import InternalServerError
 
 from .utils import create_new_job, DEFAULT_ARGS_POST, create_package_params
 from routing_packager_app.tasks import create_package
@@ -41,23 +40,6 @@ def test_create_package_compressions(
     )
 
     create_package(*create_package_params(job), config_string="testing")
-
-
-def test_create_package_missing_pbf(
-    flask_app_client, basic_auth_header, monkeypatch, delete_jobs, handle_dirs
-):
-    job1 = create_new_job(
-        flask_app_client,
-        {**DEFAULT_ARGS_POST, "bbox": "1.542892,42.508552,1.574821,42.53082"},
-        basic_auth_header,
-    )
-    create_package(*create_package_params(job1), config_string="testing")
-
-    # delete the PBF
-    os.remove(job1["pbf_path"])
-
-    with pytest.raises(InternalServerError):
-        create_package(*create_package_params(job1), config_string="testing")
 
 
 # will fail right now since there might actually be a PBF 0,0,1,1 will extract smth from
