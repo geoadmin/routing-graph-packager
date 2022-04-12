@@ -1,13 +1,12 @@
 import os
+import sys
 from typing import List  # noqa: F401
 from datetime import datetime
 
 import osmium
 from shapely.geometry import box, Polygon
-from shapely.ops import transform
 
 from .utils.cmd_utils import exec_cmd
-from .utils.geom_utils import WGS_TO_MOLLWEIDE
 
 
 def get_pbfs_by_area(pbf_dir, job_bbox):
@@ -27,8 +26,8 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
     :returns: The full path of the PBF file which fits the job's bbox and has the smallest area
     :rtype: List[List[str, int]]
     """
-    job_bbox_proj: Polygon = transform(WGS_TO_MOLLWEIDE, job_bbox)
     pbf_bbox_areas = {}
+    print(os.listdir(pbf_dir), file=sys.stderr)
     for fn in os.listdir(pbf_dir):
         if not fn.endswith(".pbf"):
             continue
@@ -43,10 +42,11 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
             pbf_bbox_osmium.top_right.lon,
             pbf_bbox_osmium.top_right.lat,
         )
-        pbf_bbox_proj: Polygon = transform(WGS_TO_MOLLWEIDE, pbf_bbox_geom)
-        if not pbf_bbox_proj.contains(job_bbox_proj):
+        print(job_bbox, file=sys.stderr)
+        print(pbf_bbox_geom, file=sys.stderr)
+        if not pbf_bbox_geom.contains(job_bbox):
             continue
-        pbf_bbox_areas[fp] = pbf_bbox_proj.area
+        pbf_bbox_areas[fp] = pbf_bbox_geom.area
 
     if not pbf_bbox_areas:
         raise FileNotFoundError(f"No PBF found for bbox {job_bbox}.")

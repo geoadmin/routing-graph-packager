@@ -10,9 +10,9 @@ from routing_packager_app.tasks import create_package
 def test_pbfs_by_area(tmpdir):
     # This will produce PBFs with bboxes in WGS84 degrees matching its features
     feats = {
-        1: [[0, 0], [10, 10]],
-        2: [[0, 0], [20, 20]],
-        3: [[0, 0], [30, 30]],
+        1: [[0, 0], [20, 20]],
+        2: [[0, 0], [30, 30]],
+        3: [[-20, -25], [10, 10]],
     }
 
     paths = make_pbfs(tmpdir, feats)
@@ -20,7 +20,7 @@ def test_pbfs_by_area(tmpdir):
     # A small polygon should return the smallest PBF
     paths_result = get_pbfs_by_area(tmpdir, Polygon([(0, 0), (0, 1), (1, 1), (1, 0)]))
     assert len(paths_result) == 3
-    assert paths_result[0][0] == paths[1]  # should be the pbf path with the smallest bbox from feats
+    assert paths_result[0][0] == paths[1]  # should be the pbf path with the smallest bbbox from feats
 
 
 def test_pbfs_by_area_missing_pbf(tmpdir):
