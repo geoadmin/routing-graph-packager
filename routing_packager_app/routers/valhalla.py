@@ -35,8 +35,6 @@ class Valhalla(RouterBase):
         if os.path.exists(elevation_path):
             config["additional_data"]["elevation"] = "/app/data/valhalla/elevation"
 
-        print(json.dumps(config))
-
         # Stitch command and add inline config
         cmd = (
             f"sudo valhalla_build_tiles --inline-config '{json.dumps(config)}'"

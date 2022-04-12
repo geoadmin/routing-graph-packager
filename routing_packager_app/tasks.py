@@ -61,6 +61,9 @@ def create_package(  # noqa: C901
     bbox_geom: Polygon = bbox_to_geom(bbox)
 
     job = DbJob.query.get(job_id)
+    job.set_status(Statuses.STARTED.value)
+    session.commit()
+
     succeeded = False
 
     # Huge try/except to make sure we only have to write a failure once.

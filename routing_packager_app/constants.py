@@ -16,6 +16,7 @@ class Providers(Enum):
 
 class Statuses(Enum):
     QUEUED = "Queued"
+    STARTED = "Started"
     EXTRACTING = "Extracting"
     TILING = "Tiling"
     FAILED = "Failed"

@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import List  # noqa: F401
 from datetime import datetime
 
@@ -27,7 +26,6 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
     :rtype: List[List[str, int]]
     """
     pbf_bbox_areas = {}
-    print(os.listdir(pbf_dir), file=sys.stderr)
     for fn in os.listdir(pbf_dir):
         if not fn.endswith(".pbf"):
             continue
@@ -42,8 +40,7 @@ def get_pbfs_by_area(pbf_dir, job_bbox):
             pbf_bbox_osmium.top_right.lon,
             pbf_bbox_osmium.top_right.lat,
         )
-        print(job_bbox, file=sys.stderr)
-        print(pbf_bbox_geom, file=sys.stderr)
+
         if not pbf_bbox_geom.contains(job_bbox):
             continue
         pbf_bbox_areas[fp] = pbf_bbox_geom.area
