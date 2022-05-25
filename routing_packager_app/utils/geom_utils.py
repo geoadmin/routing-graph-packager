@@ -2,11 +2,6 @@ from typing import List, Tuple
 
 from shapely.geometry import box, Polygon
 from geoalchemy2.shape import to_shape, WKBElement
-from pyproj import Transformer, CRS
-
-WGS_TO_MOLLWEIDE = Transformer.from_crs(
-    CRS.from_authority("EPSG", 4326), CRS.from_authority("ESRI", 54009), always_xy=True
-).transform
 
 
 def bbox_to_wkt(bbox: List[float]) -> str:

@@ -78,6 +78,10 @@ services:
       - worker
     healthcheck:
       disable: true
+    # set the proxies from the host env vars
+    environment:
+      http_proxy: "${http_proxy}"
+      https_proxy: "${https_proxy}"
     restart: always
 # For testing purposes
   fake-smtp-server:
