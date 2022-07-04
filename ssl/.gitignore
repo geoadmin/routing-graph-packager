@@ -2,4 +2,4 @@
 *
 # Except this file
 !.gitignore
-!gwdg_root_cert.pem
+!gwdg_root_cert.crt
