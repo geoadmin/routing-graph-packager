@@ -21,7 +21,6 @@ docker-compose.yml
 **/*.gz
 **/*.zip
 **/*egg-info/
-ssl/
 scan*.txt
 *.csv
 *.xlsx
