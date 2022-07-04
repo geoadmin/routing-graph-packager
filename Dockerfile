@@ -67,7 +67,7 @@ RUN git clone https://github.com/python-restx/flask-restx && cd flask-restx && \
     cp -R ./node_modules/typeface-droid-sans/files $restx_static
 
 # add the root cert for https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/, so osmupdate can download stuff
-RUN mv /app/ssl/gwdg_root_cert.pem /usr/local/share/ca-certificates && \
+RUN mv /app/ssl/gwdg_root_cert.crt /usr/local/share/ca-certificates && \
     update-ca-certificates
 
 EXPOSE 5000
