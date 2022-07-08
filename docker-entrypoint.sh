@@ -19,8 +19,12 @@ if [ "${cmd}" == 'worker' ]; then
   # Start the worker
   /app/.venv/bin/rq worker packaging -u redis://redis:6379
 elif [ "${cmd}" == 'app' ]; then
+  # Create the script first which can be sourced from the cron job itself
+  # otherwise there's not the right env vars set in the cron job's script
+  echo -e "http_proxy=$http_proxy\nhttps_proxy=$https_proxy" > /app/cron/cron_env.sh
+  chmod +x /app/cron/cron_env.sh
   # TODO: support hourly/minutely, needs the implementation in the app first
-  register_cron_script "0 3 * * *" "/app/cron/routing_packager_update_osm.sh -i daily -d /app/data/osm"
+  register_cron_script "0 3 * * *" "BASH_ENV=/app/scripts/cron_env.sh /app/cron/routing_packager_update_osm.sh -i daily -d /app/data/osm"
   service cron start
 
   # SSL? Provided by .docker_env with path mapped in docker-compose.yml
