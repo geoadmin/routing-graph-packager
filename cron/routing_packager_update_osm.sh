@@ -10,6 +10,10 @@
 # (crontab -l || true; echo "0 3 * * * /path/to/this/script.sh > /some_log.txt") | crontab -
 #
 
+# Change these addresses if applicable
+export http_proxy=http://prxp01.admin.ch:8080
+export https_proxy=http://prxp01.admin.ch:8080
+
 usage()
 {
     echo "usage: routing_packager_update_osm.sh --interval/-i [minutely|hourly|*daily*|weekly] --dir-pbf/-d /app/data/osm"
@@ -82,12 +86,16 @@ do
     # exit if the last command failed
     if ! $update_cmd; then
       echo "Couldn't update OSM file ${fn} with command ${update_cmd}."
+      echo "http_proxy env var was $http_proxy"
+      echo "https_proxy env var was $https_proxy"
       continue
     fi
   else
     update_cmd=$(osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}")
     if ! $update_cmd; then
       echo "Couldn't update OSM file ${fn} with command ${update_cmd}."
+      echo "http_proxy env var was $http_proxy"
+      echo "https_proxy env var was $https_proxy"
       continue
     fi
     # just in case osmupdate didn't delete the fairly big osmupdate_temp folder
