@@ -27,7 +27,7 @@ if [ "${cmd}" == 'worker' ]; then
 elif [ "${cmd}" == 'app' ]; then
   # TODO: support hourly/minutely, needs the implementation in the app first
   if ! test -f $cron_app_file; then
-    register_cron_script "* * * * *" "/app/cron/routing_packager_update_osm.sh -i daily -d /app/data/osm"
+    register_cron_script "0 3 * * *" "/app/cron/routing_packager_update_osm.sh -i daily -d /app/data/osm"
     touch $cron_app_file
   fi
   service cron start
