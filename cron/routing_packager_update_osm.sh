@@ -62,7 +62,7 @@ elif [[ $interval =~ ^(daily|weekly)$ ]]; then
   opts+='--day'
 fi
 
-echo "$(date "+%Y-%m-%d %H:%M:%S") Updating PBFs in ${pbf_dir}"
+echo "$(date "+%Y-%m-%d %H:%M:%S") Updating PBFs in ${pbf_dir} with the proxy settings: http_proxy: $http_proxy, https_proxy: $https_proxy"
 
 counter=0
 for f in $pbf_expansion
@@ -86,16 +86,12 @@ do
     # exit if the last command failed
     if ! $update_cmd; then
       echo "Couldn't update OSM file ${fn} with command ${update_cmd}."
-      echo "http_proxy env var was $http_proxy"
-      echo "https_proxy env var was $https_proxy"
       continue
     fi
   else
     update_cmd=$(osmupdate ${opts} -b="${bbox_sanitized:1:-1}" "${f}" "${pbf_updated}")
     if ! $update_cmd; then
       echo "Couldn't update OSM file ${fn} with command ${update_cmd}."
-      echo "http_proxy env var was $http_proxy"
-      echo "https_proxy env var was $https_proxy"
       continue
     fi
     # just in case osmupdate didn't delete the fairly big osmupdate_temp folder
