@@ -16,8 +16,8 @@ if [ "${cmd}" == 'worker' ]; then
   # register the cron scripts
   if ! test -f $cron_worker_file; then
     # the OSM files update at 3 am, give it some time
-    register_cron_script "0 17 * * *" "/app/cron/routing_packager_daily.sh"
-    register_cron_script "0 22 * * 7" "/app/cron/routing_packager_weekly.sh"
+    register_cron_script "0 15 * * *" "/app/cron/routing_packager_daily.sh"
+    register_cron_script "0 20 * * 7" "/app/cron/routing_packager_weekly.sh"
     register_cron_script "0 23 1 * *" "/app/cron/routing_packager_monthly.sh"
     touch $cron_worker_file
   fi
