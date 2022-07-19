@@ -47,14 +47,6 @@ RUN . $HOME/.poetry/env && \
     . .venv/bin/activate && \
     poetry install --no-interaction --no-ansi --no-root --no-dev
 
-COPY . .
-
-# Install dependencies and remove unneeded stuff
-RUN . $HOME/.poetry/env && \
-    . .venv/bin/activate && \
-    poetry install --no-interaction --no-ansi --no-dev && \
-    mkdir -p /app/data
-
 # the current fork's branch doesn't have
 RUN git clone https://github.com/python-restx/flask-restx && cd flask-restx && \
     pip install ".[dev]" && \
@@ -65,6 +57,14 @@ RUN git clone https://github.com/python-restx/flask-restx && cd flask-restx && \
     /bin/bash -c "cp ./node_modules/swagger-ui-dist/{swagger-ui*.{css,js}{,.map},favicon*.png,oauth2-redirect.html} ${restx_static}" && \
     cp ./node_modules/typeface-droid-sans/index.css $restx_static/droid-sans.css && \
     cp -R ./node_modules/typeface-droid-sans/files $restx_static
+
+COPY . .
+
+# Install dependencies and remove unneeded stuff
+RUN . $HOME/.poetry/env && \
+    . .venv/bin/activate && \
+    poetry install --no-interaction --no-ansi --no-dev && \
+    mkdir -p /app/data
 
 # add the root cert for https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/, so osmupdate can download stuff
 RUN mv /app/ssl/gwdg_root_cert.crt /usr/local/share/ca-certificates && \

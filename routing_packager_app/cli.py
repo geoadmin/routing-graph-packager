@@ -1,6 +1,7 @@
 from typing import List
 
 import click
+from sqlalchemy.exc import ProgrammingError
 
 from .api_v1 import Job
 from .tasks import create_package
@@ -32,7 +33,14 @@ def register(app):
     )
     def update(interval, config):
         """Update routing packages according to INTERVALs, one of ["daily", "weekly", "monthly"]."""
-        jobs = _sort_jobs(Job.query.filter_by(interval=interval, status=Statuses.COMPLETED.value).all())
+        try:
+            jobs = _sort_jobs(
+                Job.query.filter_by(interval=interval, status=Statuses.COMPLETED.value).all()
+            )
+        except ProgrammingError:
+            # can happen if the project was set up freshly and no request has been done yet
+            return
+
         for job in jobs:
             app.task_queue.enqueue(
                 create_package,
