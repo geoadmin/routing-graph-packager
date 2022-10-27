@@ -31,6 +31,7 @@ pyproj = "^3.3.0"
 psycopg2-binary = "^2.9.3"
 # wait for release of bug fix: https://github.com/python-restx/flask-restx/pull/423
 flask-restx = {git = "https://github.com/stacywsmith/flask-restx.git", rev = "bugfix/handle_werkzeug_request_get_json_change"}
+fastapi = "^0.85.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
