@@ -1,184 +1,121 @@
 from datetime import datetime
+from enum import Enum
 import os
 import json
+from typing import List, Optional
+
+from fastapi import Query, Depends, HTTPException
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from starlette.requests import Request
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 from flask import current_app, g
 from flask_restx import Resource, Namespace, reqparse, abort
 from flask_restx.errors import HTTPStatus
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 from rq.registry import NoSuchJobError
 from rq.job import Job as RqJob
+from sqlalchemy.orm import sessionmaker
 
-from . import JobFields
-from .models import Job
+from . import router
+from ..models.jobs import JobSql, JobResponse
 from .validate import validate_post, validate_get
 from .schemas import job_base_schema, job_response_schema, osm_response_schema
-from ...auth.basic_auth import basic_auth
+from ..dependencies import split_bbox, get_db, validate_name
+from ..models.users import UserSql
+from ... import SETTINGS
+from ...auth.basic_auth import BasicAuth
+from ...db import SessionLocal
 from ...utils.db_utils import add_or_abort, delete_or_abort
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
 from ...osmium import fileinfo_proc
 from ...constants import *
 
-# Mandatory, will be added by api_vX.__init__
-ns = Namespace("jobs", description="Job related operations")
 
-# Parse POST request
-post_parser = reqparse.RequestParser()
-post_parser.add_argument(JobFields.NAME)
-post_parser.add_argument(JobFields.DESCRIPTION)
-post_parser.add_argument(JobFields.BBOX)
-post_parser.add_argument(JobFields.PROVIDER)
-post_parser.add_argument(JobFields.ROUTER)
-post_parser.add_argument(JobFields.INTERVAL)
-post_parser.add_argument(JobFields.COMPRESSION)
+@router.get("/jobs", response_model=List[JobResponse])
+async def get_job(
+    router: Optional[Routers],
+    provider: Optional[Providers],
+    status: Optional[Statuses],
+    compression: Optional[Compressions],
+    bbox: Optional[List[float]] = Depends(split_bbox),
+    db: Session = Depends(get_db)
+):
+    filters = []
+    if bbox:
+        filters.append(func.ST_Intersects(JobSql.bbox, bbox_to_wkt(bbox)))
+    if router:
+        filters.append((JobSql.router == router))
+    if provider:
+        filters.append(JobSql.provider == provider)
+    if status:
+        filters.append(JobSql.status == status)
+    if compression:
+        filters.append(JobSql.compression == compression)
 
-get_parser = reqparse.RequestParser()
-get_parser.add_argument(JobFields.PROVIDER)
-get_parser.add_argument(JobFields.ROUTER)
-get_parser.add_argument(JobFields.BBOX)
-get_parser.add_argument(JobFields.STATUS)
-get_parser.add_argument(JobFields.INTERVAL)
-
-job_base_model = ns.model("JobBase", job_base_schema)
-
-job_response_model = ns.clone("JobResp", job_response_schema, job_base_model)
+    return db.query(JobSql).filter(*filters).all()
 
 
-@ns.route("/")
-@ns.response(HTTPStatus.BAD_REQUEST, "Invalid request parameters.")
-@ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Unknown error.")
-class Jobs(Resource):
-    """Manipulates User table"""
+@router.post("/", response_model=JobResponse)
+async def post(
+    req: Request,
+    name: str = Depends(validate_name),
+    router: Optional[Routers] = Query(...),
+    provider: Optional[Providers] = Query(...),
+    compression: Optional[Compressions] = Query(default=Compressions.ZIP),
+    bbox: Optional[List[float]] = Depends(split_bbox),
+    description: Optional[str] = None,
+    db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth)
+):
+    """POST a new job. Needs admin privileges."""
 
-    @ns.doc(
-        params={
-            JobFields.ROUTER: {
-                "in": "query",
-                "description": "Filter for routing engine.",
-                "enum": ROUTERS,
-            },
-            JobFields.PROVIDER: {
-                "in": "query",
-                "description": "Filter for data provider.",
-                "enum": PROVIDERS,
-            },
-            JobFields.BBOX: {
-                "in": "query",
-                "description": 'Filter for bbox, e.g. "0.531906,4559908,0.6325,42.577608".',
-            },
-            JobFields.INTERVAL: {
-                "in": "query",
-                "description": "Filter for update interval.",
-                "enum": INTERVALS,
-            },
-            JobFields.STATUS: {"in": "query", "description": "Filter for job status.", "enum": STATUSES},
-        }
+    # avoid circular imports
+    from ...tasks import create_package
+
+    # Sanitize the name field a little
+    name = name.replace(" ", "_")
+    current_user_id = UserSql.get_user_id(auth)
+    if not current_user_id:
+        raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
+
+    result_path = make_package_path(SETTINGS.DATA_DIR, name, router, provider, compression)
+
+    job = JobSql(
+        name=name,
+        description=description,
+        provider=provider,
+        router=router,
+        user_id=current_user_id,
+        status="Queued",
+        compression=compression,
+        bbox=bbox_to_wkt(bbox),
+        path=result_path,
+        last_started=datetime.utcnow(),
     )
-    @ns.marshal_list_with(job_response_model)
-    def get(self):
-        """GET all jobs."""
-        args = get_parser.parse_args()
-        validate_get(args)
 
-        # collect all filters
-        filters = []
+    db.add(job)
+    db.commit()
 
-        bbox = args.get(JobFields.BBOX)
-        if bbox:
-            bbox = [float(x) for x in args[JobFields.BBOX].split(",")]
-            bbox_wkt = bbox_to_wkt(bbox)
-            filters.append(func.ST_Intersects(Job.bbox, bbox_wkt))
-
-        router = args.get(JobFields.ROUTER)
-        if router:
-            filters.append(Job.router == router)
-
-        provider = args.get(JobFields.PROVIDER)
-        if provider:
-            filters.append(Job.provider == provider)
-
-        interval = args.get(JobFields.INTERVAL)
-        if interval:
-            filters.append(Job.interval == interval)
-
-        status = args.get(JobFields.STATUS)
-        if status:
-            filters.append(Job.status == status)
-
-        return Job.query.filter(*filters).all()
-
-    @basic_auth.login_required
-    @ns.doc(security="basic")
-    @ns.expect(job_base_model)
-    @ns.marshal_with(job_response_model)
-    @ns.response(HTTPStatus.FORBIDDEN, "Access forbidden.")
-    @ns.response(HTTPStatus.UNAUTHORIZED, "Invalid/missing basic authorization.")
-    def post(self):
-        """POST a new job. Needs admin privileges."""
-
-        # avoid circular imports
-        from ...tasks import create_package
-
-        args = post_parser.parse_args(strict=True)
-        # Sanitize the name field a little
-        args[JobFields.NAME] = args[JobFields.NAME].strip().replace(" ", "_")
-        validate_post(args)
-
-        router_name = args[JobFields.ROUTER]
-        dataset_name = args[JobFields.NAME]
-        provider = args[JobFields.PROVIDER]
-        compression = args[JobFields.COMPRESSION]
-        bbox = [float(x) for x in args[JobFields.BBOX].split(",")]
-        description = args[JobFields.DESCRIPTION]
-
-        current_user = basic_auth.current_user()
-
-        data_dir = current_app.config["DATA_DIR"]
-        result_path = make_package_path(data_dir, dataset_name, router_name, provider, compression)
-
-        job = Job(
-            name=dataset_name,
-            description=description,
-            provider=provider,
-            router=router_name,
-            user_id=current_user.id,
-            interval=args[JobFields.INTERVAL],
-            status="Queued",
-            compression=compression,
-            bbox=bbox_to_wkt(bbox),
-            path=result_path,
-            last_started=datetime.utcnow(),
+    # launch Redis task and update db entries there
+    # for testing we don't want that behaviour
+    if not current_app.testing:  # pragma: no cover
+        current_app.task_queue.enqueue(
+            create_package,
+            job.id,
+            description,
+            router,
+            provider,
+            bbox,
+            result_path,
+            compression,
+            current_user_id,
+            current_app.config["FLASK_CONFIG"],
         )
 
-        add_or_abort(job)
-
-        # Ugly but hey.. We ideally have the output PBF named after the job ID
-        pbf_path = os.path.join(data_dir, provider, f"{job.id}.{provider}.pbf")
-        job.set_pbf_path(pbf_path)
-        session = g.db.session
-        session.add(job)
-        session.commit()
-
-        # launch Redis task and update db entries there
-        # for testing we don't want that behaviour
-        if not current_app.testing:  # pragma: no cover
-            current_app.task_queue.enqueue(
-                create_package,
-                job.id,
-                dataset_name,
-                description,
-                router_name,
-                provider,
-                bbox,
-                result_path,
-                pbf_path,
-                compression,
-                current_user.email,
-                current_app.config["FLASK_CONFIG"],
-            )
-
-        return job
+    return job
 
 
 @ns.route("/<int:id>")
@@ -190,7 +127,7 @@ class JobSingle(Resource):
     @ns.marshal_with(job_response_model)
     def get(self, id):
         """GET a single job."""
-        return Job.query.get_or_404(id)
+        return JobSql.query.get_or_404(id)
 
     @basic_auth.login_required
     @ns.doc(security="basic")
@@ -199,7 +136,7 @@ class JobSingle(Resource):
     @ns.response(HTTPStatus.UNAUTHORIZED, "Invalid/missing basic authorization.")
     def delete(self, id):
         """DELETE a single job. Will also stop the job if it's in progress. Needs admin privileges."""
-        db_job: Job = Job.query.get_or_404(id)
+        db_job: JobSql = JobSql.query.get_or_404(id)
 
         # try to delete the Redis job or don't care if there is none
         try:
@@ -228,7 +165,7 @@ class OsmSingle(Resource):
     @ns.marshal_with(osm_response_model)
     def get(self, id):
         """GET info about a job's OSM file."""
-        job = Job.query.get_or_404(id)
+        job = JobSql.query.get_or_404(id)
         pbf_path = job.pbf_path
 
         # Bail if it doesn't exist

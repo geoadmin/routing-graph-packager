@@ -1,20 +1,20 @@
 from enum import Enum
 
 
-class Routers(Enum):
+class Routers(str, Enum):
     VALHALLA = "valhalla"
     ORS = "ors"
     OSRM = "osrm"
     GRAPHHOPPER = "graphhopper"
 
 
-class Providers(Enum):
+class Providers(str, Enum):
     OSM = "osm"
     TOMTOM = "tomtom"
     HERE = "here"
 
 
-class Statuses(Enum):
+class Statuses(str, Enum):
     QUEUED = "Queued"
     STARTED = "Started"
     EXTRACTING = "Extracting"
@@ -24,14 +24,7 @@ class Statuses(Enum):
     COMPLETED = "Completed"
 
 
-class Intervals(Enum):
-    ONCE = "once"
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-
-
-class Compressions(Enum):
+class Compressions(str, Enum):
     ZIP = "zip"
     TAR = "tar"
 

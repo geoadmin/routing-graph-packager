@@ -1,37 +1,21 @@
-from flask_httpauth import HTTPBasicAuth
-from flask_restx.errors import HTTPStatus
+import base64
+from typing import Optional
 
-basic_auth = HTTPBasicAuth()
-
-
-@basic_auth.verify_password
-def verify(email, password):
-    """
-    Callback to verify the email and password.
-
-    :param str email: user's email
-    :param str password: user's password
-
-    :returns: False if not verified, the User object if it is.
-    :rtype: User
-    """
-    if not (email and password):
-        return False
-
-    from ..api_v1.users.models import User
-
-    registered_user: User = User.query.filter_by(email=email).first()
-    if not registered_user or not registered_user.password == password:
-        return False
-
-    return registered_user
+from fastapi import HTTPException
+from fastapi.security.base import SecurityBase
+from fastapi.security.utils import get_authorization_scheme_param
+from sqlalchemy.orm import Session
+from starlette.requests import Request
+from starlette.status import HTTP_403_FORBIDDEN
 
 
-@basic_auth.error_handler
-def auth_error(status):
-    """Customize the error response of this package to our common schema."""
-    msg = "Access denied."
-    # 401
-    if status == HTTPStatus.UNAUTHORIZED:
-        msg = "Missing Basic Auth authorization header."
-    return {"error": msg}, status
+class BasicAuth(SecurityBase):
+    async def __call__(self, request: Request) -> Optional[str]:
+        authorization: str = request.headers.get("Authorization")
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "basic":
+            raise HTTPException(
+                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
+            )
+
+        return param

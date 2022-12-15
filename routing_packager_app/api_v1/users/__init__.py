@@ -1,5 +1,3 @@
-# some constants
-class UserFields:
-    EMAIL = "email"
-    PASSWORD = "password"
-    ID = "id"
+from fastapi import APIRouter
+
+router = APIRouter()

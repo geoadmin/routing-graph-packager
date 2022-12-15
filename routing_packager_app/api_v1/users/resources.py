@@ -1,89 +1,57 @@
-from flask import g, current_app
-from flask_restx import Resource, Namespace, fields, reqparse
-from flask_restx.errors import HTTPStatus
-from werkzeug.exceptions import Conflict, Forbidden
+from typing import List
 
-from .models import User
-from . import UserFields
-from .validate import validate_post
-from ...auth.basic_auth import basic_auth
-from ...utils.db_utils import add_or_abort
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBasicCredentials
+from sqlalchemy.orm import Session
+from starlette.responses import Response
+from starlette.status import HTTP_409_CONFLICT, HTTP_204_NO_CONTENT
+from werkzeug.exceptions import Forbidden
 
-# Mandatory, will be added by api_vX.__init__
-ns = Namespace("users", description="User related operations")
-
-# Parse POST request
-parser = reqparse.RequestParser()
-parser.add_argument(UserFields.EMAIL)
-parser.add_argument(UserFields.PASSWORD)
-
-# Set up different schemas for request and response
-user_base_schema = ns.model(
-    "UserBase",
-    {
-        UserFields.EMAIL: fields.String(example="example@email.org"),
-    },
-)
-user_response_schema = ns.clone("UserResp", user_base_schema, {UserFields.ID: fields.Integer})
-user_body_schema = ns.clone("UserReq", user_base_schema, {UserFields.PASSWORD: fields.String})
+from . import router
+from ..dependencies import get_db
+from ..models.users import UserResponse, UserSql
+from ... import SETTINGS
+from ...auth.basic_auth import BasicAuth
 
 
-@ns.route("/")
-@ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Unknown error.")
-class UserRegistration(Resource):
-    """Manipulates User table"""
+@router.post("/", response_model=UserResponse)
+async def post_user(
+    user_email: str,
+    password: str,
+    db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth)
+):
+    """POST a new user. Needs admin privileges"""
+    UserSql.get_user_id(auth)
+    user = UserSql(user_email, password)
+    db.add(user)
+    db.commit()
 
-    @basic_auth.login_required
-    @ns.doc(security="basic")
-    @ns.expect(user_body_schema)
-    @ns.marshal_with(user_response_schema)
-    @ns.response(HTTPStatus.BAD_REQUEST, "Invalid request parameters.")
-    @ns.response(HTTPStatus.CONFLICT, "User already exists.")
-    @ns.response(HTTPStatus.UNAUTHORIZED, "Invalid/missing basic authorization.")
-    def post(self):
-        """POST a new user. Needs admin privileges"""
-        args = parser.parse_args(strict=True)
-        validate_post(args)
-
-        new_user = User(**args)
-        add_or_abort(new_user)
-        return new_user
-
-    @ns.marshal_list_with(user_response_schema)
-    def get(self):
-        """GET all users."""
-        return User.query.all()
+    return user
 
 
-@ns.route("/<int:id>")
-@ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Unknown error.")
-@ns.response(HTTPStatus.NOT_FOUND, "Unknown user id.")
-class UserSingle(Resource):
-    """Get or delete single users"""
+@router.get("/", response_model=List[UserResponse])
+async def get_users(db: Session = Depends(get_db),):
+    """GET all users."""
+    return db.query(UserSql).all()
 
-    @ns.marshal_with(user_response_schema)
-    def get(self, id):
-        """GET a single user"""
-        return User.query.get_or_404(id)
 
-    @basic_auth.login_required
-    @ns.doc(security="basic")
-    @ns.response(HTTPStatus.NO_CONTENT, "Success, no content.")
-    @ns.response(HTTPStatus.UNAUTHORIZED, "Invalid/missing basic authorization.")
-    @ns.response(HTTPStatus.FORBIDDEN, "Access forbidden.")
-    @ns.response(HTTPStatus.CONFLICT, "Conflict detected.")
-    def delete(self, id):
-        """DELETE a user. Needs admin privileges."""
-        db = g.db
-        user = User.query.get_or_404(id)
-        current_user_email = basic_auth.current_user().email
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(user_id, db: Session = Depends(get_db)):
+    db.query(UserSql).get_or_404(user_id)
 
-        admin_email = current_app.config["ADMIN_EMAIL"]
-        if admin_email == user.email:
-            raise Conflict("Can't delete admin user.")
-        elif not admin_email == current_user_email:
-            raise Forbidden("Admin privileges are required to delete a user.")
 
-        db.session.delete(User.query.get_or_404(id))
-        db.session.commit()
-        return "", HTTPStatus.NO_CONTENT
+@router.delete("/{user_id}")
+async def delete_user(user_id, db: Session = Depends(get_db), auth: HTTPBasicCredentials = Depends(BasicAuth)):
+    req_user_id = UserSql.get_user_id(auth)
+    req_user_email = db.query(UserSql).get(req_user_id).email
+
+    user: UserSql = UserSql.query.get_or_404(user_id)
+    if user.email == SETTINGS.ADMIN_EMAIL:
+        raise HTTPException(HTTP_409_CONFLICT, "Can't delete admin user.")
+    elif not req_user_email == SETTINGS.ADMIN_EMAIL:
+        raise Forbidden("Admin privileges are required to delete a user.")
+
+    db.delete(user)
+    db.commit()
+    return Response(HTTP_204_NO_CONTENT)

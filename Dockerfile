@@ -41,7 +41,7 @@ WORKDIR /app
 COPY pyproject.toml .
 COPY poetry.lock .
 
-# Install dependencies only
+# Install dependencies.py only
 RUN . $HOME/.poetry/env && \
     python -m venv .venv && \
     . .venv/bin/activate && \
@@ -60,7 +60,7 @@ RUN git clone https://github.com/python-restx/flask-restx && cd flask-restx && \
 
 COPY . .
 
-# Install dependencies and remove unneeded stuff
+# Install dependencies.py and remove unneeded stuff
 RUN . $HOME/.poetry/env && \
     . .venv/bin/activate && \
     poetry install --no-interaction --no-ansi --no-dev && \

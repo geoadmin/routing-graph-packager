@@ -1,23 +1,11 @@
 import os
-from functools import lru_cache
 from pathlib import Path
+from typing import List
 
 from pydantic import BaseSettings as _BaseSettings
 
 BASE_DIR = Path(__file__).parent.parent.resolve()
 ENV_FILE = BASE_DIR.joinpath(".env")
-
-
-@lru_cache
-def get_settings(type_: str = "production"):
-    if type_ == "production":
-        return ProdSettings()
-    elif type_ == "development":
-        return DevSettings()
-    elif type_ == "testing":
-        return TestSettings()
-    else:
-        raise ValueError(f"No configuration available called {type_}")
 
 
 def _get_list_var(var):
@@ -32,9 +20,13 @@ class BaseSettings(_BaseSettings):
     SECRET_KEY: str = "<MMs8?u_;rTt>;LarIGI&FjWhKNSe=%3|W;=DFDqOdx+~-rBS+K=p8#t#9E+;{e$"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
 
+    DESCRIPTION_PATH: Path = BASE_DIR.joinpath("DESCRIPTION.md")
+
     ### APP ###
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
+    # TODO: clarify if there's a need to restrict origins
+    CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
 
     DATA_DIR: Path = os.path.join(BASE_DIR, "data")
     # if we're inside a docker container, we need to reference the fixed directory instead
@@ -103,3 +95,9 @@ class TestSettings(BaseSettings):
 
     ADMIN_EMAIL = "admin@example.org"
     ADMIN_PASS = "admin"
+
+
+SETTINGS = DevSettings()
+
+if not __debug__:
+    SETTINGS = ProdSettings()

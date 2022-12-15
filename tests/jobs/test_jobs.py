@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from routing_packager_app.api_v1.jobs.models import Job
+from routing_packager_app.api_v1.jobs.models import JobSql
 from routing_packager_app.constants import INTERVALS, COMPRESSIONS, PROVIDERS, STATUSES
 from routing_packager_app.utils.file_utils import make_package_path
 from ..utils import create_new_job, DEFAULT_ARGS_POST
@@ -26,7 +26,7 @@ def test_post_job(provider, interval, compression, flask_app_client, basic_auth_
         },
     )
 
-    job_inst: Job = Job.query.get(job["id"])
+    job_inst: JobSql = JobSql.query.get(job["id"])
 
     # TODO: re-enable when other routers should be tested
     # assert job_inst.router == router

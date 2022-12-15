@@ -2,6 +2,8 @@ from logging.handlers import SMTPHandler
 import logging
 from typing import List  # noqa: F401
 
+from routing_packager_app import SETTINGS
+
 
 # https://stackoverflow.com/a/9236722/2582935
 class AppSmtpHandler(SMTPHandler):
@@ -29,14 +31,11 @@ class AppSmtpHandler(SMTPHandler):
         super().emit(record)
 
 
-def get_smtp_details(config, toaddrs):
+def get_smtp_details(toaddrs: List[str]):
     """
-    Dynamically create the config for the SMTP logger. Sort of assumes a valid
-    App config to be passed.
+    Dynamically create the config for the SMTP logger.
 
-    :param dict config: The App config ideally or any dict having the appropriate keys.
-    :param List[str] toaddrs: The recipients' email addresses.
-    # :param bool to_admin: Whether the email(s) should be sent to the DB Admin or not.
+    :param toaddrs: The recipients' email addresses.
 
     :returns: complete SMTP configuration
     :rtype: dict
@@ -47,15 +46,15 @@ def get_smtp_details(config, toaddrs):
     #         toaddrs.append(config['ADMIN_EMAIL'])
 
     conf = dict(
-        mailhost=(config["SMTP_HOST"], config["SMTP_PORT"]),
-        fromaddr=config["SMTP_FROM"],
+        mailhost=(SETTINGS.SMTP_HOST, SETTINGS.SMTP_PORT),
+        fromaddr=SETTINGS.SMTP_FROM,
         toaddrs=toaddrs,
         subject="",
     )
 
-    if config["SMTP_USER"] and config["SMTP_PASS"]:  # pragma: no cover
-        conf["credentials"] = (config["SMTP_USER"], config["SMTP_PASS"])
-    if config["SMTP_SECURE"]:
+    if SETTINGS.SMTP_USER and SETTINGS.SMTP_PASS:  # pragma: no cover
+        conf["credentials"] = (SETTINGS.SMTP_USER, SETTINGS.SMTP_PASS)
+    if SETTINGS.SMTP_SECURE:
         conf["secure"] = tuple()
 
     return conf

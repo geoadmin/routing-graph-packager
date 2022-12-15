@@ -50,13 +50,13 @@ jobs:
         source $HOME/.poetry/env
         poetry config virtualenvs.in-project true
 
-    - name: Cache dependencies
+    - name: Cache dependencies.py
       uses: actions/cache@v2
       with:
         path: .venv
         key: venv-3.10-${{ hashFiles('**/poetry.lock') }}
 
-    - name: Install dependencies
+    - name: Install dependencies.py
       run: |
         source $HOME/.poetry/env
         poetry install

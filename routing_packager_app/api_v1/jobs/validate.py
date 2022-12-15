@@ -4,7 +4,7 @@ from werkzeug.exceptions import BadRequest, Conflict
 from flask import current_app
 
 from . import JobFields
-from .models import Job
+from .models import JobSql
 from ...constants import INTERVALS, COMPRESSIONS, STATUSES
 
 
@@ -28,10 +28,10 @@ def validate_post(args):
         raise BadRequest("'name' cannot have characters *, &, /, %.")
 
     # make sure no other combo of name & router & provider exists
-    existing_combo: Job = Job.query.filter(
-        Job.name == args[JobFields.NAME],
-        Job.provider == args[JobFields.PROVIDER],
-        Job.router == args[JobFields.ROUTER],
+    existing_combo: JobSql = JobSql.query.filter(
+        JobSql.name == args[JobFields.NAME],
+        JobSql.provider == args[JobFields.PROVIDER],
+        JobSql.router == args[JobFields.ROUTER],
     ).first()
     if existing_combo:
         raise Conflict(
