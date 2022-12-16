@@ -2,7 +2,7 @@ from logging.handlers import SMTPHandler
 import logging
 from typing import List  # noqa: F401
 
-from routing_packager_app import SETTINGS
+from .config import SETTINGS
 
 
 # https://stackoverflow.com/a/9236722/2582935

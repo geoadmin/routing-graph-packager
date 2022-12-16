@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List
 
 from pydantic import BaseSettings as _BaseSettings
+from starlette.datastructures import CommaSeparatedStrings
 
 BASE_DIR = Path(__file__).parent.parent.resolve()
 ENV_FILE = BASE_DIR.joinpath(".env")
@@ -28,14 +29,14 @@ class BaseSettings(_BaseSettings):
     # TODO: clarify if there's a need to restrict origins
     CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
 
-    DATA_DIR: Path = os.path.join(BASE_DIR, "data")
+    DATA_DIR: Path = BASE_DIR.joinpath("data")
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
     if os.path.isdir("/app/data") and not os.getenv("CI", None):
         DATA_DIR = "/app/data"
 
-    ENABLED_PROVIDERS: list[str] = ["osm"]
-    ENABLED_ROUTERS: list[str] = ["valhalla"]
+    ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
+    ENABLED_ROUTERS: list[str] = list(CommaSeparatedStrings("valhalla"))
     VALHALLA_IMAGE: str = "gisops/valhalla:latest"
     OSRM_IMAGE: str = "osrm/osrm-backend:latest"
     ORS_IMAGE: str = "openrouteservice/openrouteservice:latest"
@@ -44,13 +45,13 @@ class BaseSettings(_BaseSettings):
     ### DATABASES ###
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "gis"
-    POSTGRES_USER: str = "docker"
-    POSTGRES_PASS: str = "docker"
+    POSTGRES_DB: str = "gis_test"
+    POSTGRES_USER: str = "nilsnolde"
+    POSTGRES_PASS: str = "Manchmal88"
     SQLALCHEMY_DATABASE_URI: str = (
         f"postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
     )
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost"
 
     ### SMTP ###
     SMTP_HOST: str = "localhost"
@@ -68,33 +69,41 @@ class BaseSettings(_BaseSettings):
 class ProdSettings(BaseSettings):
     DEBUG: bool = False
 
+    class Config:
+        case_sensitive = True
+        env_file = ENV_FILE
+
 
 class DevSettings(BaseSettings):
     DEBUG: bool = True
+
+    class Config:
+        case_sensitive = True
+        env_file = ENV_FILE
 
 
 class TestSettings(BaseSettings):
     TESTING = True
     FLASK_DEBUG = 0
 
-    POSTGRES_HOST = os.getenv("POSTGRES_HOST") or "localhost"
-    POSTGRES_PORT = os.getenv("POSTGRES_PORT") or "5432"
-    POSTGRES_DB_TEST = os.getenv("POSTGRES_DB_TEST") or "gis_test"
-    POSTGRES_USER = os.getenv("POSTGRES_USER") or "admin"
-    POSTGRES_PASS = os.getenv("POSTGRES_PASS") or "admin"
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_DB_TEST: str = "gis_test"
+    POSTGRES_USER: str = "admin"
+    POSTGRES_PASS: str = "admin"
 
-    SQLALCHEMY_DATABASE_URI = (
+    SQLALCHEMY_DATABASE_URI: str = (
         os.getenv("POSTGRES_TEST_URL")
         or f"postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB_TEST}"
     )
 
-    DATA_DIR = os.path.join(BASE_DIR, "tests", "data")
+    DATA_DIR: Path = BASE_DIR.joinpath("tests", "data")
 
-    ENABLED_ROUTERS = _get_list_var("valhalla")
-    ENABLED_PROVIDERS = _get_list_var("osm,tomtom,here")
+    ENABLED_ROUTERS: List[str] = CommaSeparatedStrings("valhalla")
+    ENABLED_PROVIDERS: List[str] = CommaSeparatedStrings("osm,tomtom,here")
 
-    ADMIN_EMAIL = "admin@example.org"
-    ADMIN_PASS = "admin"
+    ADMIN_EMAIL: str = "admin@example.org"
+    ADMIN_PASS: str = "admin"
 
 
 SETTINGS = DevSettings()

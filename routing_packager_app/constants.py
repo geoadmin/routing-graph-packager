@@ -29,20 +29,4 @@ class Compressions(str, Enum):
     TAR = "tar"
 
 
-ROUTERS = [e.value for e in Routers]
-
-PROVIDERS = [e.value for e in Providers]
-
-STATUSES = [e.value for e in Statuses]
-
-INTERVALS = [e.value for e in Intervals]
-
-COMPRESSIONS = [e.value for e in Compressions]
-
-CONF_MAPPER = {
-    "development": "config.DevConfig",
-    "production": "config.ProdConfig",
-    "testing": "config.TestingConfig",
-}
-
 DOCKER_VOLUME = "routing-packager_packages"

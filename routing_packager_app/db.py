@@ -1,7 +1,5 @@
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import sessionmaker
+from sqlmodel import create_engine
 
-from routing_packager_app import SETTINGS
+from .config import SETTINGS
 
 engine = create_engine(SETTINGS.SQLALCHEMY_DATABASE_URI, echo=True, future=True)
-SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)

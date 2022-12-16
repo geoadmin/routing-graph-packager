@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from routing_packager_app.api_v1.jobs.models import JobSql
+from routing_packager_app.api_v1.routes.jobs import JobSql
 from routing_packager_app.constants import INTERVALS, COMPRESSIONS, PROVIDERS, STATUSES
 from routing_packager_app.utils.file_utils import make_package_path
 from ..utils import create_new_job, DEFAULT_ARGS_POST

@@ -1,6 +1,4 @@
 from fastapi import FastAPI
-from redis import Redis
-from rq import Queue
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
@@ -16,14 +14,7 @@ def create_app():
     with open(SETTINGS.DESCRIPTION_PATH) as fh:
         description = fh.read()
 
-    app = FastAPI(title="Web GIS Backend", description=description)
-    app.redis = Redis.from_url(SETTINGS.REDIS_URL)
-    app.rq_queue = Queue(
-        "packaging",
-        connection=app.redis,
-        default_timeout="12h",  # after 12 hours processing the job will be considered as failed
-    )
-
+    app = FastAPI(title="Routing Graph Packager App", description=description)
     register_middlewares(app)
     register_router(app)
 

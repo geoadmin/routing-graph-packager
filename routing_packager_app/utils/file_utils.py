@@ -1,6 +1,7 @@
 import os
 import tarfile
 import zipfile
+from pathlib import Path
 from typing import List
 
 
@@ -18,7 +19,7 @@ def make_directories(data_dir: str, temp_dir: str, routers: List[str]):
         os.makedirs(os.path.join(temp_dir, router), exist_ok=True)
 
 
-def make_package_path(base_dir: str, name: str, router: str, provider: str, extension: str) -> str:
+def make_package_path(base_dir: Path, name: str, router: str, provider: str, extension: str) -> Path:
     """
     Returns the file name from DATA_DIR, router, provider and dataset name.
 
@@ -33,10 +34,10 @@ def make_package_path(base_dir: str, name: str, router: str, provider: str, exte
     file_name = "_".join([router, provider, name])
 
     # also create a folder with the same name
-    out_dir = os.path.join(base_dir, router, file_name)
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = base_dir.joinpath(router, file_name)
+    out_dir.mkdir(parents=True)
 
-    return os.path.join(out_dir, file_name + f".{extension}")
+    return out_dir.joinpath(file_name + f".{extension}").resolve()
 
 
 def make_tarfile(out_fp: str, source_dir: str):

@@ -4,7 +4,7 @@ from base64 import b64encode
 
 import pytest
 
-from routing_packager_app.api_v1.users.models import User
+from routing_packager_app.api_v1.routes.users import User
 from ..utils import create_new_user
 
 """Remember that @before_first_request will add an admin user!"""

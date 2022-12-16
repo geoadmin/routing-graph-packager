@@ -3,15 +3,12 @@ from typing import List
 
 from fastapi import HTTPException
 from requests import Session
-from shapely.geometry import Polygon
 
-from routing_packager_app import SETTINGS
-from routing_packager_app.api_v1.dependencies import get_db
-from routing_packager_app.api_v1.models.jobs import JobSql
-from routing_packager_app.api_v1.models.users import UserSql
-from routing_packager_app.constants import Statuses
-from routing_packager_app.logger import AppSmtpHandler, get_smtp_details
-from routing_packager_app.utils.geom_utils import bbox_to_geom
+from .config import SETTINGS
+from .utils.db_utils import get_db
+from .api_v1.models import User, Job
+from .constants import Statuses
+from .logger import AppSmtpHandler, get_smtp_details
 
 LOGGER = logging.getLogger("packager")
 LOGGER.setLevel(logging.INFO)
@@ -28,21 +25,22 @@ async def create_package(
     result_path: str,
     compression: str,
     user_id: str,
-    cleanup=True,):
+    cleanup=True,
+):
 
     session: Session = ctx["session"]
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
     if not LOGGER.handlers:
-        user_email = session.query(UserSql).get(user_id)
+        user_email = session.query(User).get(user_id)
         handler = AppSmtpHandler(**get_smtp_details([user_email]))
         handler.setLevel(logging.INFO)
         LOGGER.addHandler(handler)
 
-    bbox_geom: Polygon = bbox_to_geom(bbox)
+    # bbox_geom: Polygon = bbox_to_geom(bbox)
 
-    job = session.query(JobSql).get(job_id)
+    job = session.query(Job).get(job_id)
     job.status = Statuses.STARTED
     session.commit()
 

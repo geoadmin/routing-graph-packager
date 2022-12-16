@@ -1,23 +1,28 @@
 import logging
-from flask import current_app, g
-from flask_restx import abort
-from flask_restx.errors import HTTPStatus
+
 from sqlalchemy import exc
+from sqlmodel import Session, select
+from starlette.exceptions import HTTPException
+from starlette.status import HTTP_409_CONFLICT, HTTP_500_INTERNAL_SERVER_ERROR
+
+from ..config import SETTINGS
+from ..db import engine
 
 log = logging.getLogger(__name__)
 
 
-def add_or_abort(obj):
+def add_or_abort(db: Session, obj):
     """
     Commit the database object or abort.
 
+    :param db: The DB session.
     :param obj: Any database object which needs to be commited.
     """
-    session = g.db.session
     success = False
     try:
-        session.add(obj)
-        session.commit()
+        db.add(obj)
+        db.commit()
+        db.refresh(obj)
         success = True
     except exc.IntegrityError as e:
         log.error(f"Transaction aborted because: {e}")
@@ -27,44 +32,54 @@ def add_or_abort(obj):
         msg_idx = msg.rfind(needle)
         if msg_idx:
             msg = msg[msg_idx + len(needle) + 1 :]
-        abort(code=HTTPStatus.CONFLICT, error=str(msg.strip()))
+        raise HTTPException(HTTP_409_CONFLICT, str(msg.strip()))
     except Exception as e:  # pragma: no cover
         log.error(f"Transaction aborted because: {e}")
-        abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, error=str(e))
+        raise HTTPException(HTTP_500_INTERNAL_SERVER_ERROR, str(e))
     finally:
         if not success:
-            session.rollback()
+            db.rollback()
 
 
-def delete_or_abort(obj):
+def delete_or_abort(db: Session, obj):
     """
     Delete the database object or abort.
 
+    :param db: The DB session.
     :param obj: Any database object which needs to be deleted.
     """
-    session = g.db.session
     success = False
     try:
-        session.delete(obj)
-        session.commit()
+        db.delete(obj)
+        db.commit()
         success = True
     except Exception as e:  # pragma: no cover
         log.error(f"Transaction aborted because: {e}")
-        abort(code=HTTPStatus.INTERNAL_SERVER_ERROR, error=str(e))
+        raise HTTPException(HTTP_500_INTERNAL_SERVER_ERROR, str(e))
     finally:
         if not success:
-            session.rollback()
+            db.rollback()
 
 
 def add_admin_user():
     """Add admin user before first request."""
-    admin_email = current_app.config["ADMIN_EMAIL"]
-    admin_pass = current_app.config["ADMIN_PASS"]
+    admin_email = SETTINGS.ADMIN_EMAIL
+    admin_pass = SETTINGS.ADMIN_PASS
 
-    from ..api_v1.users.models import User
+    from ..api_v1.routes.users import User
 
-    if not User.query.filter_by(email=admin_email).first():
+    session: Session = next(get_db())
+
+    if not session.exec(select(User).filter_by(email=admin_email)).first():
         admin_user = User(email=admin_email, password=admin_pass)
-        session = g.db.session
         session.add(admin_user)
         session.commit()
+
+
+def get_db():
+    """Gets a DB Session."""
+    db = Session(engine, autocommit=False, autoflush=False)
+    try:
+        yield db
+    finally:
+        db.close()
