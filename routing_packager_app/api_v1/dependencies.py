@@ -24,7 +24,7 @@ def split_bbox(bbox: Optional[str] = "5.9559,45.818,10.4921,47.8084") -> Optiona
     return split
 
 
-def validate_name(name: str) -> str:
+def get_validated_name(name: str) -> str:
     """Validates the name doesn't contain stuff that's not valid in filesystems"""
     match = re.match("^[^*&%/]+$", name)
     if not match:

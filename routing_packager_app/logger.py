@@ -12,7 +12,7 @@ class AppSmtpHandler(SMTPHandler):
     def getSubject(self, record: logging.LogRecord) -> str:
         """Alters the subject line of the emails."""
         subject = f"{record.levelname}: "
-        if record.levelno == logging.ERROR:
+        if record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
             subject += f"{record.user}'s job {record.job_id} failed"
         # Warning is only emitted in tasks.py, when the deletion fails
         elif record.levelno == logging.WARNING:

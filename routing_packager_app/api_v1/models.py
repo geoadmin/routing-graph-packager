@@ -22,16 +22,17 @@ class JobBase(SQLModel):
         sa_column=Column(Geography("POLYGON", srid=4326, spatial_index=True, nullable=False)),
         default="5.9559,45.818,10.4921,47.8084",
     )
-    description: str = Field(nullable=True)
+    description: str = Field(nullable=True, default="")
 
 
 class JobRead(JobBase):
-    id: int
-    user_id: int
-    arq_id: str
-    status: str
-    last_started: datetime
-    last_finished: datetime
+    id: int = 1
+    user_id: int = 1
+    arq_id: str = ""
+    status: Statuses = Statuses.QUEUED
+    bbox: str = "5.9559,45.818,10.4921,47.8084"
+    last_started: Optional[datetime]
+    last_finished: Optional[datetime]
 
 
 class JobCreate(JobBase):

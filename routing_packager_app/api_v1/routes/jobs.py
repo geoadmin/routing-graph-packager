@@ -18,14 +18,13 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from ..models import JobRead, JobCreate, Job, User
-from ..dependencies import split_bbox, validate_name
+from ..dependencies import split_bbox, get_validated_name
 from ...utils.db_utils import get_db, delete_or_abort, add_or_abort
 from ...config import SETTINGS, TestSettings
 from ...auth.basic_auth import BasicAuth
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
 from ...constants import *
-from ...tasks import create_package
 
 router = APIRouter()
 
@@ -55,7 +54,7 @@ def get_jobs(
 
 
 @router.post("/", response_model=JobRead)
-def post_job(
+async def post_job(
     req: Request,
     job: JobCreate,
     db: Session = Depends(get_db),
@@ -63,11 +62,13 @@ def post_job(
 ):
     """POST a new job. Needs admin privileges."""
     # Sanitize the name field before using it
-    job.name = validate_name(job.name)
+    job.name = get_validated_name(job.name)
     current_user = User.get_user(db, auth)
     if not current_user:
         raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
 
+    # keep the input bbox string around for the response
+    bbox_str = job.bbox
     job.bbox = bbox_to_wkt(split_bbox(job.bbox))
 
     try:
@@ -78,6 +79,7 @@ def post_job(
             job.provider.lower(),
             job.compression.lower(),
         )
+        arq_id = result_path.stem
     except FileExistsError:
         raise HTTPException(HTTP_409_CONFLICT, "Already registered this package.")
 
@@ -85,7 +87,8 @@ def post_job(
     db_job = Job(
         **job.__dict__,
     )
-    db_job.status = Statuses.QUEUED.lower()
+    db_job.status = Statuses.QUEUED
+    db_job.arq_id = arq_id
     db_job.user_id = current_user.id
     add_or_abort(db, db_job)
 
@@ -93,19 +96,22 @@ def post_job(
     # for testing we don't want that behaviour
     pool: ArqRedis = req.app.state.redis_pool
     if not isinstance(SETTINGS, TestSettings):  # pragma: no cover
-        pool.enqueue(
-            create_package,
+        await pool.enqueue_job(
+            "create_package",
             db_job.id,
+            db_job.arq_id,
             db_job.description,
             db_job.router,
             db_job.provider,
-            db_job.bbox,
-            result_path,
+            bbox_str,
+            str(result_path.resolve()),
             db_job.compression,
             current_user.id,
-            _job_id=result_path.stem,
+            cleanup=True,
         )
 
+    # At this point it'd be a geoalchemy2.WKBElement but the output model requires a string
+    db_job.bbox = bbox_str
     return db_job
 
 

@@ -89,7 +89,8 @@ services:
     container_name: routing-packager-smtp
     # You can reach the frontend on localhost:1080
     ports:
-      - 1080:1080
+      - "1080:1080"
+      - "1025:1025"
     networks:
       - routing-packager
     restart: always

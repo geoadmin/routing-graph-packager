@@ -57,8 +57,8 @@ class BaseSettings(_BaseSettings):
     SMTP_HOST: str = "localhost"
     SMTP_PORT: int = 1025
     SMTP_FROM: str = "valhalla@kadas.org"
-    SMTP_USER: str = "user"
-    SMTP_PASS: str = "pass"
+    SMTP_USER: str = ""
+    SMTP_PASS: str = ""
     SMTP_SECURE: bool = False
 
     class Config:

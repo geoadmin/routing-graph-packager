@@ -1,8 +1,9 @@
 import logging
 from typing import List
 
+from arq.connections import RedisSettings
 from fastapi import HTTPException
-from requests import Session
+from sqlmodel import Session
 
 from .config import SETTINGS
 from .utils.db_utils import get_db
@@ -24,19 +25,20 @@ async def create_package(
     bbox: List[float],
     result_path: str,
     compression: str,
-    user_id: str,
-    cleanup=True,
+    user_id: int,
+    cleanup: True,
 ):
 
     session: Session = ctx["session"]
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
+    user_email = session.query(User).get(user_id).email
     if not LOGGER.handlers:
-        user_email = session.query(User).get(user_id)
         handler = AppSmtpHandler(**get_smtp_details([user_email]))
         handler.setLevel(logging.INFO)
         LOGGER.addHandler(handler)
+    log_extra = {"user": user_email, "job_id": job_id}
 
     # bbox_geom: Polygon = bbox_to_geom(bbox)
 
@@ -45,8 +47,10 @@ async def create_package(
     session.commit()
 
     try:
-        # just use valhalla_build_extract to copy the tiles somewhere else
-        print("A")
+        # TODO: use similar logic as in valhalla_build_extract to copy the tiles somewhere else
+        # TODO: gzipping is synchronous, maybe follow
+        #   https://arq-docs.helpmanual.io/#synchronous-jobs
+        LOGGER.critical("A", extra=log_extra)
     except HTTPException:
         pass
 
@@ -55,7 +59,7 @@ async def startup(ctx):
     """
     Opens a session/connection to DB.
     """
-    ctx["session"]: Session = get_db()
+    ctx["session"]: Session = next(get_db())
 
 
 async def shutdown(ctx):
@@ -72,5 +76,5 @@ class WorkerSettings:
 
     on_startup = startup
     on_shutdown = shutdown
-    redis_settings = SETTINGS.REDIS_URL
+    redis_settings = RedisSettings.from_dsn(SETTINGS.REDIS_URL)
     functions = [create_package]
