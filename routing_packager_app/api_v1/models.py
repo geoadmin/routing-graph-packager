@@ -12,7 +12,7 @@ from routing_packager_app.constants import Routers, Providers, Compressions, Sta
 
 
 class JobBase(SQLModel):
-    name: str = Field(nullable=False)
+    name: str = Field(nullable=False, default="test")
     router: Routers = Field(
         nullable=False, default=Routers.VALHALLA
     )  # router name, i.e. valhalla, graphhopper, ors etc

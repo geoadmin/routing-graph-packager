@@ -53,14 +53,14 @@ async def create_package(
 
 async def startup(ctx):
     """
-    Binds a connection set to the db object.
+    Opens a session/connection to DB.
     """
     ctx["session"]: Session = get_db()
 
 
 async def shutdown(ctx):
     """
-    Pops the bind on the db object.
+    Closes the session.
     """
     ctx["session"].close()
 

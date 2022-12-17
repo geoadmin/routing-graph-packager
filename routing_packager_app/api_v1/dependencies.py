@@ -5,14 +5,14 @@ from fastapi import HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
 
 
-def split_bbox(bbox_str: Optional[str] = "") -> Optional[List[float]]:
+def split_bbox(bbox: Optional[str] = "5.9559,45.818,10.4921,47.8084") -> Optional[List[float]]:
     """Splits a bbox string into a list of four floats. Expects the format minx,miny,maxx,maxy."""
-    if not bbox_str:
+    if not bbox:
         return None
 
     error_msg = "'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
     try:
-        split = [float(x) for x in bbox_str.split(",")]
+        split = [float(x) for x in bbox.split(",")]
     except (ValueError, AttributeError):
         raise HTTPException(HTTP_400_BAD_REQUEST, error_msg)
     if not len(split) == 4:

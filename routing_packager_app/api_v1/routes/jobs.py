@@ -32,10 +32,10 @@ router = APIRouter()
 
 @router.get("/jobs", response_model=List[JobRead])
 def get_jobs(
-    router: Optional[Routers] = None,
-    provider: Optional[Providers] = None,
-    status: Optional[Statuses] = None,
-    compression: Optional[Compressions] = None,
+    router: Optional[Routers] = Routers.VALHALLA,
+    provider: Optional[Providers] = Providers.OSM,
+    status: Optional[Statuses] = Statuses.QUEUED,
+    compression: Optional[Compressions] = Compressions.ZIP,
     bbox: Union[List[float], None] = Depends(split_bbox),
     db: Session = Depends(get_db),
 ):
@@ -91,8 +91,7 @@ def post_job(
 
     # launch Redis task and update db entries there
     # for testing we don't want that behaviour
-    pool: ArqRedis = req.app.redis_pool
-    pool.delete()
+    pool: ArqRedis = req.app.state.redis_pool
     if not isinstance(SETTINGS, TestSettings):  # pragma: no cover
         pool.enqueue(
             create_package,
