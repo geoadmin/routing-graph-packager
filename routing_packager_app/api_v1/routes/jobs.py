@@ -19,7 +19,8 @@ from sqlmodel import Session, select
 
 from ..models import JobRead, JobCreate, Job, User
 from ..dependencies import split_bbox, get_validated_name, get_validated_bbox
-from ...utils.db_utils import get_db, delete_or_abort, add_or_abort
+from ...utils.db_utils import delete_or_abort, add_or_abort
+from ...db import get_db
 from ...config import SETTINGS, TestSettings
 from ...auth.basic_auth import BasicAuth
 from ...utils.geom_utils import bbox_to_wkt

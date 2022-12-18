@@ -1,12 +1,9 @@
 import logging
 
 from sqlalchemy import exc
-from sqlmodel import Session, select
+from sqlmodel import Session
 from starlette.exceptions import HTTPException
 from starlette.status import HTTP_409_CONFLICT, HTTP_500_INTERNAL_SERVER_ERROR
-
-from ..config import SETTINGS
-from ..db import engine
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,27 +56,3 @@ def delete_or_abort(db: Session, obj):
     finally:
         if not success:
             db.rollback()
-
-
-def add_admin_user():
-    """Add admin user before first request."""
-    admin_email = SETTINGS.ADMIN_EMAIL
-    admin_pass = SETTINGS.ADMIN_PASS
-
-    from ..api_v1.routes.users import User
-
-    session: Session = next(get_db())
-
-    if not session.exec(select(User).filter_by(email=admin_email)).first():
-        admin_user = User(email=admin_email, password=admin_pass)
-        session.add(admin_user)
-        session.commit()
-
-
-def get_db():
-    """Gets a DB Session."""
-    db = Session(engine, autocommit=False, autoflush=False)
-    try:
-        yield db
-    finally:
-        db.close()

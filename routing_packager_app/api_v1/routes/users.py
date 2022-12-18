@@ -5,15 +5,16 @@ from fastapi.security import HTTPBasicCredentials
 from sqlmodel import Session, select
 from starlette.responses import Response
 from starlette.status import (
-    HTTP_409_CONFLICT,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
 )
-from werkzeug.exceptions import Forbidden
 
 from ..models import User, UserRead, UserCreate
-from ...utils.db_utils import get_db, delete_or_abort, add_or_abort
+from ...utils.db_utils import delete_or_abort, add_or_abort
+from ...db import get_db
 from ...config import SETTINGS
 from ...auth.basic_auth import BasicAuth
 
@@ -66,7 +67,7 @@ def delete_user(user_id, db: Session = Depends(get_db), auth: HTTPBasicCredentia
     if user.email == SETTINGS.ADMIN_EMAIL:
         raise HTTPException(HTTP_409_CONFLICT, "Can't delete admin user.")
     elif not req_user.email == SETTINGS.ADMIN_EMAIL:
-        raise Forbidden("Admin privileges are required to delete a user.")
+        raise HTTPException(HTTP_400_BAD_REQUEST, "Admin privileges are required to delete a user.")
 
     delete_or_abort(db, user)
 

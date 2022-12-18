@@ -8,7 +8,8 @@ from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
 from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select
 
-from routing_packager_app.constants import Providers, Statuses
+from ..config import SETTINGS
+from ..constants import Providers, Statuses
 
 
 class JobBase(SQLModel):
@@ -88,3 +89,14 @@ class User(UserBase, table=True):
             return None
 
         return user
+
+    @staticmethod
+    def add_admin_user(session: Session):
+        """Add admin user before first request."""
+        admin_email = SETTINGS.ADMIN_EMAIL
+        admin_pass = SETTINGS.ADMIN_PASS
+
+        if not session.exec(select(User).filter_by(email=admin_email)).first():
+            admin_user = User(email=admin_email, password=admin_pass)
+            session.add(admin_user)
+            session.commit()

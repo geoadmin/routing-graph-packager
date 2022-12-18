@@ -5,9 +5,9 @@ from fastapi import FastAPI
 from sqlmodel import SQLModel
 
 from routing_packager_app import create_app
-from routing_packager_app.db import engine
+from routing_packager_app.db import engine, get_db
 from routing_packager_app.config import SETTINGS
-from routing_packager_app.utils.db_utils import add_admin_user
+from routing_packager_app.api_v1.models import User
 
 app: FastAPI = create_app()
 
@@ -16,7 +16,7 @@ app: FastAPI = create_app()
 async def startup_event():
     SQLModel.metadata.create_all(engine, checkfirst=True)
     app.state.redis_pool = await create_pool(RedisSettings.from_dsn(SETTINGS.REDIS_URL))
-    add_admin_user()
+    User.add_admin_user(next(get_db()))
 
 
 if __name__ == "__main__":

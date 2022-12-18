@@ -9,7 +9,7 @@ from sqlmodel import Session
 
 from .api_v1.dependencies import split_bbox
 from .config import SETTINGS
-from .utils.db_utils import get_db
+from .db import get_db
 from .api_v1.models import User, Job
 from .constants import Statuses
 from .logger import AppSmtpHandler, get_smtp_details
