@@ -10,27 +10,19 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-flask = "^2.1.1"
-flask-sqlalchemy = "^2.5.1"
 SQLAlchemy = "^1.4.34"
-flask-cors = "^3.0.8"
 GeoAlchemy2 = "^0.11.1"
 wheel = "^0.37.1"
 python-dotenv = "^0.20.0"
 requests = "^2.27.1"
 sqlalchemy-utils = "^0.38.2"
 passlib = "^1.7.4"
-Flask-HTTPAuth = "^4.5.0"
 shapely = "^1.8.1"
-docker = "^5.0.3"
 gunicorn = "^20.1.0"
 gevent = "^21.12.0"
-rq = "^1.10.1"
-osmium = "^3.3.0"
 pyproj = "^3.3.0"
 psycopg2-binary = "^2.9.3"
 # wait for release of bug fix: https://github.com/python-restx/flask-restx/pull/423
-flask-restx = {git = "https://github.com/stacywsmith/flask-restx.git", rev = "bugfix/handle_werkzeug_request_get_json_change"}
 fastapi = "^0.85.1"
 sqlmodel = "^0.0.8"
 arq = "^0.25.0"

@@ -33,3 +33,14 @@ def get_validated_name(name: str) -> str:
         )
 
     return name.replace(" ", "_")
+
+
+def get_validated_bbox(bbox_str: str) -> str:
+    """Sanity checks the BBOX."""
+    bbox = split_bbox(bbox_str)
+
+    # validate bbox
+    if (bbox[0] >= bbox[2] or bbox[0] < -180 or bbox[2] > 180) or (
+        bbox[1] >= bbox[3] or bbox[1] < -90 or bbox[3] > 90
+    ):
+        raise HTTPException(HTTP_400_BAD_REQUEST, "'bbox' has an invalid geometry.")

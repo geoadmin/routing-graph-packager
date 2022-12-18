@@ -1,13 +1,6 @@
 from enum import Enum
 
 
-class Routers(str, Enum):
-    VALHALLA = "valhalla"
-    ORS = "ors"
-    OSRM = "osrm"
-    GRAPHHOPPER = "graphhopper"
-
-
 class Providers(str, Enum):
     OSM = "osm"
     TOMTOM = "tomtom"
@@ -17,16 +10,7 @@ class Providers(str, Enum):
 class Statuses(str, Enum):
     QUEUED = "Queued"
     STARTED = "Started"
-    EXTRACTING = "Extracting"
-    TILING = "Tiling"
+    PROCESSING = "Processing"
     FAILED = "Failed"
     DELETED = "Deleted"
     COMPLETED = "Completed"
-
-
-class Compressions(str, Enum):
-    ZIP = "zip"
-    TAR = "tar"
-
-
-DOCKER_VOLUME = "routing-packager_packages"

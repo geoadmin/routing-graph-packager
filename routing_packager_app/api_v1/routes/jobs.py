@@ -18,7 +18,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from ..models import JobRead, JobCreate, Job, User
-from ..dependencies import split_bbox, get_validated_name
+from ..dependencies import split_bbox, get_validated_name, get_validated_bbox
 from ...utils.db_utils import get_db, delete_or_abort, add_or_abort
 from ...config import SETTINGS, TestSettings
 from ...auth.basic_auth import BasicAuth
@@ -31,24 +31,18 @@ router = APIRouter()
 
 @router.get("/jobs", response_model=List[JobRead])
 def get_jobs(
-    router: Optional[Routers] = Routers.VALHALLA,
     provider: Optional[Providers] = Providers.OSM,
     status: Optional[Statuses] = Statuses.QUEUED,
-    compression: Optional[Compressions] = Compressions.ZIP,
     bbox: Union[List[float], None] = Depends(split_bbox),
     db: Session = Depends(get_db),
 ):
     filters = []
     if bbox:
         filters.append(func.ST_Intersects(Job.bbox, bbox_to_wkt(bbox)))
-    if router:
-        filters.append((Job.router == router))
     if provider:
         filters.append(Job.provider == provider)
     if status:
         filters.append(Job.status == status)
-    if compression:
-        filters.append(Job.compression == compression)
 
     return db.exec(select(Job).filter(*filters)).all()
 
@@ -68,17 +62,11 @@ async def post_job(
         raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
 
     # keep the input bbox string around for the response
-    bbox_str = job.bbox
-    job.bbox = bbox_to_wkt(split_bbox(job.bbox))
+    bbox_str = get_validated_bbox(job.bbox)
+    job.bbox = bbox_to_wkt(split_bbox(bbox_str))
 
     try:
-        result_path = make_package_path(
-            SETTINGS.DATA_DIR,
-            job.name,
-            job.router.lower(),
-            job.provider.lower(),
-            job.compression.lower(),
-        )
+        result_path = make_package_path(SETTINGS.DATA_DIR, job.name, job.provider.lower())
         arq_id = result_path.stem
     except FileExistsError:
         raise HTTPException(HTTP_409_CONFLICT, "Already registered this package.")
@@ -101,13 +89,11 @@ async def post_job(
             db_job.id,
             db_job.arq_id,
             db_job.description,
-            db_job.router,
-            db_job.provider,
             bbox_str,
             str(result_path.resolve()),
-            db_job.compression,
             current_user.id,
             cleanup=True,
+            _job_id=db_job.arq_id,
         )
 
     # At this point it'd be a geoalchemy2.WKBElement but the output model requires a string
@@ -144,7 +130,7 @@ async def delete_job(
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
 
     job_arq_id: str = job_key_prefix + db_job.arq_id
-    pool: ArqRedis = req.app.redis_pool
+    pool: ArqRedis = req.app.state.redis_pool
     # try to delete the Redis job or don't care if there is none
     if pool.keys(job_arq_id):
         await pool.delete(job_arq_id)

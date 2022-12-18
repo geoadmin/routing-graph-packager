@@ -9,14 +9,6 @@ BASE_DIR = Path(__file__).parent.parent.resolve()
 ENV_FILE = BASE_DIR.joinpath(".env")
 
 
-def _get_list_var(var):
-    out = []
-    if var:
-        out.extend(var.split(","))
-
-    return out
-
-
 class BaseSettings(_BaseSettings):
     SECRET_KEY: str = "<MMs8?u_;rTt>;LarIGI&FjWhKNSe=%3|W;=DFDqOdx+~-rBS+K=p8#t#9E+;{e$"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
@@ -29,18 +21,15 @@ class BaseSettings(_BaseSettings):
     # TODO: clarify if there's a need to restrict origins
     CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
 
-    DATA_DIR: Path = BASE_DIR.joinpath("data")
+    DATA_DIR: Path = BASE_DIR.joinpath("data/output")
+    VALHALLA_DIR: Path = BASE_DIR.joinpath("data/valhalla_tiles")
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
     if os.path.isdir("/app/data") and not os.getenv("CI", None):
         DATA_DIR = "/app/data"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
-    ENABLED_ROUTERS: list[str] = list(CommaSeparatedStrings("valhalla"))
     VALHALLA_IMAGE: str = "gisops/valhalla:latest"
-    OSRM_IMAGE: str = "osrm/osrm-backend:latest"
-    ORS_IMAGE: str = "openrouteservice/openrouteservice:latest"
-    GRAPHHOPPER_IMAGE: str = "graphhopper/graphhopper:latest"
 
     ### DATABASES ###
     POSTGRES_HOST: str = "localhost"

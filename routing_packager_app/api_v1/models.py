@@ -8,16 +8,12 @@ from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
 from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select
 
-from routing_packager_app.constants import Routers, Providers, Compressions, Statuses
+from routing_packager_app.constants import Providers, Statuses
 
 
 class JobBase(SQLModel):
     name: str = Field(nullable=False, default="test")
-    router: Routers = Field(
-        nullable=False, default=Routers.VALHALLA
-    )  # router name, i.e. valhalla, graphhopper, ors etc
     provider: Providers = Field(nullable=False, default=Providers.OSM)
-    compression: Compressions = Field(nullable=False, default=Compressions.ZIP)  # zip, tar etc
     bbox: str = Field(
         sa_column=Column(Geography("POLYGON", srid=4326, spatial_index=True, nullable=False)),
         default="5.9559,45.818,10.4921,47.8084",

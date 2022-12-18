@@ -8,7 +8,7 @@ from starlette.status import HTTP_409_CONFLICT, HTTP_500_INTERNAL_SERVER_ERROR
 from ..config import SETTINGS
 from ..db import engine
 
-log = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def add_or_abort(db: Session, obj):
@@ -25,7 +25,7 @@ def add_or_abort(db: Session, obj):
         db.refresh(obj)
         success = True
     except exc.IntegrityError as e:
-        log.error(f"Transaction aborted because: {e}")
+        LOGGER.error(f"Transaction aborted because: {e}")
         msg = str(e.orig)
         # prettier error message
         needle = "DETAIL: "
@@ -34,7 +34,7 @@ def add_or_abort(db: Session, obj):
             msg = msg[msg_idx + len(needle) + 1 :]
         raise HTTPException(HTTP_409_CONFLICT, str(msg.strip()))
     except Exception as e:  # pragma: no cover
-        log.error(f"Transaction aborted because: {e}")
+        LOGGER.error(f"Transaction aborted because: {e}")
         raise HTTPException(HTTP_500_INTERNAL_SERVER_ERROR, str(e))
     finally:
         if not success:
@@ -54,7 +54,7 @@ def delete_or_abort(db: Session, obj):
         db.commit()
         success = True
     except Exception as e:  # pragma: no cover
-        log.error(f"Transaction aborted because: {e}")
+        LOGGER.error(f"Transaction aborted because: {e}")
         raise HTTPException(HTTP_500_INTERNAL_SERVER_ERROR, str(e))
     finally:
         if not success:
