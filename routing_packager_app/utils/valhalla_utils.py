@@ -24,6 +24,7 @@ def get_tile_bbox(tile_path: Path) -> Bbox:
 
 def get_tiles_with_bbox(all_tile_paths: List[Path], bbox: List[float]) -> Set[Path]:
     tile_paths = set()
+    bbox = Bbox(*bbox)
     for tile_path in all_tile_paths:
         tile_bbox: Bbox = get_tile_bbox(tile_path)
         # check if tile_bbox is outside bbox

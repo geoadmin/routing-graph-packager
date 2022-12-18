@@ -18,7 +18,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from ..models import JobRead, JobCreate, Job, User
-from ..dependencies import split_bbox, get_validated_name, get_validated_bbox
+from ..dependencies import split_bbox, get_validated_name, validate_bbox
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
 from ...config import SETTINGS, TestSettings
@@ -63,7 +63,8 @@ async def post_job(
         raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
 
     # keep the input bbox string around for the response
-    bbox_str = get_validated_bbox(job.bbox)
+    validate_bbox(job.bbox)
+    bbox_str = job.bbox
     job.bbox = bbox_to_wkt(split_bbox(bbox_str))
 
     try:
@@ -72,7 +73,7 @@ async def post_job(
     except FileExistsError:
         raise HTTPException(HTTP_409_CONFLICT, "Already registered this package.")
 
-    # add to DB
+    # add to DB and the things we couldn't set yet
     db_job = Job(
         **job.__dict__,
     )

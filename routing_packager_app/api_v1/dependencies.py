@@ -35,8 +35,12 @@ def get_validated_name(name: str) -> str:
     return name.replace(" ", "_")
 
 
-def get_validated_bbox(bbox_str: str) -> str:
-    """Sanity checks the BBOX."""
+def validate_bbox(bbox_str: str):
+    """
+    Sanity checks the BBOX.
+
+    :param bbox_str: BBOX as string in 'minx,miny,maxx,maxy' format.
+    """
     bbox = split_bbox(bbox_str)
 
     # validate bbox

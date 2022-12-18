@@ -5,6 +5,7 @@ from datetime import datetime
 
 from arq.connections import RedisSettings
 from fastapi import HTTPException
+import shutil
 from sqlmodel import Session
 
 from .api_v1.dependencies import split_bbox
@@ -24,7 +25,7 @@ async def create_package(
     ctx, job_id: int, job_name: str, description: str, bbox: str, result_path: str, user_id: int
 ):
 
-    session: Session = ctx["session"]
+    session: Session = next(get_db())
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
@@ -33,12 +34,13 @@ async def create_package(
         handler = AppSmtpHandler(**get_smtp_details([user_email]))
         handler.setLevel(logging.INFO)
         LOGGER.addHandler(handler)
-    #    log_extra = {"user": user_email, "job_id": job_id}
+    log_extra = {"user": user_email, "job_id": job_id}
 
     job = session.query(Job).get(job_id)
     job.status = Statuses.STARTED
     session.commit()
 
+    succeeded = False
     try:
         # TODO: gzipping is synchronous, maybe follow
         #   https://arq-docs.helpmanual.io/#synchronous-jobs
@@ -49,9 +51,7 @@ async def create_package(
         # Gather Valhalla tile paths
         tile_paths = get_tiles_with_bbox(valhalla_tiles, split_bbox(bbox))
         if not tile_paths or valhalla_tiles:
-            raise HTTPException(
-                404, f"No Valhalla tiles in {SETTINGS.VALHALLA_DIR.resolve()} in bbox {bbox}"
-            )
+            raise HTTPException(404, f"No Valhalla tiles in bbox {bbox}")
 
         # zip up the tiles
         make_zip(tile_paths, SETTINGS.VALHALLA_DIR, result_path)
@@ -71,22 +71,27 @@ async def create_package(
         with open(os.path.join(dirname, fname_sanitized + ".json"), "w", encoding="utf8") as f:
             json.dump(j, f, indent=2, ensure_ascii=False)
 
-    except HTTPException:
-        pass
-
-
-async def startup(ctx):
-    """
-    Opens a session/connection to DB.
-    """
-    ctx["session"]: Session = next(get_db())
-
-
-async def shutdown(ctx):
-    """
-    Closes the session.
-    """
-    ctx["session"].close()
+        LOGGER.info(
+            f"Job {job_id} by {user_email} finished successfully. Find the new dataset in {result_path}",
+            extra=log_extra,
+        )
+        succeeded = True
+    # catch all exceptions we're controlling
+    except HTTPException as e:
+        job.set_status(Statuses.FAILED.value)
+        session.commit()
+        raise e
+    # any other exception is assumed to be a deleted job and will only be logged/email sent
+    except Exception:  # pragma: no cover
+        msg = f"Job {job_id} by {user_email} was deleted."
+        LOGGER.critical(msg, extra=log_extra)
+        raise
+    finally:
+        # always write the "last_ran" column
+        job.set_last_finished(datetime.utcnow())
+        session.commit()
+        if not succeeded:
+            shutil.rmtree(os.path.dirname(result_path))
 
 
 class WorkerSettings:
@@ -94,7 +99,5 @@ class WorkerSettings:
     Settings for the ARQ worker.
     """
 
-    on_startup = startup
-    on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(SETTINGS.REDIS_URL)
     functions = [create_package]
