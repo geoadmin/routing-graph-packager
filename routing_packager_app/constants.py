@@ -9,8 +9,7 @@ class Providers(str, Enum):
 
 class Statuses(str, Enum):
     QUEUED = "Queued"
-    STARTED = "Started"
-    PROCESSING = "Processing"
+    COMPRESSING = "Compressing"
     FAILED = "Failed"
     DELETED = "Deleted"
     COMPLETED = "Completed"

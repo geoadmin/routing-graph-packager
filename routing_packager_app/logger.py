@@ -14,7 +14,7 @@ class AppSmtpHandler(SMTPHandler):
         subject = f"{record.levelname}: "
         if record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
             subject += f"{record.user}'s job {record.job_id} failed"
-        # Warning is only emitted in tasks.py, when the deletion fails
+        # Warning is only emitted in worker.py, when the deletion fails
         elif record.levelno == logging.WARNING:
             subject += f"{record.user}'s job {record.job_id} was stopped and deleted"
         elif record.levelno == logging.INFO:

@@ -22,14 +22,15 @@ class BaseSettings(_BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
 
     DATA_DIR: Path = BASE_DIR.joinpath("data/output")
-    VALHALLA_DIR: Path = BASE_DIR.joinpath("data/valhalla_tiles")
+    VALHALLA_SERVER_IP: str = "http://localhost"
+    VALHALLA_DIR_8002: str = str(BASE_DIR.joinpath("data/valhalla_tiles_8002"))
+    VALHALLA_DIR_8003: str = str(BASE_DIR.joinpath("data/valhalla_tiles_8003"))
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
     if os.path.isdir("/app/data") and not os.getenv("CI", None):
         DATA_DIR = "/app/data"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
-    VALHALLA_IMAGE: str = "gisops/valhalla:latest"
 
     ### DATABASES ###
     POSTGRES_HOST: str = "localhost"
@@ -53,6 +54,14 @@ class BaseSettings(_BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ENV_FILE
+
+    def get_valhalla_path(self, port: int) -> str:
+        if port == 8002:
+            return self.VALHALLA_DIR_8002
+        elif port == 8003:
+            return self.VALHALLA_DIR_8003
+        else:
+            raise ""
 
 
 class ProdSettings(BaseSettings):

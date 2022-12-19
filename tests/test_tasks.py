@@ -3,7 +3,7 @@ import os
 import pytest
 
 from .utils import create_new_job, DEFAULT_ARGS_POST, create_package_params
-from routing_packager_app.tasks import create_package
+from routing_packager_app.worker import create_package
 from routing_packager_app.utils.file_utils import make_package_path
 
 

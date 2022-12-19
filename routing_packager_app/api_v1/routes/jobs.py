@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from arq.connections import ArqRedis
 from arq.constants import job_key_prefix
@@ -34,7 +34,8 @@ router = APIRouter()
 def get_jobs(
     provider: Optional[Providers] = Providers.OSM,
     status: Optional[Statuses] = Statuses.QUEUED,
-    bbox: Union[List[float], None] = Depends(split_bbox),
+    bbox: List[float] = Depends(split_bbox),
+    update: bool = False,
     db: Session = Depends(get_db),
 ):
     filters = []
@@ -44,6 +45,8 @@ def get_jobs(
         filters.append(Job.provider == provider)
     if status:
         filters.append(Job.status == status)
+    if update:
+        filters.append(Job.update is True)
 
     return db.exec(select(Job).filter(*filters)).all()
 
@@ -68,8 +71,8 @@ async def post_job(
     job.bbox = bbox_to_wkt(split_bbox(bbox_str))
 
     try:
-        result_path = make_package_path(SETTINGS.DATA_DIR, job.name, job.provider.lower())
-        arq_id = result_path.stem
+        zip_path = make_package_path(SETTINGS.DATA_DIR, job.name, job.provider.lower())
+        arq_id = zip_path.stem
     except FileExistsError:
         raise HTTPException(HTTP_409_CONFLICT, "Already registered this package.")
 
@@ -92,9 +95,8 @@ async def post_job(
             db_job.arq_id,
             db_job.description,
             bbox_str,
-            str(result_path.resolve()),
+            str(zip_path.resolve()),
             current_user.id,
-            cleanup=True,
             _job_id=db_job.arq_id,
         )
 

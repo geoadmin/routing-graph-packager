@@ -4,7 +4,7 @@ import os
 
 from .utils import make_pbfs, DEFAULT_ARGS_POST, create_new_job, create_package_params
 from routing_packager_app.osmium import get_pbfs_by_area  #
-from routing_packager_app.tasks import create_package
+from routing_packager_app.worker import create_package
 
 
 def test_pbfs_by_area(tmpdir):

@@ -22,11 +22,11 @@ def get_tile_bbox(tile_path: Path) -> Bbox:
     return Bbox(tile_base_x, tile_base_y, tile_base_x + tile_size, tile_base_y + tile_size)
 
 
-def get_tiles_with_bbox(all_tile_paths: List[Path], bbox: List[float]) -> Set[Path]:
+def get_tiles_with_bbox(all_tile_paths: List[Path], bbox: List[float], valhalla_dir: Path) -> Set[Path]:
     tile_paths = set()
     bbox = Bbox(*bbox)
     for tile_path in all_tile_paths:
-        tile_bbox: Bbox = get_tile_bbox(tile_path)
+        tile_bbox: Bbox = get_tile_bbox(tile_path.relative_to(valhalla_dir))
         # check if tile_bbox is outside bbox
         if not any(
             [

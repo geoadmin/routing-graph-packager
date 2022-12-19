@@ -1,8 +1,8 @@
 from click.testing import CliRunner
 
 from routing_packager_app.api_v1 import Job
-from routing_packager_app.cli import _sort_jobs
-from routing_packager_app.cli import register
+from cli import _sort_jobs
+from cli import register
 from .utils import create_new_job, DEFAULT_ARGS_POST
 
 

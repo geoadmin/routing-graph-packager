@@ -15,11 +15,13 @@ from ..constants import Providers, Statuses
 class JobBase(SQLModel):
     name: str = Field(nullable=False, default="test")
     provider: Providers = Field(nullable=False, default=Providers.OSM)
+    # WKBElement isn't a valid pydantic type
     bbox: str = Field(
         sa_column=Column(Geography("POLYGON", srid=4326, spatial_index=True, nullable=False)),
         default="5.9559,45.818,10.4921,47.8084",
     )
     description: str = Field(nullable=True, default="")
+    update: bool = Field(nullable=False, default=False)
 
 
 class JobRead(JobBase):
@@ -28,6 +30,7 @@ class JobRead(JobBase):
     arq_id: str = ""
     status: Statuses = Statuses.QUEUED
     bbox: str = "5.9559,45.818,10.4921,47.8084"
+    zip_path: Optional[str]
     last_started: Optional[datetime]
     last_finished: Optional[datetime]
 
@@ -44,6 +47,7 @@ class Job(JobBase, table=True):
     arq_id: Optional[str] = Field(nullable=True)
     user_id: int = Field(default=None, foreign_key="users.id")
     status: Statuses = Field(nullable=False)
+    zip_path: str = Field(nullable=True)
     last_started: Optional[datetime] = Field(nullable=True)  # did it ever run?
     last_finished: Optional[datetime] = Field(
         sa_column=Column(DateTime(), nullable=True)
@@ -52,7 +56,7 @@ class Job(JobBase, table=True):
     user: "User" = Relationship(back_populates="jobs")
 
     def __repr__(self):  # pragma: no cover
-        s = f"<Job id={self.id} name={self.name} status={self.status} provider={self.provider} router={self.router} compression={self.compression}>"
+        s = f"<Job id={self.id} name={self.name} status={self.status} provider={self.provider}>"
         return s
 
 
