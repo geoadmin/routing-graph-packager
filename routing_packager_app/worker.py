@@ -7,9 +7,10 @@ from pathlib import Path
 from arq.connections import RedisSettings
 from fastapi import HTTPException
 import requests
+from requests.exceptions import ConnectionError
 import shutil
 from sqlmodel import Session
-from starlette.status import HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
 
 from .api_v1.dependencies import split_bbox
 from .config import SETTINGS
@@ -48,17 +49,18 @@ async def create_package(
         #   https://arq-docs.helpmanual.io/#synchronous-jobs
 
         # get the active Valhalla instance
-        current_valhalla_dir_str = ""
-        for port in (8002, 8003):
-            status = requests.get(f"{SETTINGS.VALHALLA_SERVER_IP}:{port}/status").status_code
-            if not status == HTTP_200_OK:
-                continue
-            current_valhalla_dir_str = SETTINGS.get_valhalla_path(port)
-            break
-
-        if not current_valhalla_dir_str:
+        try:
+            current_valhalla_dir_str = ""
+            for port in (8002, 8003):
+                status = requests.get(f"{SETTINGS.VALHALLA_SERVER_IP}:{port}/status").status_code
+                if not status == HTTP_200_OK:
+                    continue
+                current_valhalla_dir_str = SETTINGS.get_valhalla_path(port)
+                break
+        except ConnectionError:
             raise HTTPException(
-                500, "No Valhalla service online, check the Valhalla server's docker logs."
+                HTTP_500_INTERNAL_SERVER_ERROR,
+                "No Valhalla service online, check the Valhalla server's docker logs.",
             )
 
         current_valhalla_dir = Path(current_valhalla_dir_str).resolve()
@@ -101,10 +103,11 @@ async def create_package(
         succeeded = True
     # catch all exceptions we're controlling
     except HTTPException as e:
+        LOGGER.critical(f"Job {job.name} failed with\n'{e.detail}'", extra=log_extra)
         raise e
     # any other exception is assumed to be a deleted job and will only be logged/email sent
     except Exception:  # pragma: no cover
-        msg = f"Job {job_id} by {user_email} was deleted."
+        msg = f"Job {job.name} by {user_email} was deleted."
         LOGGER.critical(msg, extra=log_extra)
         raise
     finally:

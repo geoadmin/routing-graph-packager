@@ -49,7 +49,9 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
             wkbe_to_bbox(job.bbox),
             job.zip_path,
             job.user_id,
-            _job_id=job.arq_id,
+            # TODO: possibly we can't use the same ID, since arq won't process
+            #   the same ID twice, which would be needed for updating every package
+            # _job_id=job.arq_id,
         )
         # catch all possible exceptions and send emails
         try:
