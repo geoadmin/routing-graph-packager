@@ -97,9 +97,6 @@ class TestSettings(BaseSettings):
 
     DATA_DIR: Path = BASE_DIR.joinpath("tests", "data")
 
-    ENABLED_ROUTERS: List[str] = CommaSeparatedStrings("valhalla")
-    ENABLED_PROVIDERS: List[str] = CommaSeparatedStrings("osm,tomtom,here")
-
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
 
