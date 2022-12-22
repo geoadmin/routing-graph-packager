@@ -3,13 +3,7 @@
 [![tests](https://github.com/geoadmin/routing-graph-packager/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/geoadmin/routing-graph-packager/actions/workflows/test-ubuntu.yml)
 [![Coverage Status](https://coveralls.io/repos/github/gis-ops/routing-graph-packager/badge.svg)](https://coveralls.io/github/gis-ops/routing-graph-packager)
 
-A Flask app to schedule the generation of updated regional/local routing graph packages for open-source routing engines from a variety of data sources.
-
-Supported routing engines:
-- [Valhalla](https://github.com/valhalla/valhalla)
-- [~~OSRM~~](https://github.com/Project-OSRM/osrm-backend) (coming soon..)
-- [~~Graphhopper~~](https://github.com/graphhopper/graphhopper/) (coming soon..)
-- [~~ORS~~](https://github.com/GIScience/openrouteservice) (coming soon..)
+A [FastAPI](https://github.com/tiangolo/fastpi) app to dynamically deliver ZIPped [Valhalla](https://github.com/valhalla/valhalla) graphs from a variety of data sources.
 
 The default road dataset is [OSM](openstreetmap.org). If available, it also supports road datasets of commercial vendors, such as TomTom and HERE, assuming they are provided in the [OSM PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format#).
 
@@ -19,9 +13,8 @@ For more details have a look at our [wiki](https://github.com/gis-ops/routing-gr
 
 - **user store**: with basic authentication for `POST` and `DELETE` endpoints
 - **bbox cuts**: generate routing packages within a bounding box
-- **job scheduling**: schedule regular jobs, e.g. `daily`, `weekly` etc
 - **data updater**: includes a daily OSM updater
-- **asynchronous API**: graph generation is outsourced to a [`RQ`](https://github.com/rq/rq) worker
+- **asynchronous API**: graph generation is outsourced to a [`ARQ`](https://github.com/rq/rq) worker
 - **email notifications**: notifies the requesting user if the job succeeded/failed
 
 For more details have a look at our [wiki](https://github.com/gis-ops/routing-graph-packager/wiki).

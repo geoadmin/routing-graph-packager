@@ -1,5 +1,6 @@
 from typing import List, Tuple  # noqa: F401
 
+from requests import Response
 from starlette.testclient import TestClient
 
 DEFAULT_ARGS_POST = {
@@ -11,7 +12,7 @@ DEFAULT_ARGS_POST = {
 }
 
 
-def create_new_user(client: TestClient, data: dict, auth_header, must_succeed=True):
+def create_new_user(client: TestClient, data: dict, auth_header, must_succeed=True) -> Response:
     """
     Helper function for valid new user creation.
     """
@@ -24,12 +25,12 @@ def create_new_user(client: TestClient, data: dict, auth_header, must_succeed=Tr
         ), f"status code was {response.status_code} with {response.json()}"
         assert response.headers["Content-Type"] == "application/json"
         assert set(res_json.keys()) >= {"id", "email"}
-        return res_json["id"]
+        return response
 
     return response
 
 
-def create_new_job(client, data, auth_header, must_succeed=True) -> dict:
+def create_new_job(client, data, auth_header, must_succeed=True) -> Response:
     """
     Helper function for valid new job creation.
     """
@@ -40,5 +41,5 @@ def create_new_job(client, data, auth_header, must_succeed=True) -> dict:
             response.status_code == 200
         ), f"status code was {response.status_code} with {response.content}"
         assert response.headers["Content-Type"] == "application/json"
-        return response.json()
-    return response.json()
+        return response
+    return response

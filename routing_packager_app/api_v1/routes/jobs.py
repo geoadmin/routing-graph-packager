@@ -86,10 +86,9 @@ async def post_job(
     add_or_abort(db, db_job)
 
     # launch Redis task and update db entries there
-    # for testing we don't want that behaviour
-    pool: ArqRedis = req.app.state.redis_pool
-    # TODO: doesn't really work when testing
+    # when testing, we test the create_package function directly
     if not isinstance(SETTINGS, TestSettings):  # pragma: no cover
+        pool: ArqRedis = req.app.state.redis_pool
         await pool.enqueue_job(
             "create_package",
             db_job.id,

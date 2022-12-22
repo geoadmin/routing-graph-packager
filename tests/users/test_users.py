@@ -100,12 +100,12 @@ def test_get_all_users_empty(get_client: TestClient):
 def test_get_all_users_not_empty(get_client, basic_auth_header, get_session: Session):
     user_ids = list()
     for i in range(3, 6):
-        idx = create_new_user(
+        res = create_new_user(
             get_client,
             auth_header=basic_auth_header,
             data={"email": f"user{i}@email.com", "password": f"user{i}_password"},
         )
-        user_ids.append(idx)
+        user_ids.append(res.json()["id"])
 
     response = get_client.get("/api/v1/users/")
 
@@ -119,13 +119,13 @@ def test_get_all_users_not_empty(get_client, basic_auth_header, get_session: Ses
 
 
 def test_get_single_user(get_client, basic_auth_header):
-    user_id = create_new_user(
+    res = create_new_user(
         get_client,
         auth_header=basic_auth_header,
         data={"email": "userx@email.com", "password": "userx_password"},
     )
 
-    response = get_client.get(f"/api/v1/users/{user_id}")
+    response = get_client.get(f"/api/v1/users/{res.json()['id']}")
 
     assert response.status_code == 200
     assert response.json()["email"] == "userx@email.com"
@@ -170,14 +170,14 @@ def test_delete_auth_no_admin_error(get_client, basic_auth_header):
     email = "user@email.org"
     password = "password"
 
-    new_user_id = create_new_user(
+    res = create_new_user(
         get_client, auth_header=basic_auth_header, data={"email": email, "password": password}
     )
 
     auth_encoded = b64encode(bytes(":".join((email, password)).encode("utf-8"))).decode()
     auth_header = {"Authorization": f"Basic {auth_encoded}"}
 
-    response = get_client.delete(f"/api/v1/users/{new_user_id}", headers=auth_header)
+    response = get_client.delete(f"/api/v1/users/{res.json()['id']}", headers=auth_header)
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authorized to delete a user."

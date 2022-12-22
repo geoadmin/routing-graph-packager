@@ -1,6 +1,7 @@
 import os
+import sys
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseSettings as _BaseSettings
 from starlette.datastructures import CommaSeparatedStrings
@@ -36,11 +37,8 @@ class BaseSettings(_BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "gis_test"
-    POSTGRES_USER: str = "nilsnolde"
-    POSTGRES_PASS: str = "Manchmal88"
-    SQLALCHEMY_DATABASE_URI: str = (
-        f"postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    )
+    POSTGRES_USER: str = "admin"
+    POSTGRES_PASS: str = "admin"
     REDIS_URL: str = "redis://localhost"
 
     ### SMTP ###
@@ -65,25 +63,18 @@ class BaseSettings(_BaseSettings):
 
 
 class ProdSettings(BaseSettings):
-    DEBUG: bool = False
-
     class Config:
         case_sensitive = True
         env_file = ENV_FILE
 
 
 class DevSettings(BaseSettings):
-    DEBUG: bool = True
-
     class Config:
         case_sensitive = True
         env_file = ENV_FILE
 
 
 class TestSettings(BaseSettings):
-    TESTING = True
-    FLASK_DEBUG = 0
-
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB_TEST: str = "gis_test"
@@ -100,8 +91,19 @@ class TestSettings(BaseSettings):
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
 
+    class Config:
+        case_sensitive = True
+        env_file = ENV_FILE
 
-SETTINGS = DevSettings()
 
-if not __debug__:
+SETTINGS: Optional[BaseSettings] = None
+env = os.getenv("API_CONFIG", "prod")
+if env == "prod":
     SETTINGS = ProdSettings()
+elif env == "dev":
+    SETTINGS = DevSettings()
+elif env == "test":
+    SETTINGS = TestSettings()
+else:
+    print("No valid 'API_CONFIG' environment variable, one of 'prod', 'dev' or 'test'")
+    sys.exit(1)

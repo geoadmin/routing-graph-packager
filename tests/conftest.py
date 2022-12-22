@@ -47,11 +47,11 @@ def get_client(get_app: FastAPI) -> TestClient:
 
 @pytest.yield_fixture(scope="session", autouse=True)
 def create_db():
-    from routing_packager_app.db import engine, get_db
+    from routing_packager_app.db import engine
     from routing_packager_app.api_v1.models import User
 
     SQLModel.metadata.create_all(engine, checkfirst=True)
-    User.add_admin_user(next(get_db()))
+    User.add_admin_user(Session(engine))
     yield
     SQLModel.metadata.drop_all(engine, checkfirst=True)
 
