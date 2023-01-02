@@ -22,7 +22,6 @@ gunicorn = "^20.1.0"
 gevent = "^21.12.0"
 pyproj = "^3.3.0"
 psycopg2-binary = "^2.9.3"
-# wait for release of bug fix: https://github.com/python-restx/flask-restx/pull/423
 fastapi = "^0.85.1"
 sqlmodel = "^0.0.8"
 arq = "^0.25.0"
@@ -31,10 +30,12 @@ pydantic = {extras = ["email"], version = "^1.10.2"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
+pytest-asyncio = "^0.20.3"
+pytest-cov = "^3.0.0"
+pytest-httpserver = "^1.0.6"
 pre-commit = "^2.17.0"
 coverage = "^6.3.2"
 coveralls = "^3.3.1"
-pytest-cov = "^3.0.0"
 
 [build-system]
 requires = ["poetry>=1.0.0"]

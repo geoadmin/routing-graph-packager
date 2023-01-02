@@ -21,7 +21,6 @@ async def startup_event():
 
     # create the valhalla directories
     for p in (SETTINGS.VALHALLA_DIR_8002, SETTINGS.VALHALLA_DIR_8003):
-        p = Path(p)
         p.mkdir(parents=True, exist_ok=True)
 
 

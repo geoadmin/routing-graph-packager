@@ -1,5 +1,6 @@
 from base64 import b64encode
 from pathlib import Path
+from time import sleep
 
 import pytest
 from sqlmodel import Session
@@ -60,3 +61,32 @@ def test_post_job_existing_dir(get_client, basic_auth_header):
     )
 
     assert job.status_code == 409
+
+
+def test_job_get_jobs(get_client, basic_auth_header):
+    create_new_job(
+        get_client,
+        auth_header=basic_auth_header,
+        data={
+            **DEFAULT_ARGS_POST
+        }
+    )
+
+    res = get_client.get("/api/v1/jobs/").json()
+
+    assert len(res) == 1
+    assert res[0]["zip_path"] == str(SETTINGS.DATA_DIR.joinpath("osm_test", "osm_test.zip").resolve())
+
+
+def test_job_get_job(get_client, basic_auth_header):
+    res = create_new_job(
+        get_client,
+        auth_header=basic_auth_header,
+        data={
+            **DEFAULT_ARGS_POST
+        }
+    )
+
+    res = get_client.get(f"/api/v1/jobs/{res.json()['id']}").json()
+    print(res)
+    assert res["zip_path"] == str(SETTINGS.DATA_DIR.joinpath("osm_test", "osm_test.zip").resolve())

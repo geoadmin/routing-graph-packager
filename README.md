@@ -106,7 +106,7 @@ However, all data sources **must be** in the OSM PBF format. We offer [commercia
 The app is listening on `/api/v1/jobs` for new `POST` requests to generate some graph according to the passed arguments. The lifecycle is as follows:
 
 1. Request is parsed, inserted into the Postgres database and the new entry is immediately returned with a few job details as blank fields.
-2. Before returning the response, the graph generation function is queued with `RQ` in a Redis database to dispatch to a worker.
+2. Before returning the response, the graph generation function is queued with `ARQ` in a Redis database to dispatch to a worker.
 3. If the worker is currently
     - **idle**, the queue will immediately start the graph generation:
         - Pull the job entry from the Postgres database

@@ -5,7 +5,7 @@ from typing import Set
 
 def make_package_path(base_dir: Path, name: str, provider: str) -> Path:
     """
-    Returns the file name from DATA_DIR, router, provider and dataset name.
+    Returns the ZIP file name from DATA_DIR, provider and dataset name.
 
     :param base_dir: The DATA_DIR env variable
     :param name: The dataset name, e.g. moldavia

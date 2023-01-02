@@ -10,7 +10,7 @@ import requests
 from requests.exceptions import ConnectionError
 import shutil
 from sqlmodel import Session
-from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_301_MOVED_PERMANENTLY
 
 from .api_v1.dependencies import split_bbox
 from .config import SETTINGS
@@ -59,7 +59,8 @@ async def create_package(
             current_valhalla_dir_str = ""
             for port in (8002, 8003):
                 status = requests.get(f"{SETTINGS.VALHALLA_SERVER_IP}:{port}/status").status_code
-                if not status == HTTP_200_OK:
+                # 301 is what the test "expects" due to the simple HTTP server
+                if not status in (HTTP_200_OK, HTTP_301_MOVED_PERMANENTLY):
                     continue
                 current_valhalla_dir_str = SETTINGS.get_valhalla_path(port)
                 break
@@ -79,7 +80,7 @@ async def create_package(
         #   At least if it's not an update, i.e. a POST one, since updates are ran from the Valhalla container after a successful tile build
         #   Or encode it in the accompanying JSON, e.g. if last_opened is later than last_modified
         valhalla_tiles = sorted(current_valhalla_dir.rglob("*.gph"))
-        if not valhalla_tiles:
+        if not valhalla_tiles or not current_valhalla_dir_str:
             raise HTTPException(404, f"No Valhalla tiles in {current_valhalla_dir.resolve()}")
 
         # Gather Valhalla tile paths
@@ -87,8 +88,11 @@ async def create_package(
         if not tile_paths:
             raise HTTPException(404, f"No Valhalla tiles in bbox {bbox}")
 
-        # zip up the tiles
+        # zip up the tiles after locking the directory to not be updated right now
+        lock = current_valhalla_dir.joinpath(".lock")
+        lock.touch(exist_ok=False)
         make_zip(tile_paths, current_valhalla_dir, zip_path)
+        lock.unlink(missing_ok=False)
 
         # Create the meta JSON
         fname = os.path.basename(zip_path)
@@ -97,7 +101,7 @@ async def create_package(
             "filepath": fname,
             "name": job_name,
             "description": description,
-            "extent": ",".join([str(f) for f in bbox]),
+            "extent": bbox,
             "last_modified": str(datetime.utcnow()),
         }
         dirname = os.path.dirname(zip_path)

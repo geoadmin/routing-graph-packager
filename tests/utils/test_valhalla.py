@@ -45,7 +45,7 @@ def test_tile_intersects_bbox():
         )
     ]
     out_paths = get_tiles_with_bbox(input_paths, split_bbox(bbox), tile_dir)
-    assert input_paths == list(out_paths)
+    assert sorted(input_paths) == sorted(out_paths)
 
     bbox = "-20,-59.2,-10.2,-53.9"
     input_paths = [
@@ -57,7 +57,7 @@ def test_tile_intersects_bbox():
         )
     ]
     out_paths = get_tiles_with_bbox(input_paths, split_bbox(bbox), tile_dir)
-    assert input_paths == list(out_paths)
+    assert sorted(input_paths) == sorted(out_paths)
 
     # don't find the ones not intersecting
     bbox = "0,10,4,14"

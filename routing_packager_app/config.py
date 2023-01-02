@@ -24,8 +24,8 @@ class BaseSettings(_BaseSettings):
 
     DATA_DIR: Path = BASE_DIR.joinpath("data/output")
     VALHALLA_SERVER_IP: str = "http://localhost"
-    VALHALLA_DIR_8002: str = str(BASE_DIR.joinpath("data/valhalla_tiles_8002"))
-    VALHALLA_DIR_8003: str = str(BASE_DIR.joinpath("data/valhalla_tiles_8003"))
+    VALHALLA_DIR_8002: Path = str(BASE_DIR.joinpath("data/valhalla_tiles_8002"))
+    VALHALLA_DIR_8003: Path = str(BASE_DIR.joinpath("data/valhalla_tiles_8003"))
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
     if os.path.isdir("/app/data") and not os.getenv("CI", None):
@@ -36,7 +36,7 @@ class BaseSettings(_BaseSettings):
     ### DATABASES ###
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "gis_test"
+    POSTGRES_DB: str = "gis"
     POSTGRES_USER: str = "admin"
     POSTGRES_PASS: str = "admin"
     REDIS_URL: str = "redis://localhost"
@@ -49,10 +49,7 @@ class BaseSettings(_BaseSettings):
     SMTP_PASS: str = ""
     SMTP_SECURE: bool = False
 
-    class Config:
-        case_sensitive = True
-        env_file = ENV_FILE
-
+    # @classmethod
     def get_valhalla_path(self, port: int) -> str:
         if port == 8002:
             return self.VALHALLA_DIR_8002
@@ -77,14 +74,10 @@ class DevSettings(BaseSettings):
 class TestSettings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
+    POSTGRES_DB: str = "gis_test"
     POSTGRES_DB_TEST: str = "gis_test"
     POSTGRES_USER: str = "admin"
     POSTGRES_PASS: str = "admin"
-
-    SQLALCHEMY_DATABASE_URI: str = (
-        os.getenv("POSTGRES_TEST_URL")
-        or f"postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB_TEST}"
-    )
 
     DATA_DIR: Path = BASE_DIR.joinpath("tests", "data")
 
@@ -93,9 +86,10 @@ class TestSettings(BaseSettings):
 
     class Config:
         case_sensitive = True
-        env_file = ENV_FILE
+        env_file = BASE_DIR.joinpath("tests", "env")
 
 
+# decide which settings we'll use
 SETTINGS: Optional[BaseSettings] = None
 env = os.getenv("API_CONFIG", "prod")
 if env == "prod":

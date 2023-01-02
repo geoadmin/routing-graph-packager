@@ -3,6 +3,9 @@ from typing import List, Tuple  # noqa: F401
 from requests import Response
 from starlette.testclient import TestClient
 
+from routing_packager_app import SETTINGS
+from routing_packager_app.utils.file_utils import make_package_path
+
 DEFAULT_ARGS_POST = {
     "name": "test",
     "description": "test description",
@@ -43,3 +46,27 @@ def create_new_job(client, data, auth_header, must_succeed=True) -> Response:
         assert response.headers["Content-Type"] == "application/json"
         return response
     return response
+
+
+def create_package_params(j):
+    """
+    Create the parameters for create_package task, with user ID 1.
+
+    :param dict j: The job response in JSON
+
+    :returns: Tuple with all parameters inside
+    :rtype: tuple
+    """
+    data_dir = SETTINGS.DATA_DIR
+
+    result_path = make_package_path(data_dir, j["name"], j["provider"])
+
+    return (
+        {},
+        j["id"],
+        j["name"],
+        j["description"],
+        j["bbox"],
+        result_path,
+        1
+    )

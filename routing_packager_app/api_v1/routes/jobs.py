@@ -30,10 +30,10 @@ from ...constants import *
 router = APIRouter()
 
 
-@router.get("/jobs", response_model=List[JobRead])
+@router.get("/", response_model=List[JobRead])
 def get_jobs(
-    provider: Optional[Providers] = Providers.OSM,
-    status: Optional[Statuses] = Statuses.QUEUED,
+    provider: Optional[Providers] = None,
+    status: Optional[Statuses] = None,
     bbox: List[float] = Depends(split_bbox),
     update: bool = False,
     db: Session = Depends(get_db),
@@ -48,7 +48,11 @@ def get_jobs(
     if update:
         filters.append(Job.update is True)
 
-    return db.exec(select(Job).filter(*filters)).all()
+    jobs = db.exec(select(Job).filter(*filters)).all()
+    for job in jobs:
+        job.bbox = Job.convert_bbox(job.bbox)
+
+    return jobs
 
 
 @router.post("/", response_model=JobRead)
@@ -83,6 +87,7 @@ async def post_job(
     db_job.status = Statuses.QUEUED
     db_job.arq_id = arq_id
     db_job.user_id = current_user.id
+    db_job.zip_path = str(zip_path.resolve())
     add_or_abort(db, db_job)
 
     # launch Redis task and update db entries there
@@ -111,6 +116,8 @@ def get_job(job_id: int, db: Session = Depends(get_db)):
     job = db.get(Job, job_id)
     if not job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
+
+    job.bbox = Job.convert_bbox(job.bbox)
 
     return job
 

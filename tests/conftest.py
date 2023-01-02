@@ -9,17 +9,8 @@ from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, Session
 
 from routing_packager_app import create_app
-from routing_packager_app import config
-from routing_packager_app.config import TestSettings, SETTINGS
+from routing_packager_app.config import SETTINGS
 from routing_packager_app.worker import create_package
-
-
-@pytest.fixture(scope="function", autouse=True)
-def patch_settings(monkeypatch):
-    def mockreturn():
-        return TestSettings()
-
-    monkeypatch.setattr(config, "SETTINGS", mockreturn())
 
 
 @pytest.yield_fixture(scope="session", autouse=True)

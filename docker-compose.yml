@@ -30,7 +30,7 @@ services:
       - 5555:5432
     restart: always
   redis:
-    image: redis:6.0
+    image: redis:6.2
     container_name: routing-packager-redis
       # mostly needed to define the database hosts
     env_file:

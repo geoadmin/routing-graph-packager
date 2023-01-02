@@ -1,10 +1,17 @@
-from shutil import rmtree
+from shutil import rmtree, copytree
 
 import pytest
+from pytest_httpserver import HTTPServer
 from sqlmodel import Session, select
 
 from routing_packager_app import SETTINGS
 from routing_packager_app.api_v1.models import Job
+
+
+# alter the default port for the HTTP test server:
+# https://pytest-httpserver.readthedocs.io/en/latest/howto.html#customizing-host-and-port
+HTTPServer.DEFAULT_LISTEN_PORT = 8002
+HTTPServer.DEFAULT_LISTEN_HOST = "localhost"
 
 
 @pytest.yield_fixture(scope="function", autouse=True)
@@ -21,3 +28,11 @@ def delete_dirs():
     yield
     for dir_ in SETTINGS.DATA_DIR.iterdir():
         rmtree(dir_)
+
+
+@pytest.yield_fixture(scope="function")
+def copy_valhalla_tiles():
+    for dir_ in SETTINGS.DATA_DIR.parent.joinpath("andorra_tiles").iterdir():
+        copytree(dir_, SETTINGS.VALHALLA_DIR_8002.joinpath(dir_.stem))
+    yield
+    rmtree(SETTINGS.VALHALLA_DIR_8002)

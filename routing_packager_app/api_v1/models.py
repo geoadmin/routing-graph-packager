@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from fastapi.security import HTTPBasicCredentials
-from geoalchemy2 import Geography
+from geoalchemy2 import Geography, WKBElement
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
@@ -10,6 +10,7 @@ from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select
 
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
+from ..utils.geom_utils import wkbe_to_bbox, wkbe_to_str
 
 
 class JobBase(SQLModel):
@@ -29,7 +30,7 @@ class JobRead(JobBase):
     user_id: int = 1
     arq_id: str = ""
     status: Statuses = Statuses.QUEUED
-    bbox: str = "5.9559,45.818,10.4921,47.8084"
+    bbox: str = ""
     zip_path: Optional[str]
     last_started: Optional[datetime]
     last_finished: Optional[datetime]
@@ -58,6 +59,11 @@ class Job(JobBase, table=True):
     def __repr__(self):  # pragma: no cover
         s = f"<Job id={self.id} name={self.name} status={self.status} provider={self.provider}>"
         return s
+
+    @staticmethod
+    def convert_bbox(bbox: WKBElement) -> str:
+        """Converts a WKBElement to a bbox string"""
+        return wkbe_to_str(bbox)
 
 
 class UserBase(SQLModel):
