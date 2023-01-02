@@ -1,5 +1,0 @@
-# Ignore everything in this directory
-*
-!*.pbf
-# Except this file
-!.gitignore

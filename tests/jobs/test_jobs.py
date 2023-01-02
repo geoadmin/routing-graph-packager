@@ -8,7 +8,7 @@ from routing_packager_app import SETTINGS
 from routing_packager_app.api_v1.models import Job
 from routing_packager_app.constants import Providers
 from routing_packager_app.utils.file_utils import make_package_path
-from ..utils import create_new_job, DEFAULT_ARGS_POST
+from ..utils_ import create_new_job, DEFAULT_ARGS_POST
 
 
 def check_dir(job: Job):

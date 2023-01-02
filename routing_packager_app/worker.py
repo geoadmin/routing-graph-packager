@@ -22,18 +22,24 @@ from .utils.file_utils import make_zip
 from .utils.valhalla_utils import get_tiles_with_bbox
 
 LOGGER = logging.getLogger("packager")
-LOGGER.setLevel(logging.INFO)
 
 
 async def create_package(
-    ctx, job_id: int, job_name: str, description: str, bbox: str, zip_path: str, user_id: int
+    ctx,
+    job_id: int,
+    job_name: str,
+    description: str,
+    bbox: str,
+    zip_path: str,
+    user_id: int,
+    update: bool = False,
 ):
     session: Session = next(get_db())
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
     user_email = session.query(User).get(user_id).email
-    if not LOGGER.handlers:
+    if not LOGGER.handlers and update is False:
         handler = AppSmtpHandler(**get_smtp_details([user_email]))
         handler.setLevel(logging.INFO)
         LOGGER.addHandler(handler)
@@ -69,6 +75,9 @@ async def create_package(
         #   won't start building a new tile set while this job is running a compression
         #   That carries some risk as after the last one ran and until it can create a .lock file
         #   here with the next one, a bit of time passes. Not much really, but surely measurable.
+        #
+        #   At least if it's not an update, i.e. a POST one, since updates are ran from the Valhalla container after a successful tile build
+        #   Or encode it in the accompanying JSON, e.g. if last_opened is later than last_modified
         valhalla_tiles = sorted(current_valhalla_dir.rglob("*.gph"))
         if not valhalla_tiles:
             raise HTTPException(404, f"No Valhalla tiles in {current_valhalla_dir.resolve()}")

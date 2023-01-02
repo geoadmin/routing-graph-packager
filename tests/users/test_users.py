@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 
 from routing_packager_app import SETTINGS
 from routing_packager_app.api_v1.models import User
-from tests.utils import create_new_user
+from ..utils_ import create_new_user
 
 
 def test_client(get_client: TestClient, basic_auth_header, get_session: Session, delete_users):

@@ -49,6 +49,7 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
             wkbe_to_bbox(job.bbox),
             job.zip_path,
             job.user_id,
+            True
             # TODO: possibly we can't use the same ID, since arq won't process
             #   the same ID twice, which would be needed for updating every package
             # _job_id=job.arq_id,
@@ -77,6 +78,7 @@ if __name__ == "__main__":
 
     session: Session = get_db()
 
+    # Run the updates as software owner/admin
     user_email = session.query(select(User).where(User.email == SETTINGS.ADMIN_EMAIL)).first()
     if not LOGGER.handlers:
         handler = AppSmtpHandler(**get_smtp_details([user_email]))
