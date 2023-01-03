@@ -3,17 +3,18 @@
 **/__pycache__/
 dist/
 build/
+data/
+ciso_reports/
 .idea/
 .tox/
 .coverage
+.coveragerc
 htmlcov/
 tests/
-CHANGELOG.md
-README.md
-CONTRIBUTING.md
+*.md
 **/*.yaml
-.style.yapf
 docker-compose.yml
+*.cfg
 
 .env
 **/*.pbf

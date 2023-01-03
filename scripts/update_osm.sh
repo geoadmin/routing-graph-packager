@@ -16,7 +16,7 @@ export https_proxy=http://prxp01.admin.ch:8080
 
 usage()
 {
-    echo "usage: routing_packager_update_osm.sh --pbf/-p /app/data/osm/planet-latest.osm.pbf"
+    echo "usage: update_osm.sh --pbf/-p /app/data/osm/planet-latest.osm.pbf"
 }
 
 pbf=/app/data/osm/planet-latest.osm.pbf

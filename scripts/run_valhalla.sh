@@ -7,6 +7,8 @@
 # Rotationally build Valhalla tiles to 2 different directories (env vars from docker-compose.yml).
 # Respects a .lock file and waits for it to disappear before nuking the tileset.
 #
+# Note, that some variables here are sourced from the .env/.docker_env file.
+#
 # Usage: ./run_valhalla.sh
 #
 
@@ -29,6 +31,7 @@ wait_for_lock() {
 
 PORT_8002="8002"
 PORT_8003="8003"
+PBF="$DATA_DIR/planet-latest.osm.pbf"
 
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
@@ -55,8 +58,18 @@ while true; do
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
   fi
 
-  # wait until there's no .lock file anymore
-  wait_for_lock "$CURRENT_VALHALLA_DIR"
+  # download the PBF file if need be
+  UPDATE_OSM="True"
+  if ! [ -f "$PBF" ]; then
+    echo "INFO: Downloading OSM file $PBF"
+    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/ -O "$PBF" || exit 1
+    UPDATE_OSM="False"
+  fi
+
+  if [[ $UPDATE_OSM == "True" ]]; then
+    echo "INFO: Updating OSM file $PBF"
+    pyosmium-up-to-date -O "$PBF" -vvv || exit 1
+  fi
 
   # build the current config
   valhalla_config="$CURRENT_VALHALLA_DIR/valhalla.json"
@@ -67,16 +80,21 @@ while true; do
     --mjolnir-concurrency "$CONCURRENCY" \
     > "${valhalla_config}" || exit 1
 
+  # wait until there's no .lock file anymore
+  wait_for_lock "$CURRENT_VALHALLA_DIR"
+
   # If it's the first one, check for the Valhalla dir and abort if it's there
   if [[ -z $OLD_PORT && $FORCE_BUILD == "False" ]]; then
+    # remove the reference to tiles_dir so the service doesn't actually load the tiles
+    jq --arg d "" '.mjolnir.tile_dir = $d' "${valhalla_config}"| sponge "${valhalla_config}"
     exec valhalla_service "$valhalla_config" 1 &
     OLD_PID=$!
     sleep 1
-    continue;
+    continue
   fi
 
-  echo "INFO: Running build tiles with: ${valhalla_config} $DATA_DIR/planet-latest.osm.pbf"
-  valhalla_build_tiles -c "${CONFIG_FILE}" || exit 1
+  echo "INFO: Running build tiles with: $PBF"
+  valhalla_build_tiles -c "${CONFIG_FILE}" "$PBF" || exit 1
 
   # shut down the old service and launch the new one
   kill -9 $OLD_PID

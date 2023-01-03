@@ -56,8 +56,8 @@ def create_package_params(j):
     :returns: Tuple with all parameters inside
     :rtype: tuple
     """
-    data_dir = SETTINGS.DATA_DIR
+    output_dir = SETTINGS.get_output_path()
 
-    result_path = make_package_path(data_dir, j["name"], j["provider"])
+    result_path = make_package_path(output_dir, j["name"], j["provider"])
 
-    return ({}, j["id"], j["name"], j["description"], j["bbox"], result_path, 1)
+    return {}, j["id"], j["name"], j["description"], j["bbox"], result_path, 1

@@ -6,6 +6,8 @@ from typing import List, Optional
 from pydantic import BaseSettings as _BaseSettings
 from starlette.datastructures import CommaSeparatedStrings
 
+from routing_packager_app.constants import Providers
+
 BASE_DIR = Path(__file__).parent.parent.resolve()
 ENV_FILE = BASE_DIR.joinpath(".env")
 
@@ -22,10 +24,8 @@ class BaseSettings(_BaseSettings):
     # TODO: clarify if there's a need to restrict origins
     CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
 
-    DATA_DIR: Path = BASE_DIR.joinpath("data/output")
+    DATA_DIR: Path = BASE_DIR.joinpath("data")
     VALHALLA_SERVER_IP: str = "http://localhost"
-    VALHALLA_DIR_8002: Path = str(BASE_DIR.joinpath("data/valhalla_tiles_8002"))
-    VALHALLA_DIR_8003: Path = str(BASE_DIR.joinpath("data/valhalla_tiles_8003"))
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
     if os.path.isdir("/app/data") and not os.getenv("CI", None):  # pragma: no cover
@@ -50,12 +50,14 @@ class BaseSettings(_BaseSettings):
     SMTP_SECURE: bool = False
 
     def get_valhalla_path(self, port: int) -> Path:  # pragma: no cover
-        if port == 8002:
-            return self.VALHALLA_DIR_8002
-        elif port == 8003:
-            return self.VALHALLA_DIR_8003
-        else:
-            raise ""
+        if port in (8002, 8003):
+            p = self.DATA_DIR.joinpath(Providers.OSM.lower(), str(port))
+            p.mkdir(exist_ok=True)
+            return p
+        raise ValueError(f"{port} is not a valid port for Valhalla.")
+
+    def get_output_path(self) -> Path:
+        return self.DATA_DIR.joinpath("output")
 
 
 class ProdSettings(BaseSettings):

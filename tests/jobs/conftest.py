@@ -26,13 +26,13 @@ def delete_jobs(get_session: Session):
 @pytest.yield_fixture(scope="function", autouse=True)
 def delete_dirs():
     yield
-    for dir_ in SETTINGS.DATA_DIR.iterdir():
+    for dir_ in SETTINGS.get_output_path().iterdir():
         rmtree(dir_)
 
 
 @pytest.yield_fixture(scope="function")
 def copy_valhalla_tiles():
-    for dir_ in SETTINGS.DATA_DIR.parent.joinpath("andorra_tiles").iterdir():
-        copytree(dir_, SETTINGS.VALHALLA_DIR_8002.joinpath(dir_.stem))
+    for dir_ in SETTINGS.get_output_path().parent.joinpath("andorra_tiles").iterdir():
+        copytree(dir_, SETTINGS.get_valhalla_path(8002).joinpath(dir_.stem))
     yield
-    rmtree(SETTINGS.VALHALLA_DIR_8002)
+    rmtree(SETTINGS.get_valhalla_path(8002))

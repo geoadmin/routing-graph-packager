@@ -10,8 +10,6 @@ ADMIN_PASS=admin
 # MUST be an absolute path
 DATA_DIR=/root/routing-graph-packager/data
 
-# The routers you'd like to enable
-ENABLED_ROUTERS=valhalla
 VALHALLA_IMAGE=gisops/valhalla:latest
 
 POSTGRES_DB=gis
@@ -28,5 +26,3 @@ SSL_KEY=''
 CONCURRENCY=4
 # Should we force build on first start? True/False
 FORCE_BUILD=False
-# The full URL to the PBF
-PBF_PATH=

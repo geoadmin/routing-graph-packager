@@ -1,6 +1,5 @@
 from base64 import b64encode
 import shutil
-from pathlib import Path
 
 import pytest
 from arq import Worker
@@ -72,9 +71,9 @@ def basic_auth_header():
 # Creates needed directories and removes them after the test function
 @pytest.yield_fixture(scope="session", autouse=True)
 def handle_dirs():
-    for p in (SETTINGS.VALHALLA_DIR_8002, SETTINGS.VALHALLA_DIR_8003):
-        p = Path(p)
+    paths = [SETTINGS.get_valhalla_path(p) for p in (8002, 8003)]
+    for p in paths:
         p.mkdir(parents=True, exist_ok=True)
     yield
-    for p in (SETTINGS.VALHALLA_DIR_8002, SETTINGS.VALHALLA_DIR_8003):
+    for p in paths:
         shutil.rmtree(p, ignore_errors=True)

@@ -18,7 +18,7 @@ DEFAULT_ARGS = {
     "job_name": "test",
     "description": "test desc",
     "bbox": "5.9559,45.818,10.4921,47.8084",
-    "zip_path": str(SETTINGS.DATA_DIR.joinpath("test", "test.zip")),
+    "zip_path": str(SETTINGS.get_output_path().joinpath("test", "test.zip")),
     "user_id": 1,
 }
 

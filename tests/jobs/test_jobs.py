@@ -1,5 +1,4 @@
 from base64 import b64encode
-from pathlib import Path
 
 import pytest
 from sqlmodel import Session
@@ -13,10 +12,10 @@ from ..utils_ import create_new_job, DEFAULT_ARGS_POST
 
 def check_dir(job: Job):
     """Checks if a job directory exists and removes it after."""
-    dir = Path(SETTINGS.DATA_DIR)
-    dir.joinpath(f"{'_'.join([job.name, job.provider])}")
+    dir_ = SETTINGS.get_output_path()
+    dir_.joinpath(f"{'_'.join([job.name, job.provider])}")
 
-    assert dir.exists() and dir.is_dir()
+    assert dir_.exists() and dir_.is_dir()
 
 
 @pytest.mark.parametrize("provider", Providers)
@@ -51,7 +50,7 @@ def test_post_job_no_user(get_client):
 
 def test_post_job_existing_dir(get_client, basic_auth_header):
     out_dir = make_package_path(
-        SETTINGS.DATA_DIR, DEFAULT_ARGS_POST["name"], DEFAULT_ARGS_POST["provider"]
+        SETTINGS.get_output_path(), DEFAULT_ARGS_POST["name"], DEFAULT_ARGS_POST["provider"]
     )
     out_dir.mkdir(parents=True, exist_ok=False)
 
@@ -68,7 +67,9 @@ def test_job_get_jobs(get_client, basic_auth_header):
     res = get_client.get("/api/v1/jobs/").json()
 
     assert len(res) == 1
-    assert res[0]["zip_path"] == str(SETTINGS.DATA_DIR.joinpath("osm_test", "osm_test.zip").resolve())
+    assert res[0]["zip_path"] == str(
+        SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
+    )
 
 
 # parameterize the ones that should work with the default params
@@ -103,7 +104,9 @@ def test_job_get_job(get_client, basic_auth_header):
     res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
 
     res = get_client.get(f"/api/v1/jobs/{res.json()['id']}").json()
-    assert res["zip_path"] == str(SETTINGS.DATA_DIR.joinpath("osm_test", "osm_test.zip").resolve())
+    assert res["zip_path"] == str(
+        SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
+    )
 
 
 def test_job_get_job_not_found(get_client, basic_auth_header):

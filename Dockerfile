@@ -3,7 +3,6 @@ FROM valhalla/valhalla:run-3.2.0 as builder
 LABEL maintainer=nils@gis-ops.com
 
 WORKDIR /app
-ENV POETRY_BIN $HOME/.local/share/pypoetry/venv/bin/poetry
 
 # Install vis
 RUN apt-get update -y > /dev/null && \
@@ -11,8 +10,12 @@ RUN apt-get update -y > /dev/null && \
         apt-transport-https \
         ca-certificates \
         python-is-python3 \
+        python3-pip \
+        python3-venv \
         curl > /dev/null && \
-    pip install --upgrade pip
+    python -m pip install --upgrade pip
+
+ENV POETRY_BIN /root/.local/bin/poetry
 
 RUN curl -sSL https://install.python-poetry.org | python && \
     $POETRY_BIN config virtualenvs.create false && \
@@ -65,18 +68,18 @@ ENV serve_tiles=True
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /usr/bin/prime_* /usr/bin/
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libprime* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder .venv .venv
+COPY --from=builder /app/.venv /app/
+COPY --from=builder /app/scripts/* /usr/local/bin/
+
+COPY . .
 
 # add the root cert for https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/, so osmupdate can download stuff
 RUN mv /app/ssl/gwdg_root_cert.crt /usr/local/share/ca-certificates && \
     update-ca-certificates
 
-COPY . .
-COPY scripts scripts
-
 EXPOSE 5000
 HEALTHCHECK --start-period=5s CMD curl --fail -s http://localhost:5000/api/v1/jobs || exit 1
 
 # Start gunicorn
-ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["app"]

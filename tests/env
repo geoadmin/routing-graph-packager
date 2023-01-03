@@ -1,18 +1,11 @@
-#=== START DON'T CHANGE ===
-# only important for docker-compose
-COMPOSE_PROJECT_NAME=routing-packager
-#=== END DON'T CHANGE ===
-
 ADMIN_EMAIL=admin@example.org
 ADMIN_PASS=admin
 
 # you can change the directory to wherever you want the data to reside on the host
 # MUST be an absolute path
-DATA_DIR=${PWD}/tests/data/output
+DATA_DIR=${PWD}/tests/data
 
 VALHALLA_SERVER_IP="http://localhost"
-VALHALLA_DIR_8002=${PWD}/tests/data/valhalla_tiles_8002
-VALHALLA_DIR_8003=${PWD}/tests/ata/valhalla_tiles_8003
 
 # The routers you'd like to enable
 VALHALLA_IMAGE=gisops/valhalla:latest

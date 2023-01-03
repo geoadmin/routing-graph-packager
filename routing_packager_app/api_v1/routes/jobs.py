@@ -76,7 +76,7 @@ async def post_job(
     job.bbox = bbox_to_wkt(split_bbox(bbox_str))
 
     try:
-        zip_path = make_package_path(SETTINGS.DATA_DIR, job.name, job.provider.lower())
+        zip_path = make_package_path(SETTINGS.get_output_path(), job.name, job.provider.lower())
         arq_id = zip_path.stem
     except FileExistsError:
         raise HTTPException(HTTP_409_CONFLICT, "Already registered this package.")
