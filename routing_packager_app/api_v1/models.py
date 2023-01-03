@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from fastapi.security import HTTPBasicCredentials
-from geoalchemy2 import Geography, WKBElement
+from geoalchemy2 import Geography
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
@@ -10,7 +10,7 @@ from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select
 
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
-from ..utils.geom_utils import wkbe_to_bbox, wkbe_to_str
+from ..utils.geom_utils import wkbe_to_str
 
 
 class JobBase(SQLModel):
@@ -60,10 +60,9 @@ class Job(JobBase, table=True):
         s = f"<Job id={self.id} name={self.name} status={self.status} provider={self.provider}>"
         return s
 
-    @staticmethod
-    def convert_bbox(bbox: WKBElement) -> str:
+    def convert_bbox(self):
         """Converts a WKBElement to a bbox string"""
-        return wkbe_to_str(bbox)
+        self.bbox = wkbe_to_str(self.bbox)
 
 
 class UserBase(SQLModel):

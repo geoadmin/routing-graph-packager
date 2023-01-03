@@ -28,7 +28,7 @@ class BaseSettings(_BaseSettings):
     VALHALLA_DIR_8003: Path = str(BASE_DIR.joinpath("data/valhalla_tiles_8003"))
     # if we're inside a docker container, we need to reference the fixed directory instead
     # Watch out for CI, also runs within docker
-    if os.path.isdir("/app/data") and not os.getenv("CI", None):
+    if os.path.isdir("/app/data") and not os.getenv("CI", None):  # pragma: no cover
         DATA_DIR = "/app/data"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
@@ -49,8 +49,7 @@ class BaseSettings(_BaseSettings):
     SMTP_PASS: str = ""
     SMTP_SECURE: bool = False
 
-    # @classmethod
-    def get_valhalla_path(self, port: int) -> str:
+    def get_valhalla_path(self, port: int) -> Path:  # pragma: no cover
         if port == 8002:
             return self.VALHALLA_DIR_8002
         elif port == 8003:
@@ -92,12 +91,12 @@ class TestSettings(BaseSettings):
 # decide which settings we'll use
 SETTINGS: Optional[BaseSettings] = None
 env = os.getenv("API_CONFIG", "prod")
-if env == "prod":
+if env == "prod":  # pragma: no cover
     SETTINGS = ProdSettings()
-elif env == "dev":
+elif env == "dev":  # pragma: no cover
     SETTINGS = DevSettings()
 elif env == "test":
     SETTINGS = TestSettings()
-else:
+else:  # pragma: no cover
     print("No valid 'API_CONFIG' environment variable, one of 'prod', 'dev' or 'test'")
     sys.exit(1)

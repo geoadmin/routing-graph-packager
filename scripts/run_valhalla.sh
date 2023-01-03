@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# Author: Nils Nolde <nils@gis-ops.com>
+# Updated: 15-12-2022
+# License: MIT
+#
+# Rotationally build Valhalla tiles to 2 different directories (env vars from docker-compose.yml).
+# Respects a .lock file and waits for it to disappear before nuking the tileset.
+#
+# Usage: ./run_valhalla.sh
+#
+
 # watch the .lock file every 10 secs
 wait_for_lock() {
   count=0
@@ -37,7 +47,7 @@ while true; do
     CURRENT_PORT=${PORT_8002}
     OLD_PORT=${PORT_8003}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
-  elif [[ $iteration != 0 ]]; then
+  elif [[ $iteration != 1 ]]; then
     echo "ERROR: Neither localhost:8002 nor localhost:8003 is up."
     exit 1
   else
@@ -53,7 +63,7 @@ while true; do
   valhalla_build_config \
     --httpd-service-listen "tcp://*:${CURRENT_PORT}" \
     --mjolnir-tile-extract "" \
-    --mjolnir-tile-dir $CURRENT_VALHALLA_DIR \
+    --mjolnir-tile-dir "$CURRENT_VALHALLA_DIR" \
     --mjolnir-concurrency "$CONCURRENCY" \
     > "${valhalla_config}" || exit 1
 
@@ -65,43 +75,11 @@ while true; do
     continue;
   fi
 
-
   echo "INFO: Running build tiles with: ${valhalla_config} $DATA_DIR/planet-latest.osm.pbf"
+  valhalla_build_tiles -c "${CONFIG_FILE}" || exit 1
 
-  # if we should build with elevation we need to build the tiles in stages
-  echo ""
-  echo "============================"
-  echo "= Build the initial graph. ="
-  echo "============================"
-
-  valhalla_build_tiles -c ${CONFIG_FILE} -e build ${files} || exit 1
-
-  # Build the elevation data if requested
-  if [[ $do_elevation == "True" ]]; then
-    if [[ ${build_elevation} == "Force" ]] && ! test -d "${ELEVATION_PATH}"; then
-      echo "WARNING: Rebuilding elevation tiles"
-      rm -rf $ELEVATION_PATH || exit 1
-    fi
-    maybe_create_dir ${ELEVATION_PATH}
-    echo ""
-    echo "================================="
-    echo "= Download the elevation tiles ="
-    echo "================================="
-    valhalla_build_elevation --from-tiles --decompress -c ${CONFIG_FILE} -v || exit 1
-  fi
-
-  echo ""
-  echo "==============================="
-  echo "= Enhancing the initial graph ="
-  echo "==============================="
-  valhalla_build_tiles -c ${CONFIG_FILE} -s enhance ${files} || exit 1
-
-  echo "INFO: Successfully built files: ${files}"
-  add_hashes "${files}"
-
-
-
-
-
-
+  # shut down the old service and launch the new one
+  kill -9 $OLD_PID
+  exec valhalla_service "$valhalla_config" 1 &
+  OLD_PID=$!
 done

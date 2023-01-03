@@ -22,7 +22,6 @@ def make_package_path(base_dir: Path, name: str, provider: str) -> Path:
     return out_dir.joinpath(file_name + ".zip").resolve()
 
 
-# https://gist.github.com/felixSchl/d38b455df8bf83a78d3d
 def make_zip(source_paths: Set[Path], parent_path: Path, out_fp: str):
     """
     ZIPs the input paths.

@@ -3,7 +3,6 @@ from pathlib import Path
 import shutil
 
 import pytest
-import requests
 from pytest_httpserver import HTTPServer
 from starlette.exceptions import HTTPException
 from starlette.testclient import TestClient
@@ -25,7 +24,9 @@ DEFAULT_ARGS = {
 
 
 @pytest.mark.asyncio
-async def test_success(get_client: TestClient, httpserver: HTTPServer, basic_auth_header, copy_valhalla_tiles):
+async def test_success(
+    get_client: TestClient, httpserver: HTTPServer, basic_auth_header, copy_valhalla_tiles
+):
     httpserver.expect_request("/status").respond_with_json({})
 
     # create the right bbox
@@ -69,7 +70,9 @@ async def test_fail_no_tiles_in_dir(get_client: TestClient, httpserver: HTTPServ
 
 
 @pytest.mark.asyncio
-async def test_fail_no_tiles_in_bbox(get_client: TestClient, httpserver: HTTPServer, basic_auth_header, copy_valhalla_tiles):
+async def test_fail_no_tiles_in_bbox(
+    get_client: TestClient, httpserver: HTTPServer, basic_auth_header, copy_valhalla_tiles
+):
     httpserver.expect_request("/status").respond_with_json({})
     new_job = create_new_job(get_client, DEFAULT_ARGS, basic_auth_header)
     shutil.rmtree(Path(new_job.json()["zip_path"]).parent)

@@ -1,13 +1,12 @@
 from base64 import b64encode
 from pathlib import Path
-from time import sleep
 
 import pytest
 from sqlmodel import Session
 
 from routing_packager_app import SETTINGS
 from routing_packager_app.api_v1.models import Job
-from routing_packager_app.constants import Providers
+from routing_packager_app.constants import Providers, Statuses
 from routing_packager_app.utils.file_utils import make_package_path
 from ..utils_ import create_new_job, DEFAULT_ARGS_POST
 
@@ -64,13 +63,7 @@ def test_post_job_existing_dir(get_client, basic_auth_header):
 
 
 def test_job_get_jobs(get_client, basic_auth_header):
-    create_new_job(
-        get_client,
-        auth_header=basic_auth_header,
-        data={
-            **DEFAULT_ARGS_POST
-        }
-    )
+    create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
 
     res = get_client.get("/api/v1/jobs/").json()
 
@@ -78,15 +71,66 @@ def test_job_get_jobs(get_client, basic_auth_header):
     assert res[0]["zip_path"] == str(SETTINGS.DATA_DIR.joinpath("osm_test", "osm_test.zip").resolve())
 
 
-def test_job_get_job(get_client, basic_auth_header):
-    res = create_new_job(
+# parameterize the ones that should work with the default params
+@pytest.mark.parametrize(
+    "key_value",
+    (("bbox", "0,0,1,1"), ("provider", Providers.OSM), ("status", Statuses.QUEUED), ("update", False)),
+)
+def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
+    # default
+    create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+    # won't be GET
+    create_new_job(
         get_client,
         auth_header=basic_auth_header,
         data={
-            **DEFAULT_ARGS_POST
-        }
+            "name": "test2",
+            "provider": "tomtom",
+            "bbox": "10,10,20,20",
+            "update": True,
+            "description": "blabla",
+        },
     )
 
+    res = get_client.get("/api/v1/jobs/", params=(key_value,)).json()
+
+    # since we don't do any actual processing when testing, Statuses.Completed is never set
+    assert len(res) == 2 if key_value[0] == "value" else 1
+    assert res[0]["provider"] == "osm"
+
+
+def test_job_get_job(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
     res = get_client.get(f"/api/v1/jobs/{res.json()['id']}").json()
-    print(res)
     assert res["zip_path"] == str(SETTINGS.DATA_DIR.joinpath("osm_test", "osm_test.zip").resolve())
+
+
+def test_job_get_job_not_found(get_client, basic_auth_header):
+    res = get_client.get("/api/v1/jobs/1")
+    assert res.status_code == 404
+    assert res.json()["detail"] == "Couldn't find job id 1"
+
+
+def test_job_delete(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+    print(basic_auth_header)
+    res = get_client.delete(f"/api/v1/jobs/{res.json()['id']}", headers=basic_auth_header)
+    assert res.status_code == 204
+
+
+def test_job_delete_invalid_auth(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
+    res = get_client.delete(f"/api/v1/jobs/{res.json()['id']}", headers={})
+    assert res.status_code == 401
+
+
+def test_job_delete_invalid_pass(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
+    res = get_client.delete(
+        f"/api/v1/jobs/{res.json()['id']}",
+        headers={"Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaa5="},
+    )
+    assert res.status_code == 401

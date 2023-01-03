@@ -9,8 +9,7 @@ from routing_packager_app.utils.file_utils import make_package_path
 DEFAULT_ARGS_POST = {
     "name": "test",
     "description": "test description",
-    "bbox": "0,0,1,1",
-    "router": "valhalla",
+    "bbox": "0,0,2,2",
     "provider": "osm",
 }
 
@@ -61,12 +60,4 @@ def create_package_params(j):
 
     result_path = make_package_path(data_dir, j["name"], j["provider"])
 
-    return (
-        {},
-        j["id"],
-        j["name"],
-        j["description"],
-        j["bbox"],
-        result_path,
-        1
-    )
+    return ({}, j["id"], j["name"], j["description"], j["bbox"], result_path, 1)

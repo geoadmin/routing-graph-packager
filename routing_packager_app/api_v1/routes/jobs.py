@@ -1,4 +1,5 @@
 import os
+from shutil import rmtree
 from typing import List, Optional
 
 from arq.connections import ArqRedis
@@ -31,11 +32,11 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[JobRead])
-def get_jobs(
+async def get_jobs(
     provider: Optional[Providers] = None,
     status: Optional[Statuses] = None,
+    update: bool = None,
     bbox: List[float] = Depends(split_bbox),
-    update: bool = False,
     db: Session = Depends(get_db),
 ):
     filters = []
@@ -45,12 +46,12 @@ def get_jobs(
         filters.append(Job.provider == provider)
     if status:
         filters.append(Job.status == status)
-    if update:
-        filters.append(Job.update is True)
+    if update is not None:
+        filters.append(Job.update == update)
 
     jobs = db.exec(select(Job).filter(*filters)).all()
     for job in jobs:
-        job.bbox = Job.convert_bbox(job.bbox)
+        job.convert_bbox()
 
     return jobs
 
@@ -106,18 +107,18 @@ async def post_job(
         )
 
     # At this point it'd be a geoalchemy2.WKBElement but the output model requires a string
-    db_job.bbox = bbox_str
+    db_job.convert_bbox()
     return db_job
 
 
 @router.get("/{job_id}", response_model=JobRead)
-def get_job(job_id: int, db: Session = Depends(get_db)):
+async def get_job(job_id: int, db: Session = Depends(get_db)):
     """GET a single job."""
     job = db.get(Job, job_id)
     if not job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
 
-    job.bbox = Job.convert_bbox(job.bbox)
+    job.convert_bbox()
 
     return job
 
@@ -140,14 +141,16 @@ async def delete_job(
     if not db_job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
 
-    job_arq_id: str = job_key_prefix + db_job.arq_id
-    pool: ArqRedis = req.app.state.redis_pool
-    # try to delete the Redis job or don't care if there is none
-    if pool.keys(job_arq_id):
-        await pool.delete(job_arq_id)
+    if not isinstance(SETTINGS, TestSettings):  # pragma: no cover
+        job_arq_id: str = job_key_prefix + db_job.arq_id
+        pool: ArqRedis = req.app.state.redis_pool
+        # try to delete the Redis job or don't care if there is none
+        if pool.keys(job_arq_id):
+            await pool.delete(job_arq_id)
 
     delete_or_abort(db, db_job)
-    if os.path.exists(db_job.arq_id):
-        os.remove(db_job.arq_id)
+    dir_path = os.path.dirname(db_job.zip_path)
+    if os.path.exists(dir_path):
+        rmtree(dir_path)
 
     return Response("", HTTP_204_NO_CONTENT)
