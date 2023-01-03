@@ -71,14 +71,6 @@ async def create_package(
             )
 
         current_valhalla_dir = Path(current_valhalla_dir_str).resolve()
-
-        # TODO: maybe introduce a .lock file in the current valhalla dir, so the Valhalla server
-        #   won't start building a new tile set while this job is running a compression
-        #   That carries some risk as after the last one ran and until it can create a .lock file
-        #   here with the next one, a bit of time passes. Not much really, but surely measurable.
-        #
-        #   At least if it's not an update, i.e. a POST one, since updates are ran from the Valhalla container after a successful tile build
-        #   Or encode it in the accompanying JSON, e.g. if last_opened is later than last_modified
         valhalla_tiles = sorted(current_valhalla_dir.rglob("*.gph"))
         if not valhalla_tiles or not current_valhalla_dir_str:
             raise HTTPException(404, f"No Valhalla tiles in {current_valhalla_dir.resolve()}")

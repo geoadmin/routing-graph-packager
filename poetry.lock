@@ -738,7 +738,7 @@ files = [
 name = "markupsafe"
 version = "2.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -798,6 +798,35 @@ files = [
 
 [package.dependencies]
 setuptools = "*"
+
+[[package]]
+name = "osmium"
+version = "3.5.0"
+description = "Python bindings for libosmium, the data processing library for OSM data"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "osmium-3.5.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:3264877de04aaef451fa13299d98500c57b8c3c69616e60046482633988b9731"},
+    {file = "osmium-3.5.0-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:a0db7f2cc60355b8042acbe231c20d21ca212519be4248e839617c390e3a549d"},
+    {file = "osmium-3.5.0-cp310-cp310-win_amd64.whl", hash = "sha256:e324c5cc9a760ca9647786d3b500ba419c0a12cd6ad12d6646d3a426a3c51cd4"},
+    {file = "osmium-3.5.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:01914d637caefe27d45d082c60ab2ab9180d8421a6911f4cdf09740f3f22b130"},
+    {file = "osmium-3.5.0-cp36-cp36m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:83f939b8b23d10d3f0b2fd0d713ec0ace8fdfcf3e70b22def6e394eb4d607c4e"},
+    {file = "osmium-3.5.0-cp36-cp36m-win_amd64.whl", hash = "sha256:03cbe21e801f82c2cccdeccb9fba2abf5c1fcecad1ea421295a087ee07bd004b"},
+    {file = "osmium-3.5.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:fa6807fd7abe65f8d9bb921538c9117c085422e3d9373cd9993ec89851396e2b"},
+    {file = "osmium-3.5.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:ceca5259ef02b18af13de0e68ac9749fd323ed363a3630872b3510c98e4fc12e"},
+    {file = "osmium-3.5.0-cp37-cp37m-win_amd64.whl", hash = "sha256:48e048e15c1a81ece066105550259dbfceec4c687deefaddcb6ac21992228d5d"},
+    {file = "osmium-3.5.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6483a4587890351e5f2cc48bf9481578c8cc0f63583163d5763f25f214187d65"},
+    {file = "osmium-3.5.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:014d61433eb10e230e243175835cceede3099d6620e0eba646c82425bed41e50"},
+    {file = "osmium-3.5.0-cp38-cp38-win_amd64.whl", hash = "sha256:bc365b4961cefea0a12b899d34265f914b3b3fb9f5b7281cc896e11f710355b2"},
+    {file = "osmium-3.5.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:b31669edfd101079aae484d2ada552ae85e5057c2f7bebc55878e6ff81d1f827"},
+    {file = "osmium-3.5.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:a59d6cf9175eb27185c5579e2f28b14bad18f18cdddaeeb5ee1befdec338cafd"},
+    {file = "osmium-3.5.0-cp39-cp39-win_amd64.whl", hash = "sha256:d450e98912214b054ee3d71fe695b8e1757171491a5d96764ae722fed9c48e0b"},
+    {file = "osmium-3.5.0.tar.gz", hash = "sha256:60470b7ef1fd7bb1ffbfcf69cad3abe5ee313624401157e96ef137e41f8947a7"},
+]
+
+[package.dependencies]
+requests = "*"
 
 [[package]]
 name = "packaging"
@@ -1142,7 +1171,7 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 name = "pytest-httpserver"
 version = "1.0.6"
 description = "pytest-httpserver is a httpserver for pytest"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
@@ -1595,7 +1624,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 name = "werkzeug"
 version = "2.2.2"
 description = "The comprehensive WSGI web application library."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1700,4 +1729,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "ea74f5d0d271f3c8faec91e611f67d770e4e6885232f158f7e03e78826b86493"
+content-hash = "be7b7dc2063683b4dd5b4aed30963e49bfd0f74b2e37a19ca2c1fd70a84fafd0"

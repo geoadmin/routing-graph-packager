@@ -22,3 +22,11 @@ POSTGRES_PASS=admin
 # Paths are local to the container (/app/ssl is mapped in docker-compose)
 SSL_CERT=''
 SSL_KEY=''
+
+# Valhalla image exclusive env vars
+# How many threads to build tiles? Should be two less than available threads
+CONCURRENCY=4
+# Should we force build on first start? True/False
+FORCE_BUILD=False
+# The full URL to the PBF
+PBF_PATH=
