@@ -26,10 +26,6 @@ class BaseSettings(_BaseSettings):
 
     DATA_DIR: Path = BASE_DIR.joinpath("data")
     VALHALLA_SERVER_IP: str = "http://localhost"
-    # if we're inside a docker container, we need to reference the fixed directory instead
-    # Watch out for CI, also runs within docker
-    if os.path.isdir("/app/data") and not os.getenv("CI", None):  # pragma: no cover
-        DATA_DIR = "/app/data"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
 
@@ -50,14 +46,26 @@ class BaseSettings(_BaseSettings):
     SMTP_SECURE: bool = False
 
     def get_valhalla_path(self, port: int) -> Path:  # pragma: no cover
+        """
+        Return the path to the OSM Valhalla instances.
+        """
         if port in (8002, 8003):
-            p = self.DATA_DIR.joinpath(Providers.OSM.lower(), str(port))
+            p = self.get_data_dir().joinpath(Providers.OSM.lower(), str(port))
             p.mkdir(exist_ok=True)
             return p
         raise ValueError(f"{port} is not a valid port for Valhalla.")
 
     def get_output_path(self) -> Path:
-        return self.DATA_DIR.joinpath("output")
+        return self.get_data_dir().joinpath("output")
+
+    def get_data_dir(self) -> Path:
+        data_dir = self.DATA_DIR
+        # if we're inside a docker container, we need to reference the fixed directory instead
+        # Watch out for CI, also runs within docker
+        if os.path.isdir("/app") and not os.getenv("CI", None):  # pragma: no cover
+            data_dir = Path("/app/data")
+
+        return data_dir
 
 
 class ProdSettings(BaseSettings):

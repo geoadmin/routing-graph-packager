@@ -5,7 +5,7 @@ cmd=${1}
 # either starts a worker or the app itself
 if [ "${cmd}" == 'worker' ]; then
   # Start the worker
-  /app/.venv/bin/rq worker packaging -u redis://redis:6379
+  exec /app/app_venv/bin/arq routing_packager_app.worker.WorkerSettings
 elif [ "${cmd}" == 'app' ]; then
   # SSL? Provided by .docker_env with path mapped in docker-compose.yml
   opts=''
@@ -16,8 +16,12 @@ elif [ "${cmd}" == 'app' ]; then
     echo "No SSL configured."
   fi
 
+  # Read the supervisor config and start the build loop
+  service supervisor start
+  supervisorctl start
+
   # Start the gunicorn server
-  bash -c "/app/.venv/bin/gunicorn --config gunicorn.py ${opts} http_app:app"
+  exec /app/app_venv/bin/gunicorn --config gunicorn.py ${opts} main:app
 else
   echo "Command ${cmd} not recognized. Choose from 'worker' or 'app'"
 fi

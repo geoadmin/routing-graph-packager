@@ -21,7 +21,7 @@ async def startup_event():
 
     # create the directories
     for provider in Providers:
-        p = SETTINGS.DATA_DIR.joinpath(provider.lower())
+        p = SETTINGS.get_data_dir().joinpath(provider.lower())
         p.mkdir(exist_ok=True)
     SETTINGS.get_output_path().mkdir(exist_ok=True)
 

@@ -29,9 +29,13 @@ wait_for_lock() {
   exit 1
 }
 
+reset_config() {
+  jq --arg d "" '.mjolnir.tile_dir = $d' "${valhalla_config}"| sponge "${valhalla_config}"
+}
+
 PORT_8002="8002"
 PORT_8003="8003"
-PBF="$DATA_DIR/planet-latest.osm.pbf"
+PBF="/app/data/andorra-latest.osm.pbf"
 
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
@@ -59,7 +63,8 @@ while true; do
   fi
 
   # download the PBF file if need be
-  UPDATE_OSM="True"
+  # TODO: temp for testing, reset to True
+  UPDATE_OSM="False"
   if ! [ -f "$PBF" ]; then
     echo "INFO: Downloading OSM file $PBF"
     wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/ -O "$PBF" || exit 1
@@ -68,7 +73,7 @@ while true; do
 
   if [[ $UPDATE_OSM == "True" ]]; then
     echo "INFO: Updating OSM file $PBF"
-    pyosmium-up-to-date -O "$PBF" -vvv || exit 1
+    update_osm.sh -p "$PBF" || exit 1
   fi
 
   # build the current config
@@ -83,10 +88,10 @@ while true; do
   # wait until there's no .lock file anymore
   wait_for_lock "$CURRENT_VALHALLA_DIR"
 
-  # If it's the first one, check for the Valhalla dir and abort if it's there
-  if [[ -z $OLD_PORT && $FORCE_BUILD == "False" ]]; then
+  # If it's the first start and a graph already exists, abort
+  if [[ -z $OLD_PORT && -d $CURRENT_VALHALLA_DIR && $FORCE_BUILD == "False" ]]; then
     # remove the reference to tiles_dir so the service doesn't actually load the tiles
-    jq --arg d "" '.mjolnir.tile_dir = $d' "${valhalla_config}"| sponge "${valhalla_config}"
+    reset_config
     exec valhalla_service "$valhalla_config" 1 &
     OLD_PID=$!
     sleep 1
@@ -95,9 +100,13 @@ while true; do
 
   echo "INFO: Running build tiles with: $PBF"
   valhalla_build_tiles -c "${CONFIG_FILE}" "$PBF" || exit 1
+  reset_config
 
   # shut down the old service and launch the new one
   kill -9 $OLD_PID
   exec valhalla_service "$valhalla_config" 1 &
   OLD_PID=$!
+
+  # TODO: remove after testing
+  sleep 120
 done

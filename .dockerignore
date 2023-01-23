@@ -12,6 +12,7 @@ ciso_reports/
 htmlcov/
 tests/
 *.md
+!DESCRIPTION.md
 **/*.yaml
 docker-compose.yml
 *.cfg

@@ -24,7 +24,7 @@ pbf=/app/data/osm/planet-latest.osm.pbf
 # Get the arguments
 while [ "$1" != "" ]; do
     case $1 in
-        -d | --pbf )        shift
+        -p | --pbf )        shift
                                 pbf=$1
                                 ;;
         -h | --help )           usage

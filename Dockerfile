@@ -1,5 +1,5 @@
 #--- BEGIN Usual Python stuff ---
-FROM valhalla/valhalla:run-3.2.0 as builder
+FROM valhalla/valhalla:run-latest as builder
 LABEL maintainer=nils@gis-ops.com
 
 WORKDIR /app
@@ -20,20 +20,20 @@ ENV POETRY_BIN /root/.local/bin/poetry
 RUN curl -sSL https://install.python-poetry.org | python && \
     $POETRY_BIN config virtualenvs.create false && \
     $POETRY_BIN config virtualenvs.in-project true && \
-    python -m venv .venv
+    python -m venv app_venv
 
 # Copy these first so no need to re-install only bcs source code changes
 COPY pyproject.toml .
 COPY poetry.lock .
 
 # Install dependencies.py only
-RUN . .venv/bin/activate && \
+RUN . app_venv/bin/activate && \
     $POETRY_BIN install --no-interaction --no-ansi --no-root --only main
 
 COPY . .
 
 # Install dependencies.py and remove unneeded stuff
-RUN . .venv/bin/activate && \
+RUN . app_venv/bin/activate && \
     $POETRY_BIN install --no-interaction --no-ansi --only main && \
     mkdir -p /app/data
 
@@ -46,16 +46,16 @@ RUN cd /usr/local/bin && \
   for f in valhalla*; do rm $f; done && \
   cd .. && mv $preserve ./bin
 
-FROM ubuntu:20.04 as runner_base
+FROM ubuntu:22.04 as runner_base
 MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 # install Valhalla stuff
 RUN apt-get update > /dev/null && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y libluajit-5.1-2 \
-      libzmq5 libczmq4 spatialite-bin libprotobuf-lite17 sudo locales \
-      libsqlite3-0 libsqlite3-mod-spatialite libgeos-3.8.0 libcurl4 python-is-python3 \
-      python3.8-minimal python3-distutils curl unzip moreutils jq spatialite-bin > /dev/null
+      libzmq5 libczmq4 spatialite-bin libprotobuf-lite23 sudo locales wget \
+      libsqlite3-0 libsqlite3-mod-spatialite libcurl4 python-is-python3 osmctools \
+      python3.10-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
 
 WORKDIR /app
 
@@ -65,13 +65,12 @@ ENV use_tiles_ignore_pbf=True
 ENV build_tar=True
 ENV serve_tiles=True
 
-COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/bin/prime_* /usr/bin/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libprime* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /app/.venv /app/
-COPY --from=builder /app/scripts/* /usr/local/bin/
-
 COPY . .
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /app/app_venv /app/app_venv
+COPY --from=builder /app/scripts/* /usr/local/bin/
+COPY --from=builder /app/conf/* /etc/supervisor/conf.d/
 
 # add the root cert for https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/, so osmupdate can download stuff
 RUN mv /app/ssl/gwdg_root_cert.crt /usr/local/share/ca-certificates && \
