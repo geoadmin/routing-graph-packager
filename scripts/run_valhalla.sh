@@ -128,7 +128,6 @@ while true; do
   OLD_PID=$!
   echo "INFO: Started Valhalla on port $CURRENT_PORT with PID $OLD_PID"
 
-  sleep 120
   echo ""
   echo ""
 
