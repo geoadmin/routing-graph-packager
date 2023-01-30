@@ -18,10 +18,11 @@ elif [ "${cmd}" == 'app' ]; then
 
   # Read the supervisor config and start the build loop
   service supervisor start
-  supervisorctl start
+  supervisorctl start build_loop
 
   # Start the gunicorn server
+  . /app/app_venv/bin/activate
   exec /app/app_venv/bin/gunicorn --config gunicorn.py ${opts} main:app
 else
-  echo "Command ${cmd} not recognized. Choose from 'worker' or 'app'"
+  echo "Command '${cmd}' not recognized. Choose from 'worker' or 'app'"
 fi

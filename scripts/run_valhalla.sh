@@ -12,20 +12,24 @@
 # Usage: ./run_valhalla.sh
 #
 
+# so it can see prime_server within the supervisor process
+export LD_LIBRARY_PATH=/usr/local/lib
+
 # watch the .lock file every 10 secs
 wait_for_lock() {
   count=0
   sleep=10
   max=3600
   while ! [[ $count == $max ]]; do
-    if ! [[ -f $1 ]]; then
+    if ! [[ -f $1/.lock ]]; then
      return
     fi
+    echo "INFO: sleeping for $sleep seconds to wait for .lock file to disappear at $1"
     sleep $sleep
     count=$(( $count + $sleep ))
   done
 
-  echo "max count reached"
+  echo "ERROR: max count reached"
   exit 1
 }
 
@@ -35,7 +39,10 @@ reset_config() {
 
 PORT_8002="8002"
 PORT_8003="8003"
-PBF="/app/data/andorra-latest.osm.pbf"
+# $DATA_DIR needs to be defined, either by supervisor or the current shell
+VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
+VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
+PBF="/app/data/osm/andorra-latest.osm.pbf"
 
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
@@ -45,12 +52,14 @@ iteration=0
 while true; do
   (( iteration++ ))
 
+  echo "INFO: Starting iteration $iteration..."
+
   # Take 8002 if this is the first start
-  if curl -fs "${IP}:${PORT_8002}/status"; then
+  if curl -fs "http://localhost:${PORT_8002}/status"; then
     CURRENT_PORT=${PORT_8003}
     OLD_PORT=${PORT_8002}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8003
-  elif curl -fs "${IP}:${PORT_8003}/status"; then
+  elif curl -fs "http://localhost:${PORT_8003}/status"; then
     CURRENT_PORT=${PORT_8002}
     OLD_PORT=${PORT_8003}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
@@ -62,12 +71,17 @@ while true; do
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
   fi
 
+  if ! [[ -d $CURRENT_VALHALLA_DIR ]]; then
+    mkdir -p $CURRENT_VALHALLA_DIR
+  fi
+
   # download the PBF file if need be
-  # TODO: temp for testing, reset to True
-  UPDATE_OSM="False"
+  # TODO: change PBF URL
+  UPDATE_OSM="True"
   if ! [ -f "$PBF" ]; then
     echo "INFO: Downloading OSM file $PBF"
-    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/ -O "$PBF" || exit 1
+    # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
+    wget -nv https://download.geofabrik.de/europe/germany/brandenburg-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
   fi
 
@@ -77,6 +91,7 @@ while true; do
   fi
 
   # build the current config
+  echo "INFO: Building valhalla.json to $CURRENT_VALHALLA_DIR"
   valhalla_config="$CURRENT_VALHALLA_DIR/valhalla.json"
   valhalla_build_config \
     --httpd-service-listen "tcp://*:${CURRENT_PORT}" \
@@ -88,25 +103,30 @@ while true; do
   # wait until there's no .lock file anymore
   wait_for_lock "$CURRENT_VALHALLA_DIR"
 
-  # If it's the first start and a graph already exists, abort
-  if [[ -z $OLD_PORT && -d $CURRENT_VALHALLA_DIR && $FORCE_BUILD == "False" ]]; then
+  # If it's the first start and a graph already exists, continue with next build
+  if [[ -z $OLD_PORT && -d $CURRENT_VALHALLA_DIR ]]; then
     # remove the reference to tiles_dir so the service doesn't actually load the tiles
     reset_config
     exec valhalla_service "$valhalla_config" 1 &
     OLD_PID=$!
+    echo "INFO: Started Valhalla the first time with config $valhalla_config on with PID $OLD_PID"
     sleep 1
     continue
   fi
 
   echo "INFO: Running build tiles with: $PBF"
-  valhalla_build_tiles -c "${CONFIG_FILE}" "$PBF" || exit 1
+  valhalla_build_tiles -c "${valhalla_config}" "$PBF" || exit 1
   reset_config
 
   # shut down the old service and launch the new one
+  echo "INFO: Killing Valhalla on port $OLD_PORT with PID $OLD_PID"
   kill -9 $OLD_PID
   exec valhalla_service "$valhalla_config" 1 &
   OLD_PID=$!
+  echo "INFO: Started Valhalla on port $CURRENT_PORT with PID $OLD_PID"
 
-  # TODO: remove after testing
   sleep 120
+  echo ""
+  echo ""
+
 done

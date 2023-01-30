@@ -9,6 +9,7 @@ ADMIN_PASS=admin
 # you can change the directory to wherever you want the data to reside on the host
 # MUST be an absolute path
 DATA_DIR=/home/nilsnolde/dev/gis-ops/routing-graph-packager/data
+VALHALLA_URL="http://app"
 
 VALHALLA_IMAGE=gisops/valhalla:latest
 
@@ -24,5 +25,3 @@ SSL_KEY=''
 # Valhalla image exclusive env vars
 # How many threads to build tiles? Should be two less than available threads
 CONCURRENCY=4
-# Should we force build on first start? True/False
-FORCE_BUILD=False

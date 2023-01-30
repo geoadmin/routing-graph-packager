@@ -55,16 +55,19 @@ async def create_package(
         #   https://arq-docs.helpmanual.io/#synchronous-jobs
 
         # get the active Valhalla instance
-        try:
-            current_valhalla_dir_str = ""
-            for port in (8002, 8003):
-                status = requests.get(f"{SETTINGS.VALHALLA_SERVER_IP}:{port}/status").status_code
+        current_valhalla_dir_str = ""
+        for port in (8002, 8003):
+            try:
+                status = requests.get(f"{SETTINGS.VALHALLA_URL}:{port}/status").status_code
                 # 301 is what the test "expects" due to the simple HTTP server
                 if not status in (HTTP_200_OK, HTTP_301_MOVED_PERMANENTLY):
                     continue
                 current_valhalla_dir_str = SETTINGS.get_valhalla_path(port)
                 break
-        except ConnectionError:
+            except ConnectionError:
+                pass
+
+        if not current_valhalla_dir_str:
             raise HTTPException(
                 HTTP_500_INTERNAL_SERVER_ERROR,
                 "No Valhalla service online, check the Valhalla server's docker logs.",

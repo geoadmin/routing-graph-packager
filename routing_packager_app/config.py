@@ -25,7 +25,7 @@ class BaseSettings(_BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
 
     DATA_DIR: Path = BASE_DIR.joinpath("data")
-    VALHALLA_SERVER_IP: str = "http://localhost"
+    VALHALLA_URL: str = "http://localhost"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
 
