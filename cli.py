@@ -78,7 +78,7 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
 if __name__ == "__main__":
     with next(get_db()) as session:
         # Run the updates as software owner/admin
-        user_email = session.exec(select(User).where(User.email == SETTINGS.ADMIN_EMAIL)).first()
+        user_email = session.exec(select(User).where(User.email == SETTINGS.ADMIN_EMAIL)).first().email
         if not LOGGER.handlers:
             handler = AppSmtpHandler(**get_smtp_details([user_email]))
             handler.setLevel(logging.INFO)
