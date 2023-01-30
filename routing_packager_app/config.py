@@ -51,7 +51,7 @@ class BaseSettings(_BaseSettings):
         """
         if port in (8002, 8003):
             p = self.get_data_dir().joinpath(Providers.OSM.lower(), str(port))
-            p.mkdir(exist_ok=True)
+            p.mkdir(exist_ok=True, parents=True)
             return p
         raise ValueError(f"{port} is not a valid port for Valhalla.")
 
