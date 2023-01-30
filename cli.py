@@ -76,16 +76,13 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
 
 
 if __name__ == "__main__":
-    args = parser.parse_args()
+    with next(get_db()) as session:
+        # Run the updates as software owner/admin
+        user_email = session.exec(select(User).where(User.email == SETTINGS.ADMIN_EMAIL)).first()
+        if not LOGGER.handlers:
+            handler = AppSmtpHandler(**get_smtp_details([user_email]))
+            handler.setLevel(logging.INFO)
+            LOGGER.addHandler(handler)
 
-    session: Session = next(get_db())
-
-    # Run the updates as software owner/admin
-    user_email = session.query(select(User).where(User.email == SETTINGS.ADMIN_EMAIL)).first()
-    if not LOGGER.handlers:
-        handler = AppSmtpHandler(**get_smtp_details([user_email]))
-        handler.setLevel(logging.INFO)
-        LOGGER.addHandler(handler)
-
-    jobs = _sort_jobs(session.exec(select(Job).where(Job.update is True)).all())
-    asyncio.run(update_jobs(jobs, user_email))
+        jobs = _sort_jobs(session.exec(select(Job).where(Job.update is True)).all())
+        asyncio.run(update_jobs(jobs, user_email))
