@@ -112,6 +112,8 @@ while true; do
     OLD_PID=$!
     echo "INFO: Started Valhalla the first time with config $valhalla_config on with PID $OLD_PID"
     sleep 1
+    echo ""
+    echo ""
     continue
   fi
 

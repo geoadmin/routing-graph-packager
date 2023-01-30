@@ -11,6 +11,7 @@
 #
 
 # Change these addresses if applicable
+# TODO: activate proxy again for swisstopo
 export http_proxy=http://prxp01.admin.ch:8080
 export https_proxy=http://prxp01.admin.ch:8080
 
