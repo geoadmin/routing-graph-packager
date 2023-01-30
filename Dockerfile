@@ -5,8 +5,8 @@ LABEL maintainer=nils@gis-ops.com
 WORKDIR /app
 
 # Install vis
-RUN sudo apt-get update -y > /dev/null && \
-    sudo apt-get install -y \
+RUN apt-get update -y > /dev/null && \
+    apt-get install -y \
         apt-transport-https \
         ca-certificates \
         python-is-python3 \
