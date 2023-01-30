@@ -45,9 +45,6 @@ VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
 PBF="/app/data/osm/brandenburg-latest.osm.pbf"
 
-# enter the virtual environment so the packager CLI works
-. /app/app_env/bin/activate
-
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
 OLD_PORT=""
@@ -124,8 +121,9 @@ while true; do
   valhalla_build_tiles -c "${valhalla_config}" "$PBF" || exit 1
   reset_config
 
-  echo "INFO: Updating the registered packages"
-  python /app/cli.py
+  echo "INFO: Updating the registered packages with $(which python3)"
+  . /app/app_env/bin/activate
+  python3 /app/cli.py
 
   # shut down the old service and launch the new one
   echo "INFO: Killing Valhalla on port $OLD_PORT with PID $OLD_PID"
