@@ -47,6 +47,7 @@ async def create_package(
 
     job: Job = session.query(Job).get(job_id)
     job.status = Statuses.COMPRESSING
+    job.last_started = datetime.utcnow()
     session.commit()
 
     succeeded = False

@@ -81,3 +81,12 @@ services:
       http_proxy: "${http_proxy}"
       https_proxy: "${https_proxy}"
     restart: always
+  fake-smtp-server:
+    image: reachfive/fake-smtp-server:latest
+    container_name: routing-packager-smtp
+    # You can reach the frontend on localhost:1080
+    ports:
+      - 1080:1080
+    networks:
+      - routing-packager
+    restart: always
