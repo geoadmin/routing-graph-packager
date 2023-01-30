@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 import time
 from argparse import ArgumentParser
 from typing import List
@@ -40,6 +41,7 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
 
     # loop through all jobs "synchronously" by waiting for each job's result
     for job in jobs_:
+        print(f"Updating package {job.arq_id} as user {user_email_}", file=sys.stderr)
         log_extra = {"user": user_email_, "job_id": job.id}
         async_job = await pool.enqueue_job(
             "create_package",
@@ -76,7 +78,7 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    session: Session = get_db()
+    session: Session = next(get_db())
 
     # Run the updates as software owner/admin
     user_email = session.query(select(User).where(User.email == SETTINGS.ADMIN_EMAIL)).first()
