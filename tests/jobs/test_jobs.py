@@ -31,8 +31,6 @@ def test_post_job(provider, get_client, basic_auth_header, get_session: Session)
 
     job_inst: Job = get_session.query(Job).get(res.json()["id"])
 
-    # TODO: re-enable when other routers should be tested
-    # assert job_inst.router == router
     assert job_inst.provider == provider
     assert job_inst.status == "Queued"
     assert job_inst.description == DEFAULT_ARGS_POST["description"]

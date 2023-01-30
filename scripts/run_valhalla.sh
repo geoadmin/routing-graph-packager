@@ -43,7 +43,7 @@ PORT_8003="8003"
 VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
 VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
-PBF="/app/data/osm/brandenburg-latest.osm.pbf"
+PBF="/app/data/osm/planet-latest.osm.pbf"
 
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
@@ -77,12 +77,11 @@ while true; do
   fi
 
   # download the PBF file if need be
-  # TODO: change PBF URL
   UPDATE_OSM="True"
   if ! [ -f "$PBF" ]; then
     echo "INFO: Downloading OSM file $PBF"
-    # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
-    wget -nv https://download.geofabrik.de/europe/germany/brandenburg-latest.osm.pbf -O "$PBF" || exit 1
+    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
+    # wget -nv https://download.geofabrik.de/europe/germany/brandenburg-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
   fi
 
