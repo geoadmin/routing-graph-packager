@@ -45,6 +45,9 @@ VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
 PBF="/app/data/osm/planet-latest.osm.pbf"
 
+# activate the virtual env so the CLI can do its job in the supervisor env
+. /app/app_venv/bin/activate
+
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
 OLD_PORT=""
@@ -122,7 +125,6 @@ while true; do
   reset_config
 
   echo "INFO: Updating the registered packages with $(which python3)"
-  . /app/app_env/bin/activate
   python3 /app/cli.py
 
   # shut down the old service and launch the new one
