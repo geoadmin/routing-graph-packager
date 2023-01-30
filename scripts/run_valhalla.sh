@@ -99,6 +99,7 @@ while true; do
     --mjolnir-tile-extract "" \
     --mjolnir-tile-dir "$CURRENT_VALHALLA_DIR" \
     --mjolnir-concurrency "$CONCURRENCY" \
+    --mjolnir-logging-type "" \
     > "${valhalla_config}" || exit 1
 
   # wait until there's no .lock file anymore
