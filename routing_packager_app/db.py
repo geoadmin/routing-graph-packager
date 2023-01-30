@@ -1,4 +1,5 @@
 import os
+from typing import Generator
 
 from sqlmodel import create_engine, Session
 
@@ -9,7 +10,7 @@ SQLALCHEMY_DATABASE_URI: str = f"postgresql://{S.POSTGRES_USER}:{S.POSTGRES_PASS
 engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=bool(os.getenv("DEBUG")), future=True)
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     """Gets a DB Session."""
     db = Session(engine, autocommit=False, autoflush=False)
     try:
