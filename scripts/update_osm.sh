@@ -46,4 +46,4 @@ pbf_updated="${pbf_dir}/${pbf_name_updated}"
 
 # update the PBF
 osmupdate --day "${pbf}" "${pbf_updated}" || echo "Failed OSM update" && exit 1
-mv "${pbf_updated}" "${pbf}" || exit 1
+mv "${pbf_updated}" "${pbf}" || echo "Failed copying the updated PBF" && exit 1
