@@ -42,7 +42,8 @@ PORT_8003="8003"
 # $DATA_DIR needs to be defined, either by supervisor or the current shell
 VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
 VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
-PBF="/app/data/osm/andorra-latest.osm.pbf"
+# TODO: change PBF
+PBF="/app/data/osm/brandenburg-latest.osm.pbf"
 
 CURRENT_PORT=""
 CURRENT_VALHALLA_DIR=""
