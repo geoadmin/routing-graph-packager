@@ -127,6 +127,7 @@ while true; do
   exec valhalla_service "$valhalla_config" 1 &
   OLD_PID=$!
   echo "INFO: Started Valhalla on port $CURRENT_PORT with PID $OLD_PID"
+  sleep 10
 
   echo ""
   echo ""
