@@ -12,6 +12,10 @@ BASE_DIR = Path(__file__).parent.parent.resolve()
 ENV_FILE = BASE_DIR.joinpath(".env")
 
 
+# TODO: remove
+print(f"BASE_DIR for Settings: {BASE_DIR.resolve()}")
+
+
 class BaseSettings(_BaseSettings):
     SECRET_KEY: str = "<MMs8?u_;rTt>;LarIGI&FjWhKNSe=%3|W;=DFDqOdx+~-rBS+K=p8#t#9E+;{e$"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False

@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import TimeoutError
 import logging
 import sys
 import time
@@ -9,7 +10,7 @@ from arq import ArqRedis, create_pool
 from arq.jobs import ResultNotFound
 from arq.connections import RedisSettings
 from fastapi import HTTPException
-from sqlmodel import select, Session
+from sqlmodel import select
 
 from routing_packager_app import SETTINGS
 from routing_packager_app.db import get_db
@@ -60,6 +61,8 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
         try:
             await async_job.result(timeout=JOB_TIMEOUT, poll_delay=10)
         except ResultNotFound:
+            LOGGER.critical(f"Job {job.name} is missing from queue.", extra=log_extra)
+        except TimeoutError:
             LOGGER.critical(f"Updating job {job.name} timed out.", extra=log_extra)
         except HTTPException as e:
             LOGGER.critical(f"Updating job {job.name} failed with '{e.detail}'", extra=log_extra)

@@ -43,7 +43,7 @@ PORT_8003="8003"
 VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
 VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
-PBF="/app/data/osm/brandenburg-latest.osm.pbf"
+PBF="/app/data/osm/andorra-latest.osm.pbf"
 
 # activate the virtual env so the CLI can do its job in the supervisor env
 . /app/app_venv/bin/activate
@@ -84,7 +84,8 @@ while true; do
   if ! [ -f "$PBF" ]; then
     echo "INFO: Downloading OSM file $PBF"
     # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
-    wget -nv https://download.geofabrik.de/europe/germany/brandenburg-latest.osm.pbf -O "$PBF" || exit 1
+    # wget -nv https://download.geofabrik.de/europe/germany/brandenburg-latest.osm.pbf -O "$PBF" || exit 1
+    wget -nv https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
   fi
 
@@ -133,7 +134,13 @@ while true; do
   exec valhalla_service "$valhalla_config" 1 &
   OLD_PID=$!
   echo "INFO: Started Valhalla on port $CURRENT_PORT with PID $OLD_PID"
-  sleep 10
+  sleep 30
+
+  # TODO: remove
+  if [[ $iteration == "3" ]]; then
+    echo "Done for now"
+    exit 0
+  fi
 
   echo ""
   echo ""
