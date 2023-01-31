@@ -46,9 +46,8 @@ jobs:
 
     - name: Install and set up Poetry
       run: |
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-        source $HOME/.poetry/env
-        poetry config virtualenvs.in-project true
+        curl -sSL https://install.python-poetry.org | python
+        $HOME/.local/bin/poetry config virtualenvs.in-project true
 
     - name: Cache dependencies.py
       uses: actions/cache@v2
@@ -58,8 +57,7 @@ jobs:
 
     - name: Install dependencies.py
       run: |
-        source $HOME/.poetry/env
-        poetry install
+        $HOME/.local/bin/poetry install
 
     - name: Pull image(s)
       run: |
