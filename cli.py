@@ -16,8 +16,7 @@ from routing_packager_app import SETTINGS
 from routing_packager_app.db import get_db
 from routing_packager_app.api_v1.models import Job, User
 from routing_packager_app.logger import AppSmtpHandler, get_smtp_details
-from routing_packager_app.utils.geom_utils import wkbe_to_bbox, wkbe_to_geom
-
+from routing_packager_app.utils.geom_utils import wkbe_to_geom, wkbe_to_str
 
 JOB_TIMEOUT = 60 * 60  # one hour to compress a single graph
 
@@ -29,10 +28,12 @@ LOGGER = logging.getLogger("packager")
 
 
 def _sort_jobs(jobs_: List[Job]):
+    out = list()
     for job in jobs_:
-        job.area = wkbe_to_geom(job.bbox).area
+        out.append((wkbe_to_geom(job.bbox).area, job))
 
-    return sorted(jobs_, key=lambda x: x.area, reverse=True)
+    out = sorted(out, key=lambda x: x[0], reverse=True)
+    return [x[1] for x in out]
 
 
 async def update_jobs(jobs_: List[Job], user_email_: str):
@@ -49,7 +50,7 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
             job.id,
             job.arq_id,
             job.description,
-            wkbe_to_bbox(job.bbox),
+            wkbe_to_str(job.bbox),
             job.zip_path,
             job.user_id,
             True
@@ -87,5 +88,9 @@ if __name__ == "__main__":
             handler.setLevel(logging.INFO)
             LOGGER.addHandler(handler)
 
-        jobs = _sort_jobs(session.exec(select(Job).where(Job.update is True)).all())
+        jobs = session.exec(select(Job).where(Job.update == True)).all()  # noqa: E712
+        jobs = _sort_jobs(jobs)
+
+        print(f"INFO: Updating {len(jobs)} packages with user {user_email}...", file=sys.stderr)
+
         asyncio.run(update_jobs(jobs, user_email))

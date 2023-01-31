@@ -61,7 +61,7 @@ async def create_package(
             try:
                 status = requests.get(f"{SETTINGS.VALHALLA_URL}:{port}/status").status_code
                 # 301 is what the test "expects" due to the simple HTTP server
-                if not status in (HTTP_200_OK, HTTP_301_MOVED_PERMANENTLY):
+                if status not in (HTTP_200_OK, HTTP_301_MOVED_PERMANENTLY):
                     continue
                 current_valhalla_dir_str = SETTINGS.get_valhalla_path(port)
                 break

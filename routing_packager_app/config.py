@@ -12,10 +12,6 @@ BASE_DIR = Path(__file__).parent.parent.resolve()
 ENV_FILE = BASE_DIR.joinpath(".env")
 
 
-# TODO: remove
-print(f"BASE_DIR for Settings: {BASE_DIR.resolve()}")
-
-
 class BaseSettings(_BaseSettings):
     SECRET_KEY: str = "<MMs8?u_;rTt>;LarIGI&FjWhKNSe=%3|W;=DFDqOdx+~-rBS+K=p8#t#9E+;{e$"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
@@ -112,5 +108,5 @@ elif env == "dev":  # pragma: no cover
 elif env == "test":
     SETTINGS = TestSettings()
 else:  # pragma: no cover
-    print("No valid 'API_CONFIG' environment variable, one of 'prod', 'dev' or 'test'")
+    print("No valid 'API_CONFIG' environment variable, one of 'prod', 'dev' or 'test'", file=sys.stderr)
     sys.exit(1)
