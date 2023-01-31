@@ -79,6 +79,7 @@ jobs:
         source .venv/bin/activate
         sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
         sudo docker volume create routing-packager_packages --driver local --opt type=none --opt device=$PWD --opt o=bind
+        export API_CONFIG=test
         pytest --cov=routing_packager_app --ignore=tests/test_tasks.py
         coverage lcov --include "routing_packager_app/*"
 
