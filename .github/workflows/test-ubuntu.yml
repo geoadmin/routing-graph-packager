@@ -59,11 +59,7 @@ jobs:
       run: |
         $HOME/.local/bin/poetry install
 
-    - name: Pull image(s)
-      run: |
-        sudo docker pull gisops/valhalla:latest
-
-    - name: Install osmium
+    - name: Install osmium & osmctools
       run: |
         sudo apt-get update
         sudo apt-get install -y -qq osmium-tool osmctools
