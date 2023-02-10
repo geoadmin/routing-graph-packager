@@ -49,7 +49,7 @@ services:
     networks:
       - routing-packager
     volumes:
-      - packages:/app/data
+      - packages-v2:/app/data
       - $PWD/.docker_env:/app/.env  # Worker needs access to .env file
     depends_on:
       - postgis
