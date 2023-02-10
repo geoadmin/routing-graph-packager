@@ -69,6 +69,7 @@ services:
       - packages:/app/data
       - $PWD/ssl:/app/ssl  # optional SSL certificate for gunicorn
       - $PWD/.docker_env:/app/.env  # CLI needs access to .env file
+      - $PWD/logs:/var/log  # could be refined to have a folder within /var/log
     networks:
       - routing-packager
     depends_on:
