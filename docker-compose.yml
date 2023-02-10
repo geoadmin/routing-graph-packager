@@ -1,6 +1,6 @@
 volumes:
-  postgis-data:
-  packages:  # do not change any detail of this volume
+  postgis-data-v2:
+  packages-v2:  # do not change any detail of this volume
     driver: local
     driver_opts:
       type: none
@@ -9,7 +9,7 @@ volumes:
 
 # It's important it runs in its own private network, also more secure
 networks:
-  routing-packager:
+  routing-packager-v2:
 
 version: '3.2'
 services:
@@ -17,7 +17,7 @@ services:
     image: kartoza/postgis:12.1
     container_name: routing-packager-postgis
     volumes:
-      - postgis-data:/var/lib/postgresql
+      - postgis-data-v2:/var/lib/postgresql
     environment:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
@@ -66,7 +66,7 @@ services:
     env_file:
       - .docker_env
     volumes:
-      - packages:/app/data
+      - packages-v2:/app/data
       - $PWD/ssl:/app/ssl  # optional SSL certificate for gunicorn
       - $PWD/.docker_env:/app/.env  # CLI needs access to .env file
       - $PWD/logs:/var/log  # could be refined to have a folder within /var/log
