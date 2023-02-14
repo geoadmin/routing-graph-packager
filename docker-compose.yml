@@ -1,6 +1,6 @@
 volumes:
-  postgis-data-v2:
-  packages-v2:  # do not change any detail of this volume
+  postgis-data-test:
+  packages-test:  # do not change any detail of this volume
     driver: local
     driver_opts:
       type: none
@@ -9,15 +9,15 @@ volumes:
 
 # It's important it runs in its own private network, also more secure
 networks:
-  routing-packager-v2:
+  routing-packager-test:
 
 version: '3.2'
 services:
-  postgis:
+  postgis-test:
     image: kartoza/postgis:12.1
-    container_name: routing-packager-postgis
+    container_name: routing-packager-postgis-test
     volumes:
-      - postgis-data-v2:/var/lib/postgresql
+      - postgis-data-test:/var/lib/postgresql
     environment:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
@@ -25,57 +25,56 @@ services:
     env_file:
       - .docker_env
     networks:
-      - routing-packager
+      - routing-packager-test
     ports:
-      - 5555:5432
+      - 5556:5432
     restart: always
-  redis:
+  redis-test:
     image: redis:6.2
-    container_name: routing-packager-redis
+    container_name: routing-packager-redis-test
       # mostly needed to define the database hosts
     env_file:
       - .docker_env
     networks:
-      - routing-packager
+      - routing-packager-test
     restart: always
-  worker:
-    image: ghcr.io/geoadmin/routing-graph-packager/routing-graph-packager:latest
-    container_name: routing-packager-worker
+  worker-test:
+    image: ghcr.io/geoadmin/routing-graph-packager/routing-graph-packager:test
+    container_name: routing-packager-worker-test
     # only works off the package queue
     command: worker
     # mostly needed to define the database hosts
     env_file:
       - .docker_env
     networks:
-      - routing-packager
+      - routing-packager-test
     volumes:
-      - packages-v2:/app/data
+      - packages-test:/app/data
       - $PWD/.docker_env:/app/.env  # Worker needs access to .env file
     depends_on:
-      - postgis
-      - redis
+      - postgis-test
+      - redis-test
     healthcheck:
       disable: true
     restart: always
-  app:
-    image: ghcr.io/geoadmin/routing-graph-packager/routing-graph-packager:latest
-    container_name: routing-packager-app
+  app-test:
+    image: ghcr.io/geoadmin/routing-graph-packager/routing-graph-packager:test
+    container_name: routing-packager-app-test
     ports:
-      - 5000:5000
+      - 5001:5000
     # mostly needed to define the database hosts
     env_file:
       - .docker_env
     volumes:
-      - packages-v2:/app/data
+      - packages-test:/app/data
       - $PWD/ssl:/app/ssl  # optional SSL certificate for gunicorn
       - $PWD/.docker_env:/app/.env  # CLI needs access to .env file
-      - $PWD/logs:/var/log  # could be refined to have a folder within /var/log
     networks:
-      - routing-packager
+      - routing-packager-test
     depends_on:
-      - postgis
-      - redis
-      - worker
+      - postgis-test
+      - redis-test
+      - worker-test
     healthcheck:
       disable: true
     # set the proxies from the host env vars
@@ -83,12 +82,12 @@ services:
       http_proxy: "${http_proxy}"
       https_proxy: "${https_proxy}"
     restart: always
-  fake-smtp-server:
+  fake-smtp-server-test:
     image: reachfive/fake-smtp-server:latest
-    container_name: routing-packager-smtp
+    container_name: routing-packager-smtp-test
     # You can reach the frontend on localhost:1080
     ports:
-      - 1080:1080
+      - 1081:1080
     networks:
-      - routing-packager
+      - routing-packager-test
     restart: always

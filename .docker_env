@@ -1,15 +1,17 @@
 # for docker-compose, database hosts are the service names in docker-compose.yml
-POSTGRES_HOST=postgis
-SMTP_HOST=fake-smtp-server
-REDIS_URL=redis://redis:6379/0
+POSTGRES_HOST=postgis-test
+SMTP_HOST=fake-smtp-server-test
+REDIS_URL=redis://redis-test:6379/0
 
 ADMIN_EMAIL=admin@example.org
 ADMIN_PASS=admin
 
 # you can change the directory to wherever you want the data to reside on the host
 # MUST be an absolute path
-DATA_DIR=/home/nilsnolde/dev/gis-ops/routing-graph-packager/data
-VALHALLA_URL="http://app"
+# EDIT: Shouldn't be needed in fact, at least for the web app,
+# since it checks if it's a docker env and sets it to /app/data
+# DATA_DIR=/home/nilsnolde/dev/gis-ops/routing-graph-packager/data
+VALHALLA_URL="http://app-test"
 
 VALHALLA_IMAGE=gisops/valhalla:latest
 
