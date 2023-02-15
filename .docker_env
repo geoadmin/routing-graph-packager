@@ -8,6 +8,7 @@ ADMIN_PASS=admin
 
 # you can change the directory to wherever you want the data to reside on the host
 # MUST be an absolute path
+
 # EDIT: Shouldn't be needed in fact, at least for the web app,
 # since it checks if it's a docker env and sets it to /app/data
 # DATA_DIR=/home/nilsnolde/dev/gis-ops/routing-graph-packager/data
