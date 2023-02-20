@@ -61,11 +61,11 @@ while true; do
   echo "INFO: Starting iteration $iteration..."
 
   # Take 8002 if this is the first start
-  if curl -fs "http://localhost:${PORT_8002}/status"; then
+  if curl -fs --noproxy localhost "http://localhost:${PORT_8002}/status"; then
     CURRENT_PORT=${PORT_8003}
     OLD_PORT=${PORT_8002}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8003
-  elif curl -fs "http://localhost:${PORT_8003}/status"; then
+  elif curl -fs --noproxy localhost "http://localhost:${PORT_8003}/status"; then
     CURRENT_PORT=${PORT_8002}
     OLD_PORT=${PORT_8003}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
