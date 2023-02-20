@@ -14,6 +14,8 @@
 
 # so it can see prime_server within the supervisor process
 export LD_LIBRARY_PATH=/usr/local/lib
+export http_proxy=http://prxp01.admin.ch:8080
+export https_proxy=http://prxp01.admin.ch:8080
 
 # watch the .lock file every 10 secs
 wait_for_lock() {
@@ -43,7 +45,7 @@ PORT_8003="8003"
 VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
 VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
-PBF="/app/data/osm/germany-latest.osm.pbf"
+PBF="/app/data/osm/planet-latest.osm.pbf"
 
 # activate the virtual env so the CLI can do its job in the supervisor env
 . /app/app_venv/bin/activate
@@ -59,11 +61,11 @@ while true; do
   echo "INFO: Starting iteration $iteration..."
 
   # Take 8002 if this is the first start
-  if curl -fs "http://localhost:${PORT_8002}/status"; then
+  if curl -fs --noproxy localhost "http://localhost:${PORT_8002}/status"; then
     CURRENT_PORT=${PORT_8003}
     OLD_PORT=${PORT_8002}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8003
-  elif curl -fs "http://localhost:${PORT_8003}/status"; then
+  elif curl -fs --noproxy localhost "http://localhost:${PORT_8003}/status"; then
     CURRENT_PORT=${PORT_8002}
     OLD_PORT=${PORT_8003}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
@@ -83,8 +85,8 @@ while true; do
   UPDATE_OSM="True"
   if ! [ -f "$PBF" ]; then
     echo "INFO: Downloading OSM file $PBF"
-    # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
-    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/germany-latest.osm.pbf -O "$PBF" || exit 1
+    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
+    # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/germany-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://download.geofabrik.de/europe/iceland-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
