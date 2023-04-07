@@ -32,4 +32,4 @@ def make_zip(source_paths: Set[Path], parent_path: Path, out_fp: str):
     """
     with zipfile.ZipFile(out_fp, "w", zipfile.ZIP_DEFLATED) as archive:
         for p in source_paths:
-            archive.write(p, str(p.relative_to(parent_path)))
+            archive.write(p, "valhalla_tiles/" + str(p.relative_to(parent_path)))
