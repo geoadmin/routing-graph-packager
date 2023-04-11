@@ -1,6 +1,7 @@
 from copy import deepcopy
 from pathlib import Path
 import shutil
+from zipfile import ZipFile
 
 import pytest
 from pytest_httpserver import HTTPServer
@@ -40,8 +41,14 @@ async def test_success(
     await create_package(*params)
 
     out_fp = Path(new_job.json()["zip_path"])
+    with ZipFile(out_fp, "r") as zip:
+        zip_dir = zip.namelist()
+        assert "valhalla_tiles/2/000/763/926.gph" in zip_dir
+        assert "valhalla_tiles/2/000/763/925.gph" in zip_dir
+        assert "valhalla_tiles/1/047/701.gph" in zip_dir
+        assert "valhalla_tiles/0/003/015.gph" in zip_dir
     assert out_fp.is_file() is True
-    assert out_fp.stat().st_size == 707046
+    assert out_fp.stat().st_size == 707166
 
 
 @pytest.mark.asyncio

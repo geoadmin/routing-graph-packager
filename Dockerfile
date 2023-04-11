@@ -2,9 +2,6 @@
 FROM valhalla/valhalla:run-latest as builder
 LABEL maintainer=nils@gis-ops.com
 
-ENV http_proxy=http://prxp01.admin.ch:8080
-ENV https_proxy=http://prxp01.admin.ch:8080
-
 WORKDIR /app
 
 # Install vis
@@ -61,9 +58,6 @@ RUN apt-get update > /dev/null && \
       python3.10-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
 
 WORKDIR /app
-
-ENV http_proxy=http://prxp01.admin.ch:8080
-ENV https_proxy=http://prxp01.admin.ch:8080
 
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 # export the True defaults
