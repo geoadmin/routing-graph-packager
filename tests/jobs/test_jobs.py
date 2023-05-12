@@ -1,228 +1,137 @@
-import os
+from base64 import b64encode
 
 import pytest
+from sqlmodel import Session
 
-from routing_packager_app.api_v1.jobs.models import Job
-from routing_packager_app.constants import INTERVALS, COMPRESSIONS, PROVIDERS, STATUSES
+from routing_packager_app import SETTINGS
+from routing_packager_app.api_v1.models import Job
+from routing_packager_app.constants import Providers, Statuses
 from routing_packager_app.utils.file_utils import make_package_path
-from ..utils import create_new_job, DEFAULT_ARGS_POST
+from ..utils_ import create_new_job, DEFAULT_ARGS_POST
 
 
-# TODO: disable tests for (so far) unsupported routers
-# @pytest.mark.parametrize('router', ROUTERS)
-@pytest.mark.parametrize("provider", PROVIDERS)
-@pytest.mark.parametrize("interval", INTERVALS)
-@pytest.mark.parametrize("compression", COMPRESSIONS)
-def test_post_job(provider, interval, compression, flask_app_client, basic_auth_header):
-    job = create_new_job(
-        flask_app_client,
+def check_dir(job: Job):
+    """Checks if a job directory exists and removes it after."""
+    dir_ = SETTINGS.get_output_path()
+    dir_.joinpath(f"{'_'.join([job.name, job.provider])}")
+
+    assert dir_.exists() and dir_.is_dir()
+
+
+@pytest.mark.parametrize("provider", Providers)
+def test_post_job(provider, get_client, basic_auth_header, get_session: Session):
+    res = create_new_job(
+        get_client,
         auth_header=basic_auth_header,
         data={
             **DEFAULT_ARGS_POST,
-            "router": "valhalla",
             "provider": provider,
-            "interval": interval,
-            "compression": compression,
         },
     )
 
-    job_inst: Job = Job.query.get(job["id"])
+    job_inst: Job = get_session.query(Job).get(res.json()["id"])
 
-    # TODO: re-enable when other routers should be tested
-    # assert job_inst.router == router
     assert job_inst.provider == provider
-    assert job_inst.interval == interval
-    assert job_inst.compression == compression
     assert job_inst.status == "Queued"
     assert job_inst.description == DEFAULT_ARGS_POST["description"]
     assert job_inst.user_id == 1
+    check_dir(job_inst)
 
-    pbf_dir = flask_app_client.application.config[provider.upper() + "_DIR"]
-    assert job_inst.pbf_path == os.path.join(pbf_dir, f"{job_inst.id}.{provider}.pbf")
 
-    dataset_path = make_package_path(
-        flask_app_client.application.config["DATA_DIR"],
-        job_inst.name,
-        "valhalla",
-        provider,
-        job_inst.compression,
+def test_post_job_no_user(get_client):
+    auth_encoded = b64encode(bytes(":".join(("blibla", "blub")).encode("utf-8"))).decode()
+    bad_auth = {"Authorization": f"Basic {auth_encoded}"}
+    job = create_new_job(get_client, auth_header=bad_auth, data=DEFAULT_ARGS_POST, must_succeed=False)
+
+    assert job.status_code == 401
+
+
+def test_post_job_existing_dir(get_client, basic_auth_header):
+    out_dir = make_package_path(
+        SETTINGS.get_output_path(), DEFAULT_ARGS_POST["name"], DEFAULT_ARGS_POST["provider"]
     )
-    assert job_inst.path == dataset_path
+    out_dir.mkdir(parents=True, exist_ok=False)
+
+    job = create_new_job(
+        get_client, auth_header=basic_auth_header, data=DEFAULT_ARGS_POST, must_succeed=False
+    )
+
+    assert job.status_code == 409
 
 
+def test_job_get_jobs(get_client, basic_auth_header):
+    create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
+    res = get_client.get("/api/v1/jobs/").json()
+
+    assert len(res) == 1
+    assert res[0]["zip_path"] == str(
+        SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
+    )
+
+
+# parameterize the ones that should work with the default params
 @pytest.mark.parametrize(
-    "wrong_param",
-    [
-        {"provider": "blabla"},
-        {"router": "blabla"},
-        {"interval": "blabla"},
-        {"compression": "blabla"},
-        {"bbox": ""},
-        {"bbox": "1;2;3;4"},
-        {"bbox": "1,2,3,blabla"},
-    ],
+    "key_value",
+    (("bbox", "0,0,1,1"), ("provider", Providers.OSM), ("status", Statuses.QUEUED), ("update", False)),
 )
-def test_post_job_wrong_enum_parameters(wrong_param, flask_app_client, basic_auth_header):
-    """Test one wrong parameter each time."""
-    r = create_new_job(
-        flask_app_client,
+def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
+    # default
+    create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+    # won't be GET
+    create_new_job(
+        get_client,
         auth_header=basic_auth_header,
-        data={**DEFAULT_ARGS_POST, **wrong_param},
-        must_succeed=False,
+        data={
+            "name": "test2",
+            "provider": "tomtom",
+            "bbox": "10,10,20,20",
+            "update": True,
+            "description": "blabla",
+        },
     )
 
-    assert r.status_code == 400
+    res = get_client.get("/api/v1/jobs/", params=(key_value,)).json()
 
-    wrong_p = list(wrong_param.keys())[0]
-    error_msg = r.json["error"]
-
-    # parameter name should always be in the error message
-    assert wrong_p in error_msg
-
-    # bbox raises multiple errors
-    if wrong_p == "router":
-        assert str(flask_app_client.application.config["ENABLED_ROUTERS"]) in error_msg
-    elif wrong_p == "provider":
-        assert str(flask_app_client.application.config["ENABLED_PROVIDERS"]) in error_msg
-    elif wrong_p == "interval":
-        assert str(INTERVALS) in error_msg
-    elif wrong_p == "compression":
-        assert str(COMPRESSIONS) in error_msg
+    # since we don't do any actual processing when testing, Statuses.Completed is never set
+    assert len(res) == 2 if key_value[0] == "value" else 1
+    assert res[0]["provider"] == "osm"
 
 
-def test_job_bad_name(flask_app_client, basic_auth_header):
-    r = create_new_job(
-        flask_app_client,
-        {**DEFAULT_ARGS_POST, "name": "bad/name"},
-        basic_auth_header,
-        must_succeed=False,
+def test_job_get_job(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
+    res = get_client.get(f"/api/v1/jobs/{res.json()['id']}").json()
+    assert res["zip_path"] == str(
+        SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
     )
 
-    assert r.status_code == 400
-    assert "name" in r.json["error"]
+
+def test_job_get_job_not_found(get_client, basic_auth_header):
+    res = get_client.get("/api/v1/jobs/1")
+    assert res.status_code == 404
+    assert res.json()["detail"] == "Couldn't find job id 1"
 
 
-def test_post_job_existing_job_combo(flask_app_client, basic_auth_header):
-    # First a job
-    job = create_new_job(flask_app_client, auth_header=basic_auth_header, data=DEFAULT_ARGS_POST)
+def test_job_delete(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+    print(basic_auth_header)
+    res = get_client.delete(f"/api/v1/jobs/{res.json()['id']}", headers=basic_auth_header)
+    assert res.status_code == 204
 
-    r = create_new_job(
-        flask_app_client, auth_header=basic_auth_header, data=DEFAULT_ARGS_POST, must_succeed=False
+
+def test_job_delete_invalid_auth(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
+    res = get_client.delete(f"/api/v1/jobs/{res.json()['id']}", headers={})
+    assert res.status_code == 401
+
+
+def test_job_delete_invalid_pass(get_client, basic_auth_header):
+    res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
+
+    res = get_client.delete(
+        f"/api/v1/jobs/{res.json()['id']}",
+        headers={"Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaa5="},
     )
-
-    assert r.status_code == 409
-    assert str(job["id"]) in r.json["error"]
-
-
-def test_post_job_forbidden(flask_app_client):
-    response = create_new_job(
-        flask_app_client, auth_header={}, data=DEFAULT_ARGS_POST, must_succeed=False
-    )
-
-    assert response.status_code == 401
-
-
-def test_get_jobs_all(flask_app_client, basic_auth_header):
-    for provider in ["tomtom", "osm"]:
-        for interval in ["once", "daily"]:
-            for bbox in ["0,0,1,1", "2,2,3,3"]:
-                create_new_job(
-                    flask_app_client,
-                    data={
-                        **DEFAULT_ARGS_POST,
-                        "name": f"{provider}, {interval}, {bbox}",
-                        "provider": provider,
-                        "router": "valhalla",
-                        "interval": interval,
-                        "bbox": bbox,
-                    },
-                    auth_header=basic_auth_header,
-                    must_succeed=False,
-                )
-
-    # First get all 8 results
-    r = flask_app_client.get("/api/v1/jobs")
-    print(r)
-    assert len(r.json) == 8
-
-    # Then test all query string parameters
-    r = flask_app_client.get("/api/v1/jobs", query_string={"interval": "once"})
-    assert len(r.json) == 4
-
-    r = flask_app_client.get("/api/v1/jobs", query_string={"router": "valhalla"})
-    assert len(r.json) == 8
-
-    r = flask_app_client.get("/api/v1/jobs", query_string={"provider": "tomtom"})
-    assert len(r.json) == 4
-
-    r = flask_app_client.get("/api/v1/jobs", query_string={"status": "Queued"})
-    assert len(r.json) == 8
-
-    r = flask_app_client.get("/api/v1/jobs", query_string={"status": "Extracting"})
-    assert len(r.json) == 0
-
-    r = flask_app_client.get("/api/v1/jobs", query_string={"bbox": "0,0,1.5,1.5"})
-    assert len(r.json) == 4
-
-
-@pytest.mark.parametrize(
-    "bbox",
-    [
-        {"bbox": "0,0,1,1", "count": 1},
-        {"bbox": "0.5,0.5,0.75,0.75", "count": 1},
-        {"bbox": "0.5,0.5,2.75,2.75", "count": 2},
-        {"bbox": "0,0,4,4", "count": 2},
-    ],
-)
-def test_get_jobs_bbox(bbox, flask_app_client, basic_auth_header):
-    for box in ["0,0,1,1", "2,2,3,3"]:
-        create_new_job(
-            flask_app_client,
-            data={**DEFAULT_ARGS_POST, "name": f"{box}", "bbox": box},
-            auth_header=basic_auth_header,
-            must_succeed=False,
-        )
-
-    r = flask_app_client.get("api/v1/jobs", query_string={"bbox": bbox["bbox"]})
-
-    assert len(r.json) == bbox["count"]
-
-
-def test_get_jobs_bad_status(flask_app_client):
-    r = flask_app_client.get("/api/v1/jobs", query_string={"status": "blabla"})
-
-    assert r.status_code == 400
-    assert str(STATUSES) in r.json["error"]
-
-
-def test_get_job(flask_app_client, basic_auth_header):
-    job = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
-
-    r = flask_app_client.get(f'api/v1/jobs/{job["id"]}').json
-
-    data_dir = flask_app_client.application.config["DATA_DIR"]
-    provider = DEFAULT_ARGS_POST["provider"]
-
-    del r["last_started"]
-
-    assert {
-        **DEFAULT_ARGS_POST,
-        "bbox": "0.0,0.0,1.0,1.0",  # App returns floats
-        "status": "Queued",
-        "last_finished": None,
-        "pbf_path": os.path.join(data_dir, provider, f"{r['id']}.{provider}.pbf"),
-        "job_id": None,
-        "id": job["id"],
-        "path": os.path.join(data_dir, "valhalla/valhalla_osm_test/valhalla_osm_test.zip"),
-        "container_id": None,
-        "user_id": 1,
-    } == r
-
-
-def test_delete_job(flask_app_client, basic_auth_header):
-    job = create_new_job(flask_app_client, DEFAULT_ARGS_POST, basic_auth_header)
-
-    r = flask_app_client.delete(f'api/v1/jobs/{job["id"]}', headers=basic_auth_header)
-
-    assert r.data == b""
-    assert r.status_code == 204
+    assert res.status_code == 401

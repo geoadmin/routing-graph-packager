@@ -46,3 +46,14 @@ def wkbe_to_bbox(wkbe: WKBElement) -> Tuple[float]:
     :returns: The bbox coordinates in [minx, miny, maxx, maxy].
     """
     return to_shape(wkbe).bounds
+
+
+def wkbe_to_str(wkbe: WKBElement) -> str:
+    """
+    Converts a geoalchemy2 :class:`WKBElement` to a bbox string.
+
+    :param wkbe: The record.
+
+    :returns: The bbox string in [minx, miny, maxx, maxy] format.
+    """
+    return ",".join([str(f) for f in to_shape(wkbe).bounds])

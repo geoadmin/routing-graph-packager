@@ -1,70 +1,76 @@
 #--- BEGIN Usual Python stuff ---
-FROM python:3.10-slim-bullseye
+FROM valhalla/valhalla:run-latest as builder
 LABEL maintainer=nils@gis-ops.com
 
-# Install poetry
+WORKDIR /app
+
+# Install vis
 RUN apt-get update -y > /dev/null && \
     apt-get install -y \
         apt-transport-https \
         ca-certificates \
+        python-is-python3 \
+        python3-pip \
+        python3-venv \
         curl > /dev/null && \
-    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python && \
-    . $HOME/.poetry/env && \
-    poetry config virtualenvs.create false && \
-    poetry config virtualenvs.in-project true && \
-    # remove before going live
-    python -m venv .venv
+    python -m pip install --upgrade pip
 
-#--- END Usual Python stuff ---
+ENV POETRY_BIN /root/.local/bin/poetry
 
-# Install docker, cron, osmctools & osmium
-RUN apt-get update -y > /dev/null && \
-    apt-get install -y --fix-missing \
-        software-properties-common \
-        gnupg \
-        lsb-release \
-        nano \
-        jq \
-        git \
-        npm \
-        cron -o APT::Immediate-Configure=0 > /dev/null && \
-    # install docker & osmium
-    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
-    apt-get update -y > /dev/null && \
-    apt-get install -y docker-ce docker-ce-cli containerd.io osmium-tool osmctools > /dev/null && \
-    systemctl enable docker
-
-WORKDIR /app
+RUN curl -sSL https://install.python-poetry.org | python && \
+    $POETRY_BIN config virtualenvs.create false && \
+    $POETRY_BIN config virtualenvs.in-project true && \
+    python -m venv app_venv
 
 # Copy these first so no need to re-install only bcs source code changes
 COPY pyproject.toml .
 COPY poetry.lock .
 
-# Install dependencies only
-RUN . $HOME/.poetry/env && \
-    python -m venv .venv && \
-    . .venv/bin/activate && \
-    poetry install --no-interaction --no-ansi --no-root --no-dev
-
-# the current fork's branch doesn't have
-RUN git clone https://github.com/python-restx/flask-restx && cd flask-restx && \
-    pip install ".[dev]" && \
-    restx_static="../.venv/lib/python3.10/site-packages/flask_restx/static" && \
-    inv assets && \
-    mkdir $restx_static && \
-    ls -l ./node_modules/swagger-ui-dist && \
-    /bin/bash -c "cp ./node_modules/swagger-ui-dist/{swagger-ui*.{css,js}{,.map},favicon*.png,oauth2-redirect.html} ${restx_static}" && \
-    cp ./node_modules/typeface-droid-sans/index.css $restx_static/droid-sans.css && \
-    cp -R ./node_modules/typeface-droid-sans/files $restx_static
+# Install dependencies.py only
+RUN . app_venv/bin/activate && \
+    $POETRY_BIN install --no-interaction --no-ansi --no-root --only main
 
 COPY . .
 
-# Install dependencies and remove unneeded stuff
-RUN . $HOME/.poetry/env && \
-    . .venv/bin/activate && \
-    poetry install --no-interaction --no-ansi --no-dev && \
+# Install dependencies.py and remove unneeded stuff
+RUN . app_venv/bin/activate && \
+    $POETRY_BIN install --no-interaction --no-ansi --only main && \
     mkdir -p /app/data
+
+# Do some Valhalla stuff
+
+# remove some stuff from the original image
+RUN cd /usr/local/bin && \
+  preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic" && \
+  mv $preserve .. && \
+  for f in valhalla*; do rm $f; done && \
+  cd .. && mv $preserve ./bin
+
+FROM ubuntu:22.04 as runner_base
+MAINTAINER Nils Nolde <nils@gis-ops.com>
+
+# install Valhalla stuff
+RUN apt-get update > /dev/null && \
+    export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install -y libluajit-5.1-2 \
+      libzmq5 libczmq4 spatialite-bin libprotobuf-lite23 sudo locales wget \
+      libsqlite3-0 libsqlite3-mod-spatialite libcurl4 python-is-python3 osmctools \
+      python3.10-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
+
+WORKDIR /app
+
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+# export the True defaults
+ENV use_tiles_ignore_pbf=True
+ENV build_tar=True
+ENV serve_tiles=True
+
+COPY . .
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /app/app_venv /app/app_venv
+COPY --from=builder /app/scripts/* /usr/local/bin/
+COPY --from=builder /app/conf/* /etc/supervisor/conf.d/
 
 # add the root cert for https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/, so osmupdate can download stuff
 RUN mv /app/ssl/gwdg_root_cert.crt /usr/local/share/ca-certificates && \
@@ -74,5 +80,5 @@ EXPOSE 5000
 HEALTHCHECK --start-period=5s CMD curl --fail -s http://localhost:5000/api/v1/jobs || exit 1
 
 # Start gunicorn
-ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["app"]

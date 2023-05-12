@@ -27,7 +27,7 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: redis:6.0
+        image: redis:6.2
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -46,26 +46,20 @@ jobs:
 
     - name: Install and set up Poetry
       run: |
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-        source $HOME/.poetry/env
-        poetry config virtualenvs.in-project true
+        curl -sSL https://install.python-poetry.org | python
+        $HOME/.local/bin/poetry config virtualenvs.in-project true
 
-    - name: Cache dependencies
+    - name: Cache dependencies.py
       uses: actions/cache@v2
       with:
         path: .venv
         key: venv-3.10-${{ hashFiles('**/poetry.lock') }}
 
-    - name: Install dependencies
+    - name: Install dependencies.py
       run: |
-        source $HOME/.poetry/env
-        poetry install
+        $HOME/.local/bin/poetry install
 
-    - name: Pull image(s)
-      run: |
-        sudo docker pull gisops/valhalla:latest
-
-    - name: Install osmium
+    - name: Install osmium & osmctools
       run: |
         sudo apt-get update
         sudo apt-get install -y -qq osmium-tool osmctools
@@ -81,6 +75,7 @@ jobs:
         source .venv/bin/activate
         sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
         sudo docker volume create routing-packager_packages --driver local --opt type=none --opt device=$PWD --opt o=bind
+        export API_CONFIG=test
         pytest --cov=routing_packager_app --ignore=tests/test_tasks.py
         coverage lcov --include "routing_packager_app/*"
 
