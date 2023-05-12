@@ -5,9 +5,7 @@
 
 A [FastAPI](https://github.com/tiangolo/fastpi) app to dynamically deliver ZIPped [Valhalla](https://github.com/valhalla/valhalla) graphs from a variety of data sources.
 
-The default road dataset is [OSM](openstreetmap.org). If available, it also supports road datasets of commercial vendors, such as TomTom and HERE, assuming they are provided in the [OSM PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format#).
-
-For more details have a look at our [wiki](https://github.com/gis-ops/routing-graph-packager/wiki).
+The default road dataset is the [OSM](openstreetmap.org) planet PBF. If available, it also supports road datasets of commercial vendors, such as TomTom and HERE, assuming they are provided in the [OSM PBF format](https://wiki.openstreetmap.org/wiki/PBF_Format#).
 
 ## Features
 
@@ -17,17 +15,14 @@ For more details have a look at our [wiki](https://github.com/gis-ops/routing-gr
 - **asynchronous API**: graph generation is outsourced to a [`ARQ`](https://github.com/samuelcolvin/arq) worker
 - **email notifications**: notifies the requesting user if the job succeeded/failed
 
-For more details have a look at our [wiki](https://github.com/gis-ops/routing-graph-packager/wiki).
-
 ## "Quick Start"
 
-**Note**, if you need/want to change any of the commands below (e.g. the OSM file), try the [Installation wiki](https://github.com/gis-ops/routing-graph-packager/wiki/Installation), which gives more detailed explanations.
+The following will download
 
-First you need to clone the project and download an OSM file to its respective location:
+First you need to clone the project:
 
 ```
 git clone https://github.com/gis-ops/routing-graph-packager.git
-cd routing-graph-packager && wget http://download.geofabrik.de/europe/andorra-latest.osm.pbf -O ./data/osm/andorra-latest.osm.pbf
 ```
 
 Since the graph generation takes place in docker containers, you'll also need to pull the relevant image: `docker pull ghcr.io/gis-ops/docker-valhalla/valhalla:latest`.
@@ -53,15 +48,14 @@ curl --location -XPOST 'http://localhost:5000/api/v1/jobs' \
 }'
 ```
 
-After a minute you should have the graph package available in `./data/valhalla/valhalla_osm_test/`. If not, check the logs of the worker process or the Flask app.
+After a minute you should have the graph package available in `./data/output/osm_test/`. If not, check the logs of the worker process or the Flask app.
 
-The `routing-packager-worker` container has `cron` jobs running to update the routing packages in the root user's `crontab`.
+The `routing-packager-app` container running the HTTP API has a `supervisor` process running in a loop, which:
+- downloads a planet PBF (if it doesn't exist) or updates the planet PBF (if it does exist)
+- builds a planet Valhalla graph
+- then updates all graph extracts with a fresh copy
 
-The `routing-packager-app` container running the HTTP API has a `cron` job which runs daily updates of **all** OSM PBF files.
-
-By default, also a fake SMTP server is started and you can see incoming messages on `http://localhost:1080`.
-
-For full configuration options, please consult our [wiki](https://github.com/gis-ops/routing-graph-packager/wiki/Configuration#complete-list).
+By default, also a fake SMTP server is started, and you can see incoming messages on `http://localhost:1080`.
 
 ## Concepts
 
@@ -72,22 +66,6 @@ Under the hood we're running a `supervisor` instance to control the graph builds
 Two instances of the [Valhalla docker image](https://github.com/gis-ops/docker-valhalla) take turns building a new graph from an updated OSM file. Those two graphs are physically separated from each other in subdirectories `$DATA_DIR/osm/8002` & `$DATA_DIR/osm/8003`.
 
 After each graph build finished, the OSM file is updated for the next graph build.
-
-### PBF files
-
-Before starting the service, you need to supply at least one PBF file (e.g. from [Geofabrik](https://download.geofabrik.de)). To support multiple providers and keep the amount of manual configuration to a minimum, this project assumes a **rigid folder hierarchy** in its `DATA_DIR` (see [Configuration](https://github.com/gis-ops/routing-graph-packager/wiki/Configuration#complete-list), defaults to `./data`) where any PBF file is located in its provider directory, e.g.:
-
-```
-data
-├── here
-│   └── spain-latest.here.pbf
-├── osm
-│   └── andorra-latest.osm.pbf
-└── tomtom
-    └── switzerland-latest.tomtom.pbf
-```
-
-**Note**, you'll need **at least one PBF file** which covers all extents you ever want to generate graphs for (e.g. the full planet).
 
 ### Data sources
 
