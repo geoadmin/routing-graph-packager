@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
@@ -15,6 +16,7 @@ def create_app():
         description = fh.read()
 
     app = FastAPI(title="Routing Graph Packager App", description=description)
+    app.mount("/static", StaticFiles(directory="static"), name="static")
     register_middlewares(app)
     register_router(app)
 
