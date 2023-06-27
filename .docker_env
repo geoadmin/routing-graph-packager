@@ -21,8 +21,8 @@ POSTGRES_PASS=admin
 
 # If you need a SSL certificate to be respected on the gunicorn level
 # Paths are local to the container (/app/ssl is mapped in docker-compose)
-SSL_CERT=''
-SSL_KEY=''
+SSL_CERT='/app/ssl/server.crt'
+SSL_KEY='/app/ssl/server.key'
 
 # Valhalla image exclusive env vars
 # How many threads to build tiles? Should be two less than available threads
