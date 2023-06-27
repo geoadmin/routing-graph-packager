@@ -22,7 +22,7 @@ class BaseSettings(_BaseSettings):
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
     # TODO: clarify if there's a need to restrict origins
-    CORS_ORIGINS: List[str] = ["http://localhost:5000", "http://localhost"]
+    CORS_ORIGINS: List[str] = ["*"]
 
     DATA_DIR: Path = BASE_DIR.joinpath("data")
     VALHALLA_URL: str = "http://localhost"

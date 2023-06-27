@@ -1,3 +1,4 @@
+
 volumes:
   postgis-data-test:
   packages-test:  # do not change any detail of this volume
@@ -61,7 +62,7 @@ services:
     image: ghcr.io/geoadmin/routing-graph-packager/routing-graph-packager:test
     container_name: routing-packager-app-test
     ports:
-      - 443:5000
+      - 5001:5000
     # mostly needed to define the database hosts
     env_file:
       - .docker_env

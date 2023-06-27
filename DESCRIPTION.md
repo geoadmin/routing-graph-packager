@@ -1,4 +1,4 @@
-App to generate routing graph packages for FOSS routing engines, featuring:
+Appl to generate routing graph packages for FOSS routing engines, featuring:
 
 - email notification on final job status
 - automatic placement on a hard disk, e.g. FTP
