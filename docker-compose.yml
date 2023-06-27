@@ -69,6 +69,7 @@ services:
       - packages-test:/app/data
       - $PWD/ssl:/app/ssl  # optional SSL certificate for gunicorn
       - $PWD/.docker_env:/app/.env  # CLI needs access to .env file
+      - $PWD/static:/app/static # static file for frontend
     networks:
       - routing-packager-test
     depends_on:
