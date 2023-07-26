@@ -79,7 +79,7 @@
 		<div id="leftpane" style="width: 49%; float:left;">  
 			<div id="map" style="height: 470px; border: 1px solid #ccc "></div>
 			<br>
-			<form method="POST" id="submitForm" action="http://l0t2511a.lt.admin.ch:5001/api/v1/jobs/">
+			<form method="POST" id="submitForm" action="https://l0t2511a.lt.admin.ch/api/v1/jobs/">
 
 				<label for="name" width="300" >Export name:</label>
 				<input type="text" id="name" name="name"  placeholder="Enter export name" required><br>
@@ -94,7 +94,7 @@
 				<input type="text" id="description" name="description" placeholder="Enter description"><br>
 				
 				<label for="update">Update:</label>
-				<input type="text" id="update" name="update" value="false" style="background-color:Gainsboro" readonly><br>
+				<input type="checkbox" id="update" name="update" value="true" style="background-color:Gainsboro" checked><br>
 				
 				<input id="submitBtn" type="submit" value="Start Routing Packager Export">
 			</form>
@@ -181,7 +181,7 @@
 
 					// prepare POST Call for ajax
 					$.ajax({
-						url: "http://l0t2511a.lt.admin.ch:5001/api/v1/jobs/",
+						url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/",
 						type: "POST",
 						headers: {
 							"Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
@@ -245,7 +245,7 @@
 			<script>
 
 			function jobresult() {
-				$.getJSON("http://l0t2511a.lt.admin.ch:5001/api/v1/jobs/", function (gr) {
+				$.getJSON("https://l0t2511a.lt.admin.ch/api/v1/jobs/", function (gr) {
 					if (gr) {
 						//console.log(gr)
 						var jsonData = gr
@@ -267,6 +267,7 @@
 								var jarq_id = jsonData[j].arq_id
 								var jstatus = jsonData[j].status
 								var jzip_path = jsonData[j].zip_path
+                                                                var jupdate = jsonData[j].update
 								jsonData[j].last_started ??= "-"
 								jsonData[j].last_finished ??= "-"
 
@@ -294,7 +295,7 @@
 									var lfexportDate = jlast_finished;
 									var lfdate = new Date(lfexportDate);
 									var lfy = lfdate.getFullYear().toString();
-									var lfmo = lfdate.getMonth().toString().padStart(2, "0");
+									var lfmo = (lfdate.getMonth()+1).toString().padStart(2, "0");
 									var lfd = lfdate.getDate().toString().padStart(2, "0");
 									var lfh = lfdate.getHours().toString().padStart(2, "0");
 									var lfmi = lfdate.getMinutes().toString().padStart(2, "0");
@@ -303,6 +304,8 @@
 								} else {
 									dataLine.push(jlast_finished);
 								}
+                            
+                                                                dataLine.push(jupdate)
 
 								// job delete button per line
 								dataLine.push('<button onclick="delJob(' + jid + ');destroyRecreateTable();">x</button>')
@@ -329,10 +332,12 @@
 									},
 									//{ title: 'Zip Path' },
 									{
-										title: 'Last Started'
+										title: 'Last Started UTC'
 									}, {
-										title: 'Last Finished'
-									}, {
+										title: 'Last Finished UTC'
+									},{
+                                                                                title: 'Update'
+                                                                        },{
 										title: 'Del'
 									},
 								],
@@ -376,7 +381,7 @@
 			function delJob(jid) {
 				//console.log("del Job: "+jid);
 				$.ajax({
-					url: "http://l0t2511a.lt.admin.ch:5001/api/v1/jobs/" + jid,
+					url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/" + jid,
 					type: 'DELETE',
 					headers: {
 						"Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
