@@ -1,404 +1,404 @@
 <!DOCTYPE html>
 <html lang="de">
-<!-- https://leafletjs.com/examples/quick-start/ --> 
+<!-- https://leafletjs.com/examples/quick-start/ -->
 <head>
-	<style>
+        <style>
 
- 		html,body  {
-			height: 900px;
-			max-width: 98%;
-			margin: auto;
-			font-family: Arial, Helvetica, sans-serif;
-		} 
-		h1{
-			line-height: 50px;
-			text-align: center;
-			font-weight: bold;
-			font-family: Arial, Helvetica, sans-serif;
-			color: CadetBlue;
-		}
-		.leaflet-container {
-			height: 600px;
-			width: 100%;
-			max-width: 100%;
-			max-height: 100%;
-		}
-			
-		input[type=text], select {
-		  width: 100%;
-		  padding: 12px 20px;
-		  margin: 8px 0;
-		  display: inline-block;
-		  border: 1px solid #ccc;
-		  border-radius: 4px;
-		  box-sizing: border-box;
-		}
+                html,body  {
+                        height: 900px;
+                        max-width: 98%;
+                        margin: auto;
+                        font-family: Arial, Helvetica, sans-serif;
+                }
+                h1{
+                        line-height: 50px;
+                        text-align: center;
+                        font-weight: bold;
+                        font-family: Arial, Helvetica, sans-serif;
+                        color: CadetBlue;
+                }
+                .leaflet-container {
+                        height: 600px;
+                        width: 100%;
+                        max-width: 100%;
+                        max-height: 100%;
+                }
 
-		input[type=submit] {
-		  width: 100%;
-		  background-color: CadetBlue;
-		  color: white;
-		  padding: 14px 20px;
-		  margin: 8px 0;
-		  border: none;
-		  border-radius: 4px;
-		  cursor: pointer;
-		}
-		
-		
-		.failedjob {
-		  background-color: Khaki !important;
-		}
-		.workingjob {
-		  background-color: LightGreen !important;
-		}		
-		
-	</style>
-	
-	<title>KARP GUI</title>
-	<h1>KARP - KADAS Routing Packager</h1>
+                input[type=text], select {
+                  width: 100%;
+                  padding: 12px 20px;
+                  margin: 8px 0;
+                  display: inline-block;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                }
 
-	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+                input[type=submit] {
+                  width: 100%;
+                  background-color: CadetBlue;
+                  color: white;
+                  padding: 14px 20px;
+                  margin: 8px 0;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                }
 
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
-	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>	
+                .failedjob {
+                  background-color: Khaki !important;
+                }
+                .workingjob {
+                  background-color: LightGreen !important;
+                }
 
-	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        </style>
 
-	<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"/>
-	<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>			
-	
+        <title>KARP GUI</title>
+        <h1>KARP - KADAS Routing Packager</h1>
+
+        <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"/>
+        <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
 </head>
 
-<body style="font-size:11pt">  
-    <div style="width: 100%; heigth:1000px">  
-			
-		<div id="leftpane" style="width: 49%; float:left;">  
-			<div id="map" style="height: 470px; border: 1px solid #ccc "></div>
-			<br>
-			<form method="POST" id="submitForm" action="https://l0t2511a.lt.admin.ch/api/v1/jobs/">
+<body style="font-size:11pt">
+    <div style="width: 100%; heigth:1000px">
 
-				<label for="name" width="300" >Export name:</label>
-				<input type="text" id="name" name="name"  placeholder="Enter export name" required><br>
-				
-				<label for="provider">Provider:</label>
-				<input type="text" id="provider" name="provider" value="osm" style="background-color:Gainsboro" readonly><br>
-				
-				<label for="bbox">Boundingbox:</label>
-				<input type="text" id="bbox" name="bbox" placeholder="Use the map to draw the boundingbox or enter comma separated list w,s,e,n" required><br>
-				
-				<label for="desc">Description:</label>
-				<input type="text" id="description" name="description" placeholder="Enter description"><br>
-				
-				<label for="update">Update:</label>
-				<input type="checkbox" id="update" name="update" value="true" style="background-color:Gainsboro" checked><br>
-				
-				<input id="submitBtn" type="submit" value="Start Routing Packager Export">
-			</form>
-			
-			<script>
-			// Variables for extent
-			var sw = 0.0;
-			var ne = 0.0;
-			var s = 0.0;
-			var w = 0.0;
-			var n = 0.0;
-			var e = 0.0;
-			var bbox = "";
+                <div id="leftpane" style="width: 49%; float:left;">
+                        <div id="map" style="height: 470px; border: 1px solid #ccc "></div>
+                        <br>
+                        <form method="POST" id="submitForm" action="https://l0t2511a.lt.admin.ch/api/v1/jobs/">
 
-			// initialize map
-			var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-			osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-			osm = L.tileLayer(osmUrl, {
-				maxZoom: 18,
-				attribution: osmAttrib
-			}),
-			map = new L.Map('map', {
-				center: new L.LatLng(46.928455, 7.451772),
-				zoom: 5
-			}),
-			drawnItems = L.featureGroup().addTo(map);
+                                <label for="name" width="300" >Export name:</label>
+                                <input type="text" id="name" name="name"  placeholder="Enter export name" required><br>
 
-			osm.addTo(map)
+                                <label for="provider">Provider:</label>
+                                <input type="text" id="provider" name="provider" value="osm" style="background-color:Gainsboro" readonly><br>
 
-			// map draw controls
-			map.addControl(new L.Control.Draw({
-					edit: {
-						featureGroup: drawnItems,
-						poly: {
-							allowIntersection: false
-						}
-					},
-					draw: {
-						polygon: false,
-						polyline: false,
-						marker: false,
-						circle: false
-					}
-				}));
+                                <label for="bbox">Boundingbox:</label>
+                                <input type="text" id="bbox" name="bbox" placeholder="Use the map to draw the boundingbox or enter comma separated list w,s,e,n" required><br>
 
-			// Draw rectangle control. Delete previous element when creating new feature.
-			map.on(L.Draw.Event.CREATED, function (event) {
-				drawnItems.clearLayers()
-				var layer = event.layer
-					drawnItems.addLayer(layer)
+                                <label for="desc">Description:</label>
+                                <input type="text" id="description" name="description" placeholder="Enter description"><br>
 
-					// get boundingbox informations
-					var bounds = layer.getBounds()
-					sw = bounds.getSouthWest()
-					ne = bounds.getNorthEast()
-					s = bounds.getSouth()
-					w = bounds.getWest()
-					n = bounds.getNorth()
-					e = bounds.getEast()
-					bbox = w + "," + s + "," + e + "," + n
-					document.getElementById("bbox").value = bbox
-					//console.log(bbox)
-			});
+                                <label for="update">Update:</label>
+                                <input type="checkbox" id="update" name="update" value="true" style="background-color:Gainsboro" checked><br>
 
-			//form elements as json
-			const formElement = document.querySelector('form#submitForm')
-				//console.log(formElement)
-				// convert the form to JSON
-				const getFormJSON = (form) => {
-				const data = new FormData(form);
-				return Array.from(data.keys()).reduce((result, key) => {
-					result[key] = data.get(key);
-					return result;
-				}, {});
-			};
+                                <input id="submitBtn" type="submit" value="Start Routing Packager Export">
+                        </form>
 
-			// handle the form submission event, prevent default form behaviour, check validity, convert form to JSON
-			const handler = (event) => {
-				event.preventDefault();
-				const valid = formElement.reportValidity();
-				if (valid) {
-					const jsonBody = getFormJSON(formElement);
-					//console.log(jsonBody);
+                        <script>
+                        // Variables for extent
+                        var sw = 0.0;
+                        var ne = 0.0;
+                        var s = 0.0;
+                        var w = 0.0;
+                        var n = 0.0;
+                        var e = 0.0;
+                        var bbox = "";
 
-					// prepare POST Call for ajax
-					$.ajax({
-						url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/",
-						type: "POST",
-						headers: {
-							"Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
-							"Content-Type": "application/json"
-						},
-						crossDomain: true,
-						data: JSON.stringify(jsonBody),
-						dataType: "json",
-						
-						// call success
-						success: function (response) {
-							//console.log(response);
-							//console.log(response.status);
-							//console.log(response.id);
-							responseid = response.id
-								jobid = responseid;
-							//console.log(jobid);
-							document.getElementById("submitBtn").value = "Job with id " + jobid + " successfully submitted!";
-							document.getElementById("submitBtn").style = "background-color: SeaGreen";
+                        // initialize map
+                        var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                        osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+                        osm = L.tileLayer(osmUrl, {
+                                maxZoom: 18,
+                                attribution: osmAttrib
+                        }),
+                        map = new L.Map('map', {
+                                center: new L.LatLng(46.928455, 7.451772),
+                                zoom: 5
+                        }),
+                        drawnItems = L.featureGroup().addTo(map);
 
-						},
-						
-						//call error
-						error: function (xhr, status) {
-							//console.log(xhr.status);
-							if (xhr.status == 409) {
-								document.getElementById("submitBtn").value = "Error: Export name already exists! Try again with another name. ";
-								document.getElementById("submitBtn").style = "background-color: LightCoral";
-							} else {
-								document.getElementById("submitBtn").value = "Unexpected Error! ";
-								document.getElementById("submitBtn").style = "background-color: LightCoral";
-							}							
+                        osm.addTo(map)
 
-						}
-					});
+                        // map draw controls
+                        map.addControl(new L.Control.Draw({
+                                        edit: {
+                                                featureGroup: drawnItems,
+                                                poly: {
+                                                        allowIntersection: false
+                                                }
+                                        },
+                                        draw: {
+                                                polygon: false,
+                                                polyline: false,
+                                                marker: false,
+                                                circle: false
+                                        }
+                                }));
 
-				};
-				
-				// refresh jobtable after clicking submit button
-				destroyRecreateTable();
-			}
-			
-			// listen for button submit click
-			formElement.addEventListener("submit", handler);
+                        // Draw rectangle control. Delete previous element when creating new feature.
+                        map.on(L.Draw.Event.CREATED, function (event) {
+                                drawnItems.clearLayers()
+                                var layer = event.layer
+                                        drawnItems.addLayer(layer)
 
-			</script>
-		<p style="color: gray; font-size:8pt">v.1.0</p>
-        </div>  
-	
-        <div id="middlepane" style="width: 2%; float:left; ">  
-		<br>
-        </div>  
- 
-        <div id="rightpane" style="width: 49%; float:left; ">  
-			<b>Job History</b>
-			<button onclick="destroyRecreateTable();">Refresh</button> 
+                                        // get boundingbox informations
+                                        var bounds = layer.getBounds()
+                                        sw = bounds.getSouthWest()
+                                        ne = bounds.getNorthEast()
+                                        s = bounds.getSouth()
+                                        w = bounds.getWest()
+                                        n = bounds.getNorth()
+                                        e = bounds.getEast()
+                                        bbox = w + "," + s + "," + e + "," + n
+                                        document.getElementById("bbox").value = bbox
+                                        //console.log(bbox)
+                        });
 
-			<div id="jobdelstatus" name="jobdelstatus" style="color:green; height:6px; padding:3px;"></div>
-			
-			<table id="getJobsResult" class="stripe hover order-column row-border compact" width="100%"></table>
-			<script>
+                        //form elements as json
+                        const formElement = document.querySelector('form#submitForm')
+                                //console.log(formElement)
+                                // convert the form to JSON
+                                const getFormJSON = (form) => {
+                                const data = new FormData(form);
+                                return Array.from(data.keys()).reduce((result, key) => {
+                                        result[key] = data.get(key);
+                                        return result;
+                                }, {});
+                        };
 
-			function jobresult() {
-				$.getJSON("https://l0t2511a.lt.admin.ch/api/v1/jobs/", function (gr) {
-					if (gr) {
-						//console.log(gr)
-						var jsonData = gr
-							jsonData ??= 0;
+                        // handle the form submission event, prevent default form behaviour, check validity, convert form to JSON
+                        const handler = (event) => {
+                                event.preventDefault();
+                                const valid = formElement.reportValidity();
+                                if (valid) {
+                                        const jsonBody = getFormJSON(formElement);
+                                        //console.log(jsonBody);
 
-						// prepare table values
-						var dataSet = []
-						for (j in jsonData) {
+                                        // prepare POST Call for ajax
+                                        $.ajax({
+                                                url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/",
+                                                type: "POST",
+                                                headers: {
+                                                        "Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
+                                                        "Content-Type": "application/json"
+                                                },
+                                                crossDomain: true,
+                                                data: JSON.stringify(jsonBody),
+                                                dataType: "json",
 
-							// table values per line
-							var dataLine = []
-							var jname = jsonData[j].name
-								var jprovider = jsonData[j].provider
-								var jbbox = jsonData[j].bbox
-								var jdescription = jsonData[j].description
-								var jupdate = jsonData[j].update
-								var jid = jsonData[j].id
-								var juser_id = jsonData[j].user_id
-								var jarq_id = jsonData[j].arq_id
-								var jstatus = jsonData[j].status
-								var jzip_path = jsonData[j].zip_path
+                                                // call success
+                                                success: function (response) {
+                                                        //console.log(response);
+                                                        //console.log(response.status);
+                                                        //console.log(response.id);
+                                                        responseid = response.id
+                                                                jobid = responseid;
+                                                        //console.log(jobid);
+                                                        document.getElementById("submitBtn").value = "Job with id " + jobid + " successfully submitted!";
+                                                        document.getElementById("submitBtn").style = "background-color: SeaGreen";
+
+                                                },
+
+                                                //call error
+                                                error: function (xhr, status) {
+                                                        //console.log(xhr.status);
+                                                        if (xhr.status == 409) {
+                                                                document.getElementById("submitBtn").value = "Error: Export name already exists! Try again with another name. ";
+                                                                document.getElementById("submitBtn").style = "background-color: LightCoral";
+                                                        } else {
+                                                                document.getElementById("submitBtn").value = "Unexpected Error! ";
+                                                                document.getElementById("submitBtn").style = "background-color: LightCoral";
+                                                        }
+
+                                                }
+                                        });
+
+                                };
+
+                                // refresh jobtable after clicking submit button
+                                destroyRecreateTable();
+                        }
+
+                        // listen for button submit click
+                        formElement.addEventListener("submit", handler);
+
+                        </script>
+                <p style="color: gray; font-size:8pt">v.1.0</p>
+        </div>
+
+        <div id="middlepane" style="width: 2%; float:left; ">
+                <br>
+        </div>
+
+        <div id="rightpane" style="width: 49%; float:left; ">
+                        <b>Job History</b>
+                        <button onclick="destroyRecreateTable();">Refresh</button>
+
+                        <div id="jobdelstatus" name="jobdelstatus" style="color:green; height:6px; padding:3px;"></div>
+
+                        <table id="getJobsResult" class="stripe hover order-column row-border compact" width="100%"></table>
+                        <script>
+
+                        function jobresult() {
+                                $.getJSON("https://l0t2511a.lt.admin.ch/api/v1/jobs/", function (gr) {
+                                        if (gr) {
+                                                //console.log(gr)
+                                                var jsonData = gr
+                                                        jsonData ??= 0;
+
+                                                // prepare table values
+                                                var dataSet = []
+                                                for (j in jsonData) {
+
+                                                        // table values per line
+                                                        var dataLine = []
+                                                        var jname = jsonData[j].name
+                                                                var jprovider = jsonData[j].provider
+                                                                var jbbox = jsonData[j].bbox
+                                                                var jdescription = jsonData[j].description
                                                                 var jupdate = jsonData[j].update
-								jsonData[j].last_started ??= "-"
-								jsonData[j].last_finished ??= "-"
+                                                                var jid = jsonData[j].id
+                                                                var juser_id = jsonData[j].user_id
+                                                                var jarq_id = jsonData[j].arq_id
+                                                                var jstatus = jsonData[j].status
+                                                                var jzip_path = jsonData[j].zip_path
+                                                                var jupdate = jsonData[j].update
+                                                                jsonData[j].last_started ??= "-"
+                                                                jsonData[j].last_finished ??= "-"
 
-								var jlast_started = jsonData[j].last_started
-								var jlast_finished = jsonData[j].last_finished
+                                                                var jlast_started = jsonData[j].last_started
+                                                                var jlast_finished = jsonData[j].last_finished
 
-								dataLine.push(jid)
-								dataLine.push(jstatus)
-								dataLine.push(jname)
-								dataLine.push(jdescription)
-								//dataLine.push(jzip_path)
+                                                                dataLine.push(jid)
+                                                                dataLine.push(jstatus)
+                                                                dataLine.push(jname)
+                                                                dataLine.push(jdescription)
+                                                                //dataLine.push(jzip_path)
 
-								// nice last started date, no NaN or NULL
-								if (jlast_started != "-") {
-									var lsdate = jlast_started.substring(0, 10);
-									var lstime = jlast_started.substring(11, 16);
-									var lsniceDateTime = lsdate + " " + lstime;
-									dataLine.push(lsniceDateTime);
-								} else {
-									dataLine.push(jlast_started);
-								}
+                                                                // nice last started date, no NaN or NULL
+                                                                if (jlast_started != "-") {
+                                                                        var lsdate = jlast_started.substring(0, 10);
+                                                                        var lstime = jlast_started.substring(11, 16);
+                                                                        var lsniceDateTime = lsdate + " " + lstime;
+                                                                        dataLine.push(lsniceDateTime);
+                                                                } else {
+                                                                        dataLine.push(jlast_started);
+                                                                }
 
-								// nice last finished date, no NaN or NULL
-								if (jlast_finished != "-") {
-									var lfexportDate = jlast_finished;
-									var lfdate = new Date(lfexportDate);
-									var lfy = lfdate.getFullYear().toString();
-									var lfmo = (lfdate.getMonth()+1).toString().padStart(2, "0");
-									var lfd = lfdate.getDate().toString().padStart(2, "0");
-									var lfh = lfdate.getHours().toString().padStart(2, "0");
-									var lfmi = lfdate.getMinutes().toString().padStart(2, "0");
-									var lfniceDateTime = lfy + "-" + lfmo + "-" + lfd + " " + lfh + ":" + lfmi;
-									dataLine.push(lfniceDateTime);
-								} else {
-									dataLine.push(jlast_finished);
-								}
-                            
+                                                                // nice last finished date, no NaN or NULL
+                                                                if (jlast_finished != "-") {
+                                                                        var lfexportDate = jlast_finished;
+                                                                        var lfdate = new Date(lfexportDate);
+                                                                        var lfy = lfdate.getFullYear().toString();
+                                                                        var lfmo = (lfdate.getMonth()+1).toString().padStart(2, "0");
+                                                                        var lfd = lfdate.getDate().toString().padStart(2, "0");
+                                                                        var lfh = lfdate.getHours().toString().padStart(2, "0");
+                                                                        var lfmi = lfdate.getMinutes().toString().padStart(2, "0");
+                                                                        var lfniceDateTime = lfy + "-" + lfmo + "-" + lfd + " " + lfh + ":" + lfmi;
+                                                                        dataLine.push(lfniceDateTime);
+                                                                } else {
+                                                                        dataLine.push(jlast_finished);
+                                                                }
+
                                                                 dataLine.push(jupdate)
 
-								// job delete button per line
-								dataLine.push('<button onclick="delJob(' + jid + ');destroyRecreateTable();">x</button>')
+                                                                // job delete button per line
+                                                                dataLine.push('<button onclick="delJob(' + jid + ');destroyRecreateTable();">x</button>')
 
-								// push all cell-data to tableline
-								dataSet.push(dataLine);
-						}
+                                                                // push all cell-data to tableline
+                                                                dataSet.push(dataLine);
+                                                }
 
-						// create table with DataTable library
-						$(document).ready(function () {
-							table = $('#getJobsResult').DataTable({
-								dom: 'ftip', // only show filter menu, no "show x entries"
-								data: dataSet,
-								pageLength: 20, // how many entries to show
-								order: [0, 'desc'],
-								columns: [{
-										title: 'ID'
-									}, {
-										title: 'Status'
-									}, {
-										title: 'Name'
-									}, {
-										title: 'Description'
-									},
-									//{ title: 'Zip Path' },
-									{
-										title: 'Last Started UTC'
-									}, {
-										title: 'Last Finished UTC'
-									},{
+                                                // create table with DataTable library
+                                                $(document).ready(function () {
+                                                        table = $('#getJobsResult').DataTable({
+                                                                dom: 'ftip', // only show filter menu, no "show x entries"
+                                                                data: dataSet,
+                                                                pageLength: 20, // how many entries to show
+                                                                order: [0, 'desc'],
+                                                                columns: [{
+                                                                                title: 'ID'
+                                                                        }, {
+                                                                                title: 'Status'
+                                                                        }, {
+                                                                                title: 'Name'
+                                                                        }, {
+                                                                                title: 'Description'
+                                                                        },
+                                                                        //{ title: 'Zip Path' },
+                                                                        {
+                                                                                title: 'Last Started UTC'
+                                                                        }, {
+                                                                                title: 'Last Finished UTC'
+                                                                        },{
                                                                                 title: 'Update'
                                                                         },{
-										title: 'Del'
-									},
-								],
+                                                                                title: 'Del'
+                                                                        },
+                                                                ],
 
-								// background color of row according to jobstatus, working=green, failed/deleted=red
-								"createdRow": function (row, data, dataIndex) {
-									if (data[1] == "Failed" || data[1] == "Deleted") {
-										$(row).addClass('failedjob');
-									} else if (data[1] == "Compressing" || data[1] == "Queued") {
-										$(row).addClass('workingjob');
-									}
-								}
+                                                                // background color of row according to jobstatus, working=green, failed/deleted=red
+                                                                "createdRow": function (row, data, dataIndex) {
+                                                                        if (data[1] == "Failed" || data[1] == "Deleted") {
+                                                                                $(row).addClass('failedjob');
+                                                                        } else if (data[1] == "Compressing" || data[1] == "Queued") {
+                                                                                $(row).addClass('workingjob');
+                                                                        }
+                                                                }
 
-							});
-						});
-					
-					// error if GET jobs fails
-					} else {
-						console.log("GET ERROR: CAN NOT BUILD JOBS TABLE");
-					}
-				});
-			};
+                                                        });
+                                                });
 
-			//destroy existing jobs table if exists
-			function destroyTable() {
-				if (typeof table == "object") {
-					table.destroy();
-				}
-			};
+                                        // error if GET jobs fails
+                                        } else {
+                                                console.log("GET ERROR: CAN NOT BUILD JOBS TABLE");
+                                        }
+                                });
+                        };
 
-			// nested function to destroy and recreate table in single function
-			function destroyRecreateTable() {
-				destroyTable();
-				jobresult();
-			};
+                        //destroy existing jobs table if exists
+                        function destroyTable() {
+                                if (typeof table == "object") {
+                                        table.destroy();
+                                }
+                        };
 
-			//refresh table during page load
-			destroyRecreateTable();
+                        // nested function to destroy and recreate table in single function
+                        function destroyRecreateTable() {
+                                destroyTable();
+                                jobresult();
+                        };
 
-			// delete job by jobid with DELETE request
-			function delJob(jid) {
-				//console.log("del Job: "+jid);
-				$.ajax({
-					url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/" + jid,
-					type: 'DELETE',
-					headers: {
-						"Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
-						"Content-Type": "application/json"
-					},
-					crossDomain: true,
-					dataType: "json",
+                        //refresh table during page load
+                        destroyRecreateTable();
 
-					success: function (result) {
-						document.getElementById("jobdelstatus").innerHTML = "Job " + jid + " successfully deleted!";
-					}
-				});
-			};
-								
-			</script>
-        </div>  
-    </div>  
-	<br>
+                        // delete job by jobid with DELETE request
+                        function delJob(jid) {
+                                //console.log("del Job: "+jid);
+                                $.ajax({
+                                        url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/" + jid,
+                                        type: 'DELETE',
+                                        headers: {
+                                                "Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
+                                                "Content-Type": "application/json"
+                                        },
+                                        crossDomain: true,
+                                        dataType: "json",
+
+                                        success: function (result) {
+                                                document.getElementById("jobdelstatus").innerHTML = "Job " + jid + " successfully deleted!";
+                                        }
+                                });
+                        };
+
+                        </script>
+        </div>
+    </div>
+        <br>
 </body>
 </html>
