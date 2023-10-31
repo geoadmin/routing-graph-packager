@@ -77,10 +77,6 @@ services:
       - worker
     healthcheck:
       disable: true
-    # set the proxies from the host env vars
-    environment:
-      http_proxy: "${http_proxy}"
-      https_proxy: "${https_proxy}"
     restart: always
   fake-smtp-server:
     image: reachfive/fake-smtp-server:latest

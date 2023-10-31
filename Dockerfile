@@ -1,5 +1,8 @@
 #--- BEGIN Usual Python stuff ---
-FROM valhalla/valhalla:run-latest as builder
+
+# TODO: we need master here or a newer version of Valhalla (3.4.0 is not recent enough)
+#   but: https://github.com/valhalla/valhalla/issues/4374
+FROM ghcr.io/valhalla/valhalla:3.4.0 as builder
 LABEL maintainer=nils@gis-ops.com
 
 WORKDIR /app
@@ -46,6 +49,7 @@ RUN cd /usr/local/bin && \
   for f in valhalla*; do rm $f; done && \
   cd .. && mv $preserve ./bin
 
+# TODO: valhalla master is based on 23.04 for arm64
 FROM ubuntu:22.04 as runner_base
 MAINTAINER Nils Nolde <nils@gis-ops.com>
 
