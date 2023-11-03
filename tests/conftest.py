@@ -1,7 +1,6 @@
 import asyncio
 from base64 import b64encode
 import shutil
-from typing import Iterator
 
 import pytest
 from arq import Worker
@@ -12,12 +11,6 @@ from sqlmodel import SQLModel, Session
 from routing_packager_app import create_app
 from routing_packager_app.config import SETTINGS
 from routing_packager_app.worker import create_package
-
-@pytest.fixture(scope="module")
-def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="session", autouse=True)

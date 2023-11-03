@@ -14,8 +14,8 @@
 
 # so it can see prime_server within the supervisor process
 export LD_LIBRARY_PATH=/usr/local/lib
-#export http_proxy=http://prxp01.admin.ch:8080
-#export https_proxy=http://prxp01.admin.ch:8080
+export http_proxy=http://prxp01.admin.ch:8080
+export https_proxy=http://prxp01.admin.ch:8080
 
 # watch the .lock file every 10 secs
 wait_for_lock() {
@@ -90,16 +90,16 @@ while true; do
   UPDATE_OSM="True"
   if ! [ -f "$PBF" ]; then
     echo "INFO: Downloading OSM file $PBF"
-    # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
+    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/germany-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://download.geofabrik.de/europe/iceland-latest.osm.pbf -O "$PBF" || exit 1
-    wget -nv https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
+    # wget -nv https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
   fi
 
   if [[ $UPDATE_OSM == "True" ]]; then
     echo "INFO: Updating OSM file $PBF"
-    #update_osm.sh -p "$PBF" || exit 1
+    update_osm.sh -p "$PBF" || exit 1
   fi
 
   # build the current config
