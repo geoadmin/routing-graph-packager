@@ -14,7 +14,7 @@ HTTPServer.DEFAULT_LISTEN_PORT = 8002
 HTTPServer.DEFAULT_LISTEN_HOST = "localhost"
 
 
-@pytest.yield_fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def delete_jobs(get_session: Session):
     yield
     jobs = get_session.exec(select(Job)).all()
@@ -23,14 +23,14 @@ def delete_jobs(get_session: Session):
         get_session.commit()
 
 
-@pytest.yield_fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def delete_dirs():
     yield
     for dir_ in SETTINGS.get_output_path().iterdir():
         rmtree(dir_)
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def copy_valhalla_tiles():
     for dir_ in SETTINGS.get_output_path().parent.joinpath("andorra_tiles").iterdir():
         copytree(dir_, SETTINGS.get_valhalla_path(8002).joinpath(dir_.stem))

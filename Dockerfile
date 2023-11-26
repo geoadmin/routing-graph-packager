@@ -1,5 +1,6 @@
 #--- BEGIN Usual Python stuff ---
-FROM valhalla/valhalla:run-latest as builder
+
+FROM ghcr.io/valhalla/valhalla:latest as builder
 LABEL maintainer=nils@gis-ops.com
 
 WORKDIR /app
@@ -13,7 +14,7 @@ RUN apt-get update -y > /dev/null && \
         python3-pip \
         python3-venv \
         curl > /dev/null && \
-    python -m pip install --upgrade pip
+    python -m pip install --upgrade pip --break-system-packages
 
 ENV POETRY_BIN /root/.local/bin/poetry
 
@@ -46,16 +47,16 @@ RUN cd /usr/local/bin && \
   for f in valhalla*; do rm $f; done && \
   cd .. && mv $preserve ./bin
 
-FROM ubuntu:22.04 as runner_base
+FROM ubuntu:23.04 as runner_base
 MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 # install Valhalla stuff
 RUN apt-get update > /dev/null && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y libluajit-5.1-2 \
-      libzmq5 libczmq4 spatialite-bin libprotobuf-lite23 sudo locales wget \
+      libzmq5 libczmq4 spatialite-bin libprotobuf-lite32 sudo locales wget \
       libsqlite3-0 libsqlite3-mod-spatialite libcurl4 python-is-python3 osmctools \
-      python3.10-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
+      python3.11-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
 
 WORKDIR /app
 

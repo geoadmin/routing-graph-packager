@@ -35,13 +35,18 @@ wait_for_lock() {
   exit 1
 }
 
+# reset config so we don't start the service with a valid graph
+# we only need the service to query the /status endpoint to decide
+# which instance to shut down/start up
 reset_config() {
   jq --arg d "" '.mjolnir.tile_dir = $d' "${valhalla_config}"| sponge "${valhalla_config}"
+  jq --arg d "" '.additional_data.elevation = $d' "${valhalla_config}"| sponge "${valhalla_config}"
 }
 
 PORT_8002="8002"
 PORT_8003="8003"
 # $DATA_DIR needs to be defined, either by supervisor or the current shell
+ELEVATION_DIR="$DATA_DIR/elevation"
 VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
 VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
@@ -102,8 +107,10 @@ while true; do
   valhalla_config="$CURRENT_VALHALLA_DIR/valhalla.json"
   valhalla_build_config \
     --httpd-service-listen "tcp://*:${CURRENT_PORT}" \
+    --loki-actions "status" \
     --mjolnir-tile-extract "" \
     --mjolnir-tile-dir "$CURRENT_VALHALLA_DIR" \
+    --additional-data-elevation "$ELEVATION_DIR" \
     --mjolnir-concurrency "$CONCURRENCY" \
     --mjolnir-logging-type "" \
     > "${valhalla_config}" || exit 1
@@ -124,8 +131,16 @@ while true; do
     continue
   fi
 
-  echo "INFO: Running build tiles with: $PBF"
-  valhalla_build_tiles -c "${valhalla_config}" "$PBF" || exit 1
+  echo "INFO: Building initial graph with $PBF..."
+  valhalla_build_tiles -c "${valhalla_config}" -s initialize -e build "$PBF" || exit 1
+
+  echo "INFO: Downloading elevation to $ELEVATION_DIR..."
+  valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
+
+  echo "INFO: Enhancing initial tiles with elevation..."
+  valhalla_build_tiles -c "${valhalla_config}" -s enhance -e cleanup "$PBF" || exit 1
+
+  # reset config so the service won't load the graph
   reset_config
 
   echo "INFO: Updating the registered packages with $(which python3)"

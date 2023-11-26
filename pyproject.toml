@@ -19,12 +19,11 @@ sqlalchemy-utils = "^0.38.2"
 passlib = "^1.7.4"
 shapely = "^1.8.1"
 gunicorn = "^20.1.0"
-gevent = "^21.12.0"
-pyproj = "^3.3.0"
 psycopg2-binary = "^2.9.3"
 fastapi = "^0.85.1"
 sqlmodel = "^0.0.8"
 arq = "^0.25.0"
+anyio = "^3.0.0"  # some anyio breaking change in 4.x breaks starlette's testclient
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
 pydantic = {extras = ["email"], version = "^1.10.2"}
 osmium = "^3.5.0"

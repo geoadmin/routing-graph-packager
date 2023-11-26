@@ -12,7 +12,7 @@ from routing_packager_app.config import SETTINGS
 from routing_packager_app.worker import create_package
 
 
-@pytest.yield_fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def create_worker():
     """Auto-runs and creates an event loop for the worker."""
     worker = Worker([create_package])
@@ -35,7 +35,7 @@ def get_client(get_app: FastAPI) -> TestClient:
     return client
 
 
-@pytest.yield_fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def create_db():
     from routing_packager_app.db import engine
     from routing_packager_app.api_v1.models import User
@@ -46,7 +46,7 @@ def create_db():
     SQLModel.metadata.drop_all(engine, checkfirst=True)
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def get_session():
     from routing_packager_app.db import engine
 
@@ -69,7 +69,7 @@ def basic_auth_header():
 
 
 # Creates needed directories and removes them after the test function
-@pytest.yield_fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def handle_dirs():
     paths = [SETTINGS.get_valhalla_path(p) for p in (8002, 8003)]
     for p in paths:
