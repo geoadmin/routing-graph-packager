@@ -66,6 +66,7 @@ while true; do
   echo "INFO: Starting iteration $iteration..."
 
   # Take 8002 if this is the first start
+  # this is copied from FOSSGIS, was too lazy to change to smth more suitable
   if curl -fs --noproxy localhost "http://localhost:${PORT_8002}/status"; then
     CURRENT_PORT=${PORT_8003}
     OLD_PORT=${PORT_8002}
