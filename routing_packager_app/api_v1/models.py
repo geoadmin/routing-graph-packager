@@ -6,7 +6,7 @@ from geoalchemy2 import Geography
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
-from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select
+from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select, AutoString
 
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
@@ -66,7 +66,7 @@ class Job(JobBase, table=True):
 
 
 class UserBase(SQLModel):
-    email: EmailStr = Field(index=True, unique=True, nullable=False)
+    email: EmailStr = Field(index=True, unique=True, nullable=False, sa_type=AutoString)
 
 
 class UserRead(UserBase):

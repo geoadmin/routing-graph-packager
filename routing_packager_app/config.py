@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseSettings as _BaseSettings
+from pydantic_settings import SettingsConfigDict, BaseSettings as _BaseSettings
 from starlette.datastructures import CommaSeparatedStrings
 
 from routing_packager_app.constants import Providers
@@ -44,6 +44,8 @@ class BaseSettings(_BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASS: str = ""
     SMTP_SECURE: bool = False
+    
+    model_config = SettingsConfigDict(extra='ignore')
 
     def get_valhalla_path(self, port: int) -> Path:  # pragma: no cover
         """
@@ -69,15 +71,11 @@ class BaseSettings(_BaseSettings):
 
 
 class ProdSettings(BaseSettings):
-    class Config:
-        case_sensitive = True
-        env_file = ENV_FILE
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra='ignore')
 
 
 class DevSettings(BaseSettings):
-    class Config:
-        case_sensitive = True
-        env_file = ENV_FILE
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra='ignore')
 
 
 class TestSettings(BaseSettings):
@@ -92,14 +90,12 @@ class TestSettings(BaseSettings):
 
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
-
-    class Config:
-        case_sensitive = True
-        env_file = BASE_DIR.joinpath("tests", "env")
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=BASE_DIR.joinpath("tests", "env"), extra='ignore')
 
 
 # decide which settings we'll use
 SETTINGS: Optional[BaseSettings] = None
+print("LOADING SETTINGS")
 env = os.getenv("API_CONFIG", "prod")
 if env == "prod":  # pragma: no cover
     SETTINGS = ProdSettings()

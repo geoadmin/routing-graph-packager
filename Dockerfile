@@ -54,7 +54,7 @@ MAINTAINER Nils Nolde <nils@gis-ops.com>
 RUN apt-get update > /dev/null && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y libluajit-5.1-2 \
-      libzmq5 libczmq4 spatialite-bin libprotobuf-lite32 sudo locales wget \
+      libzmq5 libgdal-dev libczmq4 spatialite-bin libprotobuf-lite32 sudo locales wget \
       libsqlite3-0 libsqlite3-mod-spatialite libcurl4 python-is-python3 osmctools \
       python3.11-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
 
