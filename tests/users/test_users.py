@@ -47,7 +47,7 @@ def test_new_user_missing_field_error(missing_field, get_client: TestClient, bas
     response = create_new_user(get_client, data, basic_auth_header, False)
 
     assert response.status_code == 422
-    assert response.json()["detail"][0].get("msg") == "field required"
+    assert response.json()["detail"][0].get("msg") == "Field required"
 
 
 @pytest.mark.parametrize("email", ("user@email.12", "user.me", "uuser@email:", "user@email."))
@@ -57,7 +57,7 @@ def test_new_user_wrong_email_error(email, get_client: TestClient, basic_auth_he
     response = create_new_user(get_client, auth_header=basic_auth_header, data=data, must_succeed=False)
 
     assert response.status_code == 422
-    assert response.json()["detail"][0].get("msg") == "value is not a valid email address"
+    assert response.json()["detail"][0].get("msg")[:34] == "value is not a valid email address"
 
 
 def test_new_user_unauthorized(get_client, basic_auth_header):
@@ -192,6 +192,6 @@ def test_admin_user_created(get_client, get_session: Session):
     assert response.json()[0]["email"] == expected_email
 
     statement = select(User).where(User.id == 1)
-    admin_user = get_session.exec(statement)
+    admin_user = get_session.exec(statement).first()
     assert admin_user is not None
     assert admin_user.email == expected_email

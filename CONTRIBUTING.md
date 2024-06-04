@@ -41,14 +41,21 @@ pre-commit install
 You'll need a few things to run the tests:
 
 - PostreSQL installation with a DB named `gis_test` (or define another db name using `POSTGRES_DB_TEST`) **and PostGIS enabled**
-- Redis database, best done with `docker run --name redis -p 6379:6379 -d redis:6.0`, then you can use the project's defaults, i.e. `REDIS_URL=redis://localhost:6379/0`
-- some fake SMTP service to handle email tests, our recommendations:
-  - [fake-smtp-server](https://www.npmjs.com/package/fake-smtp-server): NodeJS app with a frontend on `http://localhost:1080` and SMTP port 1025
-  - pure Python one-liner in a separate terminal window: `sudo python -m smtpd -n -c DebuggingServer localhost:1025`
+- Redis database
+
+Both can be quickly spun up by using the provided `docker-compose.test.yml`:
+
+```bash
+docker compose -f docker-compose.test.yml up -d
+```
+
+You'll also need some fake SMTP service to handle email tests, our recommendation: [fake-smtp-server](https://www.npmjs.com/package/fake-smtp-server),
+a NodeJS app with a frontend on `http://localhost:1080` and SMTP port 1025
 
 We use `pytest` in this project with `coverage`:
 
 ```bash
+export API_CONFIG=test
 pytest --cov=routing_packager_app
 ```
 
