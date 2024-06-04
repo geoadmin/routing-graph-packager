@@ -12,9 +12,11 @@ from routing_packager_app.config import SETTINGS
 from routing_packager_app.worker import create_package
 from contextlib import asynccontextmanager
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    pass 
+    pass
+
 
 @pytest.fixture(scope="session", autouse=True)
 def create_worker():

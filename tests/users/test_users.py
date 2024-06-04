@@ -81,7 +81,6 @@ def test_new_user_unauthorized(get_client, basic_auth_header):
 
 
 def test_new_user_forbidden(get_client):
-
     response = create_new_user(
         get_client,
         auth_header={},

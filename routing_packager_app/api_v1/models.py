@@ -41,7 +41,6 @@ class JobCreate(JobBase):
 
 
 class Job(JobBase, table=True):
-
     __tablename__ = "jobs"
 
     id: Optional[int] = Field(primary_key=True)
