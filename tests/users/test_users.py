@@ -114,7 +114,9 @@ def test_get_all_users_not_empty(get_client, basic_auth_header, get_session: Ses
 
     search_user = r"^user[3|4|5]@email\.com$"
     for i in user_ids:
-        user = get_session.query(User).get(i)
+        statement = select(User).where(User.id == i)
+        user = get_session.exec(statement).first()
+        assert user != None
         assert re.search(search_user, user.email)
 
 
@@ -190,5 +192,7 @@ def test_admin_user_created(get_client, get_session: Session):
     response = get_client.get("/api/v1/users")
     assert response.json()[0]["email"] == expected_email
 
-    admin_user = get_session.query(User).get(1)
+    statement = select(User).where(User.id == 1)
+    admin_user = get_session.exec(statement)
+    assert admin_user != None
     assert admin_user.email == expected_email

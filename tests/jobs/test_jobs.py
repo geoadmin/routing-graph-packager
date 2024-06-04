@@ -1,7 +1,7 @@
 from base64 import b64encode
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from routing_packager_app import SETTINGS
 from routing_packager_app.api_v1.models import Job
@@ -28,9 +28,10 @@ def test_post_job(provider, get_client, basic_auth_header, get_session: Session)
             "provider": provider,
         },
     )
-
-    job_inst: Job = get_session.query(Job).get(res.json()["id"])
-
+    statement = select(Job).where(Job.id == res.json()["id"])
+    job_inst: Job = get_session.exec(statement).first()
+    
+    assert job_inst != None
     assert job_inst.provider == provider
     assert job_inst.status == "Queued"
     assert job_inst.description == DEFAULT_ARGS_POST["description"]

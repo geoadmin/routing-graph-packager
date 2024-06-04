@@ -2,7 +2,10 @@
 name = "routing-graph-packager"
 version = "1.0.0b"
 description = "Backend to generate packages of routing graphs for FOSS routing engines in a job queue."
-authors = ["Nils Nolde <nils@gis-ops.com>"]
+authors = [
+  "Nils Nolde <nils@gis-ops.com>",
+  "Christian Beiwinkel <christian@gis-ops.com>",
+]
 license = "MIT"
 packages = [{ include = "routing_packager_app" }]
 
