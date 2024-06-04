@@ -30,8 +30,8 @@ def test_post_job(provider, get_client, basic_auth_header, get_session: Session)
     )
     statement = select(Job).where(Job.id == res.json()["id"])
     job_inst: Job = get_session.exec(statement).first()
-    
-    assert job_inst != None
+
+    assert job_inst is not None
     assert job_inst.provider == provider
     assert job_inst.status == "Queued"
     assert job_inst.description == DEFAULT_ARGS_POST["description"]

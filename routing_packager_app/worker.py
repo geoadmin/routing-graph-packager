@@ -10,7 +10,12 @@ import requests
 from requests.exceptions import ConnectionError
 import shutil
 from sqlmodel import Session, select
-from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_301_MOVED_PERMANENTLY
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_301_MOVED_PERMANENTLY,
+)
 
 from .api_v1.dependencies import split_bbox
 from .config import SETTINGS
@@ -40,11 +45,11 @@ async def create_package(
     # and only if there hasn't been one before
     statement = select(User).where(User.id == user_id)
     results = session.exec(statement).first()
-    
+
     if results is None:
         raise HTTPException(
-                HTTP_404_NOT_FOUND,
-                "No user with specified ID found.",
+            HTTP_404_NOT_FOUND,
+            "No user with specified ID found.",
         )
     user_email = results.email
     if not LOGGER.handlers and update is False:
@@ -57,8 +62,8 @@ async def create_package(
     job = session.exec(statement).first()
     if job is None:
         raise HTTPException(
-                HTTP_404_NOT_FOUND,
-                "No job with specified ID found.",
+            HTTP_404_NOT_FOUND,
+            "No job with specified ID found.",
         )
     job.status = Statuses.COMPRESSING
     job.last_started = datetime.now(timezone.utc)

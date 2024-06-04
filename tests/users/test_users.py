@@ -116,7 +116,7 @@ def test_get_all_users_not_empty(get_client, basic_auth_header, get_session: Ses
     for i in user_ids:
         statement = select(User).where(User.id == i)
         user = get_session.exec(statement).first()
-        assert user != None
+        assert user is not None
         assert re.search(search_user, user.email)
 
 
@@ -194,5 +194,5 @@ def test_admin_user_created(get_client, get_session: Session):
 
     statement = select(User).where(User.id == 1)
     admin_user = get_session.exec(statement)
-    assert admin_user != None
+    assert admin_user is not None
     assert admin_user.email == expected_email

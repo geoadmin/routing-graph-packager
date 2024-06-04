@@ -25,7 +25,7 @@ class BaseSettings(_BaseSettings):
     CORS_ORIGINS: List[str] = ["*"]
 
     DATA_DIR: Path = BASE_DIR.joinpath("data")
-    TMP_DATA_DIR: Path = BASE_DIR.joinpath("tmp_data") 
+    TMP_DATA_DIR: Path = BASE_DIR.joinpath("tmp_data")
     VALHALLA_URL: str = "http://localhost"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
@@ -45,8 +45,8 @@ class BaseSettings(_BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASS: str = ""
     SMTP_SECURE: bool = False
-    
-    model_config = SettingsConfigDict(extra='ignore')
+
+    model_config = SettingsConfigDict(extra="ignore")
 
     def get_valhalla_path(self, port: int) -> Path:  # pragma: no cover
         """
@@ -69,7 +69,7 @@ class BaseSettings(_BaseSettings):
             data_dir = Path("/app/data")
 
         return data_dir
-    
+
     def get_tmp_data_dir(self) -> Path:
         tmp_data_dir = self.TMP_DATA_DIR
         # if we're inside a docker container, we need to reference the fixed directory instead
@@ -81,11 +81,11 @@ class BaseSettings(_BaseSettings):
 
 
 class ProdSettings(BaseSettings):
-    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra='ignore')
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra="ignore")
 
 
 class DevSettings(BaseSettings):
-    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra='ignore')
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra="ignore")
 
 
 class TestSettings(BaseSettings):
@@ -101,7 +101,9 @@ class TestSettings(BaseSettings):
 
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
-    model_config = SettingsConfigDict(case_sensitive=True, env_file=BASE_DIR.joinpath("tests", "env"), extra='ignore')
+    model_config = SettingsConfigDict(
+        case_sensitive=True, env_file=BASE_DIR.joinpath("tests", "env"), extra="ignore"
+    )
 
 
 # decide which settings we'll use

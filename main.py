@@ -26,6 +26,7 @@ async def lifespan(app: FastAPI):
     yield
     app.state.redis_pool.shutdown()
 
+
 app: FastAPI = create_app(lifespan=lifespan)
 
 if __name__ == "__main__":
