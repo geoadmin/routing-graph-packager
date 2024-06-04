@@ -10,7 +10,11 @@ from sqlmodel import SQLModel, Session
 from routing_packager_app import create_app
 from routing_packager_app.config import SETTINGS
 from routing_packager_app.worker import create_package
+from contextlib import asynccontextmanager
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    pass 
 
 @pytest.fixture(scope="session", autouse=True)
 def create_worker():
@@ -23,7 +27,7 @@ def create_worker():
 
 @pytest.fixture(scope="session", autouse=False)
 def get_app() -> FastAPI:
-    app = create_app()
+    app = create_app(lifespan=lifespan)
 
     return app
 
