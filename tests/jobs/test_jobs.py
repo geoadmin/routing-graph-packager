@@ -1,11 +1,11 @@
 from base64 import b64encode
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from routing_packager_app import SETTINGS
 from routing_packager_app.api_v1.models import Job
-from routing_packager_app.constants import Providers, Statuses
+from routing_packager_app.constants import Providers
 from routing_packager_app.utils.file_utils import make_package_path
 from ..utils_ import create_new_job, DEFAULT_ARGS_POST
 
@@ -28,9 +28,10 @@ def test_post_job(provider, get_client, basic_auth_header, get_session: Session)
             "provider": provider,
         },
     )
+    statement = select(Job).where(Job.id == res.json()["id"])
+    job_inst: Job = get_session.exec(statement).first()
 
-    job_inst: Job = get_session.query(Job).get(res.json()["id"])
-
+    assert job_inst is not None
     assert job_inst.provider == provider
     assert job_inst.status == "Queued"
     assert job_inst.description == DEFAULT_ARGS_POST["description"]
@@ -73,7 +74,7 @@ def test_job_get_jobs(get_client, basic_auth_header):
 # parameterize the ones that should work with the default params
 @pytest.mark.parametrize(
     "key_value",
-    (("bbox", "0,0,1,1"), ("provider", Providers.OSM), ("status", Statuses.QUEUED), ("update", False)),
+    (("bbox", "0,0,1,1"), ("provider", "osm"), ("status", "Queued"), ("update", False)),
 )
 def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
     # default

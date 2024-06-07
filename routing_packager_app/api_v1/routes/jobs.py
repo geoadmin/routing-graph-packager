@@ -26,7 +26,7 @@ from ...config import SETTINGS, TestSettings
 from ...auth.basic_auth import BasicAuth
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
-from ...constants import *
+from ...constants import Providers, Statuses
 
 router = APIRouter()
 

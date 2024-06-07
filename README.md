@@ -41,7 +41,7 @@ curl --location -XPOST 'http://localhost:5000/api/v1/jobs' \
 --header 'Content-Type: application/json' \
 --data-raw '{
 	"name": "test",  # name needs to be unique for a specific router & provider
-	"description": "test descr",  
+	"description": "test descr",
 	"bbox": "1.531906,42.559908,1.6325,42.577608",  # the bbox as minx,miny,maxx,maxy
 	"provider": "osm",  # the dataset provider, needs to be registered in ENABLED_PROVIDERS
 	"update": "true"  # whether this package should be updated on every planet build
@@ -51,6 +51,7 @@ curl --location -XPOST 'http://localhost:5000/api/v1/jobs' \
 After a minute you should have the graph package available in `./data/output/osm_test/`. If not, check the logs of the worker process or the Flask app.
 
 The `routing-packager-app` container running the HTTP API has a `supervisor` process running in a loop, which:
+
 - downloads a planet PBF (if it doesn't exist) or updates the planet PBF (if it does exist)
 - builds a planet Valhalla graph
 - then updates all graph extracts with a fresh copy
@@ -61,9 +62,9 @@ By default, also a fake SMTP server is started, and you can see incoming message
 
 ### Graph & OSM updates
 
-Under the hood we're running a `supervisor` instance to control the graph builds. 
+Under the hood we're running a `supervisor` instance to control the graph builds.
 
-Two instances of the [Valhalla docker image](https://github.com/gis-ops/docker-valhalla) take turns building a new graph from an updated OSM file. Those two graphs are physically separated from each other in subdirectories `$DATA_DIR/osm/8002` & `$DATA_DIR/osm/8003`.
+Two instances of the [Valhalla docker image](https://github.com/gis-ops/docker-valhalla) take turns building a new graph from an updated OSM file. Those two graphs are physically separated from each other in subdirectories `$TMP_DATA_DIR/osm/8002` & `$TMP_DATA_DIR/osm/8003`.
 
 After each graph build finished, the OSM file is updated for the next graph build.
 
@@ -80,9 +81,9 @@ The app is listening on `/api/v1/jobs` for new `POST` requests to generate some 
 1. Request is parsed, inserted into the Postgres database and the new entry is immediately returned with a few job details as blank fields.
 2. Before returning the response, the graph generation function is queued with `ARQ` in a Redis database to dispatch to a worker.
 3. If the worker is currently
-    - **idle**, the queue will immediately start the graph generation:
-        - Pull the job entry from the Postgres database
-        - Update the job's `status` database field along the processing to indicate the current stage
-        - Zip graph tiles from disk according to the request's bounding box and put the package to `$DATA_DIR/output/<JOB_NAME>`, along with a metadata JSON
-    - **busy**, the current job will be put in the queue and will be processed once it reaches the queue's head
+   - **idle**, the queue will immediately start the graph generation:
+     - Pull the job entry from the Postgres database
+     - Update the job's `status` database field along the processing to indicate the current stage
+     - Zip graph tiles from disk according to the request's bounding box and put the package to `$DATA_DIR/output/<JOB_NAME>`, along with a metadata JSON
+   - **busy**, the current job will be put in the queue and will be processed once it reaches the queue's head
 4. Send an email to the requesting user with success or failure notice (including the error message)
