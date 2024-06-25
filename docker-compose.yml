@@ -6,11 +6,12 @@ volumes:
       type: none
       device: $DATA_DIR # DATA_DIR is the host directory for the data. It has to be in the environment, e.g. in .env file
       o: bind
-  tmp_packages: # do not change any detail of this volume
+  tmp_data: # do not change any detail of this volume
     driver: local
     driver_opts:
       type: none
       device: $TMP_DATA_DIR # DATA_DIR is the host directory for the data. It has to be in the environment, e.g. in .env file
+      o: bind
 
 # It's important it runs in its own private network, also more secure
 networks:
@@ -55,7 +56,7 @@ services:
       - routing-packager
     volumes:
       - packages:/app/data
-      - tmp_packages:/app/tmp_data
+      - tmp_data:/app/tmp_data
       - $PWD/.docker_env:/app/.env # Worker needs access to .env file
     depends_on:
       - postgis
@@ -73,7 +74,7 @@ services:
       - .docker_env
     volumes:
       - packages:/app/data
-      - tmp_packages:/app/tmp_data
+      - tmp_data:/app/tmp_data
       - $PWD/.docker_env:/app/.env # CLI needs access to .env file
       - $PWD/static:/app/static # static file for frontend
     networks:
