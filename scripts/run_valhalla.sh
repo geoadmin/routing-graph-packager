@@ -45,12 +45,12 @@ reset_config() {
 
 PORT_8002="8002"
 PORT_8003="8003"
-# $DATA_DIR needs to be defined, either by supervisor or the current shell
-ELEVATION_DIR="$DATA_DIR/elevation"
-VALHALLA_DIR_8002="$DATA_DIR/osm/$PORT_8002"
-VALHALLA_DIR_8003="$DATA_DIR/osm/$PORT_8003"
+# $TMP_DATA_DIR needs to be defined, either by supervisor or the current shell
+ELEVATION_DIR="$TMP_DATA_DIR/elevation"
+VALHALLA_DIR_8002="$TMP_DATA_DIR/osm/$PORT_8002"
+VALHALLA_DIR_8003="$TMP_DATA_DIR/osm/$PORT_8003"
 # TODO: change PBF
-PBF="/app/data/osm/planet-latest.osm.pbf"
+PBF="/app/tmp_data/osm/planet-latest.osm.pbf"
 
 # activate the virtual env so the CLI can do its job in the supervisor env
 . /app/app_venv/bin/activate
@@ -94,7 +94,7 @@ while true; do
     wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/germany-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://download.geofabrik.de/europe/iceland-latest.osm.pbf -O "$PBF" || exit 1
-    # wget -nv https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
+    # wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
   fi
 
@@ -137,6 +137,8 @@ while true; do
 
   echo "INFO: Downloading elevation to $ELEVATION_DIR..."
   valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
+  # debugging with andorra only:
+  # valhalla_build_elevation --decompress -c ${valhalla_config} -v -b 1,42,2,43 || exit 1
 
   echo "INFO: Enhancing initial tiles with elevation..."
   valhalla_build_tiles -c "${valhalla_config}" -s enhance -e cleanup "$PBF" || exit 1

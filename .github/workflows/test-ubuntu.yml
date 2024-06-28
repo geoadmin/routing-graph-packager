@@ -21,10 +21,10 @@ jobs:
           POSTGRES_DB: gis_test
           ALLOW_IP_RANGE: 0.0.0.0/0
         options: >-
-         --health-cmd pg_isready
-         --health-interval 10s
-         --health-timeout 5s
-         --health-retries 5
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         ports:
           - 5432:5432
       redis:
@@ -38,50 +38,52 @@ jobs:
           - 6379:6379
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.10'
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.12"
 
-    - name: Install and set up Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python
-        $HOME/.local/bin/poetry config virtualenvs.in-project true
+      - name: Install and set up Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python
+          $HOME/.local/bin/poetry config virtualenvs.in-project true
 
-    - name: Cache dependencies.py
-      uses: actions/cache@v2
-      with:
-        path: .venv
-        key: venv-3.10-${{ hashFiles('**/poetry.lock') }}
+      - name: Cache dependencies.py
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-3.12-${{ hashFiles('**/poetry.lock') }}
 
-    - name: Install dependencies.py
-      run: |
-        $HOME/.local/bin/poetry install
+      - name: Install dependencies.py
+        run: |
+          $HOME/.local/bin/poetry install
 
-    - name: Install osmium & osmctools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y -qq osmium-tool osmctools
-        echo $(osmium --version)
+      - name: Install osmium & osmctools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y -qq osmium-tool osmctools
+          echo $(osmium --version)
 
-    - name: linting
-      run: |
-        source .venv/bin/activate
-        pre-commit run --all-files
+      - name: linting
+        run: |
+          source .venv/bin/activate
+          pre-commit run --all-files
 
-    - name: pytest and coverage
-      run: |
-        source .venv/bin/activate
-        sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
-        sudo docker volume create routing-packager_packages --driver local --opt type=none --opt device=$PWD --opt o=bind
-        export API_CONFIG=test
-        pytest --cov=routing_packager_app --ignore=tests/test_tasks.py
-        coverage lcov --include "routing_packager_app/*"
+      - name: pytest and coverage
+        run: |
+          source .venv/bin/activate
+          sudo python -m smtpd -n -c DebuggingServer localhost:1025 &
+          sudo docker volume create routing-packager_packages --driver local --opt type=none --opt device=$PWD --opt o=bind &
+          sudo docker volume create routing-packager_tmp_data --driver local --opt type=none --opt device=$PWD --opt o=bind 
 
-    - name: coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./coverage.lcov
+          export API_CONFIG=test
+          pytest --cov=routing_packager_app --ignore=tests/test_tasks.py
+          coverage lcov --include "routing_packager_app/*"
+
+      - name: coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./coverage.lcov

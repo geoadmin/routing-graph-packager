@@ -6,7 +6,7 @@ from geoalchemy2 import Geography
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
-from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select
+from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select, AutoString
 
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
@@ -41,16 +41,15 @@ class JobCreate(JobBase):
 
 
 class Job(JobBase, table=True):
-
     __tablename__ = "jobs"
 
-    id: Optional[int] = Field(primary_key=True)
-    arq_id: Optional[str] = Field(nullable=True)
-    user_id: int = Field(default=None, foreign_key="users.id")
+    id: int | None = Field(default=None, primary_key=True)
+    arq_id: str | None = Field(nullable=True)
+    user_id: int | None = Field(default=None, foreign_key="users.id")
     status: Statuses = Field(nullable=False)
     zip_path: str = Field(nullable=True)
-    last_started: Optional[datetime] = Field(nullable=True)  # did it ever run?
-    last_finished: Optional[datetime] = Field(
+    last_started: datetime | None = Field(nullable=True)  # did it ever run?
+    last_finished: datetime | None = Field(
         sa_column=Column(DateTime(), nullable=True)
     )  # did it ever finish?
 
@@ -66,7 +65,7 @@ class Job(JobBase, table=True):
 
 
 class UserBase(SQLModel):
-    email: EmailStr = Field(index=True, unique=True, nullable=False)
+    email: EmailStr = Field(index=True, unique=True, nullable=False, sa_type=AutoString)
 
 
 class UserRead(UserBase):
@@ -82,7 +81,7 @@ class User(UserBase, table=True):
 
     __tablename__ = "users"
 
-    id: Optional[int] = Field(primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     password: str = Field(sa_column=Column(PasswordType(schemes=("pbkdf2_sha512",)), nullable=False))
     jobs: List[Job] = Relationship(back_populates="user")
 

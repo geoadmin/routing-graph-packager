@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from arq.connections import RedisSettings
@@ -9,8 +9,13 @@ from fastapi import HTTPException
 import requests
 from requests.exceptions import ConnectionError
 import shutil
-from sqlmodel import Session
-from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_301_MOVED_PERMANENTLY
+from sqlmodel import Session, select
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_301_MOVED_PERMANENTLY,
+)
 
 from .api_v1.dependencies import split_bbox
 from .config import SETTINGS
@@ -38,16 +43,30 @@ async def create_package(
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
-    user_email = session.query(User).get(user_id).email
+    statement = select(User).where(User.id == user_id)
+    results = session.exec(statement).first()
+
+    if results is None:
+        raise HTTPException(
+            HTTP_404_NOT_FOUND,
+            "No user with specified ID found.",
+        )
+    user_email = results.email
     if not LOGGER.handlers and update is False:
         handler = AppSmtpHandler(**get_smtp_details([user_email]))
         handler.setLevel(logging.INFO)
         LOGGER.addHandler(handler)
     log_extra = {"user": user_email, "job_id": job_id}
 
-    job: Job = session.query(Job).get(job_id)
+    statement = select(Job).where(Job.id == job_id)
+    job = session.exec(statement).first()
+    if job is None:
+        raise HTTPException(
+            HTTP_404_NOT_FOUND,
+            "No job with specified ID found.",
+        )
     job.status = Statuses.COMPRESSING
-    job.last_started = datetime.utcnow()
+    job.last_started = datetime.now(timezone.utc)
     session.commit()
 
     succeeded = False
@@ -85,7 +104,8 @@ async def create_package(
             raise HTTPException(404, f"No Valhalla tiles in bbox {bbox}")
 
         # zip up the tiles after locking the directory to not be updated right now
-        lock = current_valhalla_dir.joinpath(".lock")
+        out_dir = SETTINGS.get_output_path()
+        lock = out_dir.joinpath(".lock")
         lock.touch(exist_ok=False)
         make_zip(tile_paths, current_valhalla_dir, zip_path)
         lock.unlink(missing_ok=False)
@@ -98,7 +118,7 @@ async def create_package(
             "name": job_name,
             "description": description,
             "extent": bbox,
-            "last_modified": str(datetime.utcnow()),
+            "last_modified": str(datetime.now(timezone.utc)),
         }
         dirname = os.path.dirname(zip_path)
         fname_sanitized = fname.split(os.extsep, 1)[0]
@@ -126,7 +146,7 @@ async def create_package(
             final_status = Statuses.FAILED
 
         # always write the "last_finished" column
-        job.last_finished = datetime.utcnow()
+        job.last_finished = datetime.now(timezone.utc)
         job.status = final_status
         session.commit()
 

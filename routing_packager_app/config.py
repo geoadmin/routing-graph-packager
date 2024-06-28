@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseSettings as _BaseSettings
+from pydantic_settings import SettingsConfigDict, BaseSettings as _BaseSettings
 from starlette.datastructures import CommaSeparatedStrings
 
 from routing_packager_app.constants import Providers
@@ -25,6 +25,7 @@ class BaseSettings(_BaseSettings):
     CORS_ORIGINS: List[str] = ["*"]
 
     DATA_DIR: Path = BASE_DIR.joinpath("data")
+    TMP_DATA_DIR: Path = BASE_DIR.joinpath("tmp_data")
     VALHALLA_URL: str = "http://localhost"
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
@@ -45,12 +46,14 @@ class BaseSettings(_BaseSettings):
     SMTP_PASS: str = ""
     SMTP_SECURE: bool = False
 
+    model_config = SettingsConfigDict(extra="ignore")
+
     def get_valhalla_path(self, port: int) -> Path:  # pragma: no cover
         """
         Return the path to the OSM Valhalla instances.
         """
         if port in (8002, 8003):
-            p = self.get_data_dir().joinpath(Providers.OSM.lower(), str(port))
+            p = self.get_tmp_data_dir().joinpath(Providers.OSM.lower(), str(port))
             p.mkdir(exist_ok=True, parents=True)
             return p
         raise ValueError(f"{port} is not a valid port for Valhalla.")
@@ -67,17 +70,22 @@ class BaseSettings(_BaseSettings):
 
         return data_dir
 
+    def get_tmp_data_dir(self) -> Path:
+        tmp_data_dir = self.TMP_DATA_DIR
+        # if we're inside a docker container, we need to reference the fixed directory instead
+        # Watch out for CI, also runs within docker
+        if os.path.isdir("/app") and not os.getenv("CI", None):  # pragma: no cover
+            tmp_data_dir = Path("/app/tmp_data")
+
+        return tmp_data_dir
+
 
 class ProdSettings(BaseSettings):
-    class Config:
-        case_sensitive = True
-        env_file = ENV_FILE
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra="ignore")
 
 
 class DevSettings(BaseSettings):
-    class Config:
-        case_sensitive = True
-        env_file = ENV_FILE
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra="ignore")
 
 
 class TestSettings(BaseSettings):
@@ -89,17 +97,18 @@ class TestSettings(BaseSettings):
     POSTGRES_PASS: str = "admin"
 
     DATA_DIR: Path = BASE_DIR.joinpath("tests", "data")
+    TMP_DATA_DIR: Path = BASE_DIR.joinpath("tests", "tmp_data")
 
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
-
-    class Config:
-        case_sensitive = True
-        env_file = BASE_DIR.joinpath("tests", "env")
+    model_config = SettingsConfigDict(
+        case_sensitive=True, env_file=BASE_DIR.joinpath("tests", "env"), extra="ignore"
+    )
 
 
 # decide which settings we'll use
 SETTINGS: Optional[BaseSettings] = None
+print("LOADING SETTINGS")
 env = os.getenv("API_CONFIG", "prod")
 if env == "prod":  # pragma: no cover
     SETTINGS = ProdSettings()

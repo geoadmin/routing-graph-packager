@@ -2,31 +2,34 @@
 name = "routing-graph-packager"
 version = "1.0.0b"
 description = "Backend to generate packages of routing graphs for FOSS routing engines in a job queue."
-authors = ["Nils Nolde <nils@gis-ops.com>"]
-license = "MIT"
-packages = [
-    { include = "routing_packager_app" }
+authors = [
+  "Nils Nolde <nils@gis-ops.com>",
+  "Christian Beiwinkel <christian@gis-ops.com>",
 ]
+license = "MIT"
+packages = [{ include = "routing_packager_app" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-SQLAlchemy = "^1.4.34"
+python = "^3.9"
+SQLAlchemy = "2.0.30"
 GeoAlchemy2 = "^0.11.1"
 wheel = "^0.37.1"
-python-dotenv = "^0.20.0"
+python-dotenv = "^1.0.1"
 requests = "^2.27.1"
 sqlalchemy-utils = "^0.38.2"
 passlib = "^1.7.4"
-shapely = "^1.8.1"
+shapely = "^2.0.4"
 gunicorn = "^20.1.0"
 psycopg2-binary = "^2.9.3"
-fastapi = "^0.85.1"
-sqlmodel = "^0.0.8"
+fastapi = "^0.111.0"
+sqlmodel = "0.0.18"
 arq = "^0.25.0"
-anyio = "^3.0.0"  # some anyio breaking change in 4.x breaks starlette's testclient
-uvicorn = {extras = ["standard"], version = "^0.20.0"}
-pydantic = {extras = ["email"], version = "^1.10.2"}
+anyio = "^3.0.0"                                         # some anyio breaking change in 4.x breaks starlette's testclient
+uvicorn = { extras = ["standard"], version = "^0.20.0" }
+pydantic = "^2.7.1"
 osmium = "^3.5.0"
+pydantic-settings = "^2.2.1"
+bump-pydantic = "^0.8.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
@@ -51,3 +54,64 @@ exclude = '''
   | build
 )/
 '''
+
+[tool.ruff]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["E", "F"]
+ignore = []
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "I",
+  "N",
+  "Q",
+  "S",
+  "T",
+  "W",
+  "ANN",
+  "ARG",
+  "BLE",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FBT",
+  "ICN",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "SLF",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "YTT",
+]
+unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [".venv", "__pycache__", ".git"]
+
+# Same as Black.
+line-length = 105
+target-version = "py312"

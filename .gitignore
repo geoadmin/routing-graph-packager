@@ -16,3 +16,5 @@ scan*.txt
 # temp
 .env_local
 .env
+
+.vscode/

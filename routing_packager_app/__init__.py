@@ -1,4 +1,6 @@
+from typing import Optional
 from fastapi import FastAPI
+from starlette.types import Lifespan
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
@@ -7,7 +9,7 @@ from .api_v1 import api_v1_router
 from .config import SETTINGS
 
 
-def create_app():
+def create_app(lifespan: Optional[Lifespan[FastAPI]]):
     """
     Creates a FastAPI app dynamically.
     """
@@ -15,7 +17,7 @@ def create_app():
     with open(SETTINGS.DESCRIPTION_PATH) as fh:
         description = fh.read()
 
-    app = FastAPI(title="Routing Graph Packager App", description=description)
+    app = FastAPI(title="Routing Graph Packager App", description=description, lifespan=lifespan)
     app.mount("/static", StaticFiles(directory="static"), name="static")
     register_middlewares(app)
     register_router(app)
