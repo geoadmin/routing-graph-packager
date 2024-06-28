@@ -4,6 +4,7 @@ ADMIN_PASS=admin
 # you can change the directory to wherever you want the data to reside on the host
 # MUST be an absolute path
 DATA_DIR=${PWD}/tests/data
+TMP_DATA_DIR=${PWD}/tests/tmp_data
 
 VALHALLA_SERVER_IP="http://localhost"
 

@@ -104,7 +104,8 @@ async def create_package(
             raise HTTPException(404, f"No Valhalla tiles in bbox {bbox}")
 
         # zip up the tiles after locking the directory to not be updated right now
-        lock = current_valhalla_dir.joinpath(".lock")
+        out_dir = SETTINGS.get_output_path()
+        lock = out_dir.joinpath(".lock")
         lock.touch(exist_ok=False)
         make_zip(tile_paths, current_valhalla_dir, zip_path)
         lock.unlink(missing_ok=False)

@@ -20,7 +20,7 @@ usage()
     echo "usage: update_osm.sh --pbf/-p /app/data/osm/planet-latest.osm.pbf"
 }
 
-pbf=/app/data/osm/planet-latest.osm.pbf
+pbf=/app/tmp_data/osm/planet-latest.osm.pbf
 
 # Get the arguments
 while [ "$1" != "" ]; do
@@ -38,7 +38,6 @@ while [ "$1" != "" ]; do
 done
 
 echo "$(date "+%Y-%m-%d %H:%M:%S") Updating ${pbf} with the proxy settings: http_proxy: $http_proxy, https_proxy: $https_proxy"
-
 fn=$(basename "${pbf}")
 pbf_dir=$(dirname "$pbf")
 pbf_name_updated="updated_${fn}"

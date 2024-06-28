@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
 
     # create the directories
     for provider in Providers:
-        p = SETTINGS.get_data_dir().joinpath(provider.lower())
+        p = SETTINGS.get_tmp_data_dir().joinpath(provider.lower())
         p.mkdir(exist_ok=True)
     SETTINGS.get_output_path().mkdir(exist_ok=True)
     yield
