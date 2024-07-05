@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <!-- https://leafletjs.com/examples/quick-start/ -->
+<!-- 05.07.2024 bao -->
 <head>
         <style>
 
@@ -55,8 +56,8 @@
 
         </style>
 
-        <title>KARP GUI</title>
-        <h1>KARP - KADAS Routing Packager</h1>
+        <title id="titleid"></title>
+        <h1 id="h1id"></h1>
 
         <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
 
@@ -79,7 +80,7 @@
                 <div id="leftpane" style="width: 49%; float:left;">
                         <div id="map" style="height: 470px; border: 1px solid #ccc "></div>
                         <br>
-                        <form method="POST" id="submitForm" action="https://l0t2511a.lt.admin.ch/api/v1/jobs/">
+                        <form method="POST" id="submitForm" action="javascript:postjobsurl;">
 
                                 <label for="name" width="300" >Export name:</label>
                                 <input type="text" id="name" name="name"  placeholder="Enter export name" required><br>
@@ -87,7 +88,7 @@
                                 <label for="provider">Provider:</label>
                                 <input type="text" id="provider" name="provider" value="osm" style="background-color:Gainsboro" readonly><br>
 
-                                <label for="bbox">Boundingbox:</label>
+                                <label for="bbox">Boundingbox:<span id="env2"></span></label>
                                 <input type="text" id="bbox" name="bbox" placeholder="Use the map to draw the boundingbox or enter comma separated list w,s,e,n" required><br>
 
                                 <label for="desc">Description:</label>
@@ -100,6 +101,26 @@
                         </form>
 
                         <script>
+                        // Variables for environment infos (PROD INT)
+                        var hostlocation = window.location.origin;
+                        var hostname = window.location.hostname;
+                        var hostenvironment = "";
+						var postjobsurl = "";
+
+                        if (hostname.includes("l0t2511a")) {
+                          hostenvironment  = "PROD";
+                        } else if (hostname.includes("l8t2511a")){
+                          hostenvironment = "INT";
+                        } else {
+                          hostenvironment = "UNKNOWN";
+                        };											
+                        
+                        document.getElementById("titleid").innerHTML = "KARP GUI ".concat(hostenvironment);
+                        document.getElementById("h1id").innerHTML = "KARP - KADAS Routing Packager ".concat(hostenvironment);
+                         
+                        postjobsurl = hostlocation.concat("/api/v1/jobs/");
+                        //document.getElementById("jobposturl").innerHTML = postjobsurl;
+                        
                         // Variables for extent
                         var sw = 0.0;
                         var ne = 0.0;
@@ -181,7 +202,7 @@
 
                                         // prepare POST Call for ajax
                                         $.ajax({
-                                                url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/",
+                                                url: postjobsurl,
                                                 type: "POST",
                                                 headers: {
                                                         "Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
@@ -245,7 +266,7 @@
                         <script>
 
                         function jobresult() {
-                                $.getJSON("https://l0t2511a.lt.admin.ch/api/v1/jobs/", function (gr) {
+                                $.getJSON(postjobsurl, function (gr) {
                                         if (gr) {
                                                 //console.log(gr)
                                                 var jsonData = gr
@@ -381,7 +402,7 @@
                         function delJob(jid) {
                                 //console.log("del Job: "+jid);
                                 $.ajax({
-                                        url: "https://l0t2511a.lt.admin.ch/api/v1/jobs/" + jid,
+                                        url: postjobsurl + jid,
                                         type: 'DELETE',
                                         headers: {
                                                 "Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
