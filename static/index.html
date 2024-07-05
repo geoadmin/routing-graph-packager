@@ -101,25 +101,15 @@
                         </form>
 
                         <script>
-                        // Variables for environment infos (PROD INT)
+                        // Variables for host infos
                         var hostlocation = window.location.origin;
                         var hostname = window.location.hostname;
-                        var hostenvironment = "";
-						var postjobsurl = "";
-
-                        if (hostname.includes("l0t2511a")) {
-                          hostenvironment  = "PROD";
-                        } else if (hostname.includes("l8t2511a")){
-                          hostenvironment = "INT";
-                        } else {
-                          hostenvironment = "UNKNOWN";
-                        };											
+						var postjobsurl = "";										
                         
-                        document.getElementById("titleid").innerHTML = "KARP GUI ".concat(hostenvironment);
-                        document.getElementById("h1id").innerHTML = "KARP - KADAS Routing Packager ".concat(hostenvironment);
+                        document.getElementById("titleid").innerHTML = "KARP GUI ".concat(hostname);
+                        document.getElementById("h1id").innerHTML = "KARP - KADAS Routing Packager ".concat(hostname);
                          
                         postjobsurl = hostlocation.concat("/api/v1/jobs/");
-                        //document.getElementById("jobposturl").innerHTML = postjobsurl;
                         
                         // Variables for extent
                         var sw = 0.0;
@@ -249,7 +239,7 @@
                         formElement.addEventListener("submit", handler);
 
                         </script>
-                <p style="color: gray; font-size:8pt">v.1.0</p>
+                <p style="color: gray; font-size:8pt">v.1.1</p>
         </div>
 
         <div id="middlepane" style="width: 2%; float:left; ">
