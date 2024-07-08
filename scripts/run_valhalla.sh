@@ -126,7 +126,7 @@ while true; do
     exec valhalla_service "$valhalla_config" 1 &
     OLD_PID=$!
     echo "INFO: Started Valhalla the first time with config $valhalla_config on with PID $OLD_PID"
-    sleep 1
+    sleep 10
     echo ""
     echo ""
     continue
