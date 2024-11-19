@@ -140,9 +140,9 @@ while true; do
   valhalla_build_tiles -c "${valhalla_config}" -s initialize -e build "$PBF" || exit 1
 
   log_message "INFO: Downloading elevation to $ELEVATION_DIR..."
-  # valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
+  valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
   # debugging with andorra only:
-  valhalla_build_elevation --decompress -c ${valhalla_config} -v -b 1,42,2,43 || exit 1
+  # valhalla_build_elevation --decompress -c ${valhalla_config} -v -b 1,42,2,43 || exit 1
 
   log_message "INFO: Enhancing initial tiles with elevation..."
   valhalla_build_tiles -c "${valhalla_config}" -s enhance -e cleanup "$PBF" || exit 1
