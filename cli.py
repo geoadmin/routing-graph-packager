@@ -15,16 +15,13 @@ from sqlmodel import select
 from routing_packager_app import SETTINGS
 from routing_packager_app.db import get_db
 from routing_packager_app.api_v1.models import Job, User
-from routing_packager_app.logger import AppSmtpHandler, get_smtp_details
+from routing_packager_app.logger import AppSmtpHandler, get_smtp_details, LOGGER
 from routing_packager_app.utils.geom_utils import wkbe_to_geom, wkbe_to_str
 
 JOB_TIMEOUT = 60 * 60  # one hour to compress a single graph
 
 description = "Runs the worker to update the ZIP packages."
 parser = ArgumentParser(description=description)
-
-# set up the logger basics
-LOGGER = logging.getLogger("packager")
 
 
 def _sort_jobs(jobs_: List[Job]):

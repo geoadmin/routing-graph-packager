@@ -1,7 +1,7 @@
 #--- BEGIN Usual Python stuff ---
 
-FROM ghcr.io/valhalla/valhalla:latest as builder
-LABEL maintainer=nils@gis-ops.com
+FROM ghcr.io/valhalla/valhalla:latest AS builder
+LABEL maintainer="Nils Nolde <nils@gis-ops.com>"
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN apt-get update -y > /dev/null && \
     python3-venv \
     curl > /dev/null
 
-ENV POETRY_BIN /root/.local/bin/poetry
+ENV POETRY_BIN=/root/.local/bin/poetry
 
 RUN curl -sSL https://install.python-poetry.org | python && \
     $POETRY_BIN config virtualenvs.create false && \
@@ -46,8 +46,8 @@ RUN cd /usr/local/bin && \
     for f in valhalla*; do rm $f; done && \
     cd .. && mv $preserve ./bin
 
-FROM ubuntu:24.04 as runner_base
-MAINTAINER Nils Nolde <nils@gis-ops.com>
+FROM ubuntu:24.04 AS runner_base
+LABEL maintainer="Nils Nolde <nils@gis-ops.com>"
 
 # install Valhalla stuff
 RUN apt-get update > /dev/null && \

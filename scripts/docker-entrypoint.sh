@@ -16,6 +16,8 @@ elif [ "${cmd}" == 'app' ]; then
     echo "No SSL configured."
   fi
 
+  # make sure the log directory exists for supervisor to be able to log
+  mkdir -p /app/tmp_data/logs
   # Read the supervisor config and start the build loop
   service supervisor start
   supervisorctl start build_loop

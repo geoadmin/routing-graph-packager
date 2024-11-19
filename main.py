@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
         p.mkdir(exist_ok=True)
     SETTINGS.get_output_path().mkdir(exist_ok=True)
     yield
-    app.state.redis_pool.shutdown()
+    await app.state.redis_pool.shutdown()
 
 
 app: FastAPI = create_app(lifespan=lifespan)

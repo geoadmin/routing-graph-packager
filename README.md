@@ -14,6 +14,7 @@ The default road dataset is the [OSM](openstreetmap.org) planet PBF. If availabl
 - **data updater**: includes a daily OSM updater
 - **asynchronous API**: graph generation is outsourced to a [`ARQ`](https://github.com/samuelcolvin/arq) worker
 - **email notifications**: notifies the requesting user if the job succeeded/failed
+- **logs API** read the logs for the worker, the app and the graph builder via the API
 
 ## "Quick Start"
 
@@ -87,3 +88,7 @@ The app is listening on `/api/v1/jobs` for new `POST` requests to generate some 
      - Zip graph tiles from disk according to the request's bounding box and put the package to `$DATA_DIR/output/<JOB_NAME>`, along with a metadata JSON
    - **busy**, the current job will be put in the queue and will be processed once it reaches the queue's head
 4. Send an email to the requesting user with success or failure notice (including the error message)
+
+### Logs
+
+The app exposes logs via the route `/api/v1/logs/{log_type}`. Available log types are `worker`, `app` and `builder`. An optional query parameter `?lines={n}` limits the output to the last `n` lines. Authentication is required.
