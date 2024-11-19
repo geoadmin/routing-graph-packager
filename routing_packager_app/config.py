@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic_settings import SettingsConfigDict, BaseSettings as _BaseSettings
+from pydantic_settings import BaseSettings as _BaseSettings
+from pydantic_settings import SettingsConfigDict
 from starlette.datastructures import CommaSeparatedStrings
 
 from routing_packager_app.constants import Providers
@@ -88,7 +89,7 @@ class BaseSettings(_BaseSettings):
             tmp_data_dir = Path("/app/tmp_data")
         log_dir = tmp_data_dir / "logs"
 
-        log_dir.mkdir(exist_ok=True)
+        log_dir.mkdir(exist_ok=True, parents=True)
 
         return log_dir
 
