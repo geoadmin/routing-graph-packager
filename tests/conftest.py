@@ -1,16 +1,16 @@
-from base64 import b64encode
 import shutil
+from base64 import b64encode
+from contextlib import asynccontextmanager
 
 import pytest
 from arq import Worker
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlmodel import SQLModel, Session
+from sqlmodel import Session, SQLModel
 
 from routing_packager_app import create_app
 from routing_packager_app.config import SETTINGS
 from routing_packager_app.worker import create_package
-from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
@@ -43,8 +43,8 @@ def get_client(get_app: FastAPI) -> TestClient:
 
 @pytest.fixture(scope="session", autouse=True)
 def create_db():
-    from routing_packager_app.db import engine
     from routing_packager_app.api_v1.models import User
+    from routing_packager_app.db import engine
 
     SQLModel.metadata.create_all(engine, checkfirst=True)
     User.add_admin_user(Session(engine))
@@ -78,6 +78,7 @@ def basic_auth_header():
 @pytest.fixture(scope="session", autouse=True)
 def handle_dirs():
     paths = [SETTINGS.get_valhalla_path(p) for p in (8002, 8003)]
+    paths.append(SETTINGS.get_logging_dir())
     for p in paths:
         p.mkdir(parents=True, exist_ok=True)
     yield

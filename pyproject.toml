@@ -44,24 +44,19 @@ coveralls = "^3.3.1"
 requires = ["poetry>=1.0.0"]
 build-backend = "poetry.masonry.api"
 
-[tool.black]
-line-length = 105
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | dist
-  | build
-)/
-'''
-
 [tool.ruff]
+
+extend-exclude = [".venv", "third_party", "build"]
+lint.preview = true
+format.preview = true
+
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F"]
-ignore = []
+lint.select = ["E", "F", "RUF022"]
+lint.ignore = []
+line-length = 105
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = [
+lint.fixable = [
   "A",
   "B",
   "C",
@@ -106,12 +101,6 @@ fixable = [
   "TRY",
   "UP",
   "YTT",
+  "RUF022",
 ]
-unfixable = []
-
-# Exclude a variety of commonly ignored directories.
-exclude = [".venv", "__pycache__", ".git"]
-
-# Same as Black.
-line-length = 105
-target-version = "py312"
+lint.unfixable = []

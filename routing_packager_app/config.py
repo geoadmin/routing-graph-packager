@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic_settings import SettingsConfigDict, BaseSettings as _BaseSettings
+from pydantic_settings import BaseSettings as _BaseSettings
+from pydantic_settings import SettingsConfigDict
 from starlette.datastructures import CommaSeparatedStrings
 
 from routing_packager_app.constants import Providers
@@ -18,7 +19,7 @@ class BaseSettings(_BaseSettings):
 
     DESCRIPTION_PATH: Path = BASE_DIR.joinpath("DESCRIPTION.md")
 
-    ### APP ###
+    # APP ###
     ADMIN_EMAIL: str = "admin@example.org"
     ADMIN_PASS: str = "admin"
     # TODO: clarify if there's a need to restrict origins
@@ -30,7 +31,7 @@ class BaseSettings(_BaseSettings):
 
     ENABLED_PROVIDERS: list[str] = list(CommaSeparatedStrings("osm"))
 
-    ### DATABASES ###
+    # DATABASES ###
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "gis"
@@ -38,7 +39,7 @@ class BaseSettings(_BaseSettings):
     POSTGRES_PASS: str = "admin"
     REDIS_URL: str = "redis://localhost"
 
-    ### SMTP ###
+    # SMTP ###
     SMTP_HOST: str = "localhost"
     SMTP_PORT: int = 1025
     SMTP_FROM: str = "valhalla@kadas.org"
@@ -79,6 +80,19 @@ class BaseSettings(_BaseSettings):
 
         return tmp_data_dir
 
+    def get_logging_dir(self) -> Path:
+        """
+        Gets the path where logs are stored for both worker and builder/app
+        """
+        tmp_data_dir = self.TMP_DATA_DIR
+        if os.path.isdir("/app") and not os.getenv("CI", None):  # pragma: no cover
+            tmp_data_dir = Path("/app/tmp_data")
+        log_dir = tmp_data_dir / "logs"
+
+        log_dir.mkdir(exist_ok=True, parents=True)
+
+        return log_dir
+
 
 class ProdSettings(BaseSettings):
     model_config = SettingsConfigDict(case_sensitive=True, env_file=ENV_FILE, extra="ignore")
@@ -108,7 +122,6 @@ class TestSettings(BaseSettings):
 
 # decide which settings we'll use
 SETTINGS: Optional[BaseSettings] = None
-print("LOADING SETTINGS")
 env = os.getenv("API_CONFIG", "prod")
 if env == "prod":  # pragma: no cover
     SETTINGS = ProdSettings()

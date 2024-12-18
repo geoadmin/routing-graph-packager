@@ -1,5 +1,6 @@
 from logging.handlers import SMTPHandler
 import logging
+from logging import config
 from typing import List  # noqa: F401
 
 from .config import SETTINGS
@@ -58,3 +59,62 @@ def get_smtp_details(toaddrs: List[str]):
         conf["secure"] = tuple()
 
     return conf
+
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "root": {
+        "level": "INFO",
+        "handlers": ["default"],
+    },
+    "loggers": {
+        "gunicorn.error": {
+            "level": "INFO",
+            "handlers": ["app"],
+            "propagate": True,
+            "qualname": "gunicorn.error",
+        },
+        "gunicorn.access": {
+            "level": "INFO",
+            "handlers": ["app"],
+            "propagate": True,
+            "qualname": "gunicorn.access",
+        },
+        "worker": {
+            "level": "INFO",
+            "handlers": ["worker"],
+            "propagate": True,
+            "qualname": "gunicorn.access",
+        },
+    },
+    "handlers": {
+        "worker": {
+            "class": "logging.FileHandler",
+            "formatter": "worker",
+            "filename": str(SETTINGS.get_logging_dir() / "worker.log"),
+        },
+        "app": {
+            "class": "logging.FileHandler",
+            "formatter": "app",
+            "filename": str(SETTINGS.get_logging_dir() / "app.log"),
+        },
+        "default": {"class": "logging.StreamHandler", "formatter": "std", "stream": "ext://sys.stdout"},
+    },
+    "formatters": {
+        "worker": {
+            "format": "worker: %(asctime)s [%(process)d] [%(levelname)s] %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+            "class": "logging.Formatter",
+        },
+        "app": {
+            "format": "app: %(asctime)s [%(process)d] [%(levelname)s] %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+            "class": "logging.Formatter",
+        },
+        "std": {"format": "%(asctime)s [%(process)d] [%(levelname)s] %(message)s"},
+    },
+}
+
+config.dictConfig(LOGGING_CONFIG)
+LOGGER = logging.getLogger("worker")

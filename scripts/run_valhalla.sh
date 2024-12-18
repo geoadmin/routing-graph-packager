@@ -17,6 +17,10 @@ export LD_LIBRARY_PATH=/usr/local/lib
 export http_proxy=http://prxp01.admin.ch:8080
 export https_proxy=http://prxp01.admin.ch:8080
 
+log_message() {
+    echo "build_loop: $(date "+%Y-%m-%d %H:%M:%S") $1"
+}
+
 # watch the .lock file every 10 secs
 wait_for_lock() {
   count=0
@@ -31,7 +35,7 @@ wait_for_lock() {
     count=$(( $count + $sleep ))
   done
 
-  echo "ERROR: max count reached"
+  log_message "ERROR: max count reached"
   exit 1
 }
 
@@ -63,7 +67,7 @@ iteration=0
 while true; do
   (( iteration++ ))
 
-  echo "INFO: Starting iteration $iteration..."
+  log_message "INFO: Starting iteration $iteration..."
 
   # Take 8002 if this is the first start
   # this is copied from FOSSGIS, was too lazy to change to smth more suitable
@@ -76,7 +80,7 @@ while true; do
     OLD_PORT=${PORT_8003}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
   elif [[ $iteration != 1 ]]; then
-    echo "ERROR: Neither localhost:8002 nor localhost:8003 is up."
+    log_message "ERROR: Neither localhost:8002 nor localhost:8003 is up."
     exit 1
   else
     CURRENT_PORT=${PORT_8002}
@@ -90,7 +94,7 @@ while true; do
   # download the PBF file if need be
   UPDATE_OSM="True"
   if ! [ -f "$PBF" ]; then
-    echo "INFO: Downloading OSM file $PBF"
+    log_message "INFO: Downloading OSM file $PBF"
     wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/germany-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://download.geofabrik.de/europe/iceland-latest.osm.pbf -O "$PBF" || exit 1
@@ -99,12 +103,12 @@ while true; do
   fi
 
   if [[ $UPDATE_OSM == "True" ]]; then
-    echo "INFO: Updating OSM file $PBF"
+    log_message "INFO: Updating OSM file $PBF"
     update_osm.sh -p "$PBF" || exit 1
   fi
 
   # build the current config
-  echo "INFO: Building valhalla.json to $CURRENT_VALHALLA_DIR"
+  log_message "INFO: Building valhalla.json to $CURRENT_VALHALLA_DIR"
   valhalla_config="$CURRENT_VALHALLA_DIR/valhalla.json"
   valhalla_build_config \
     --httpd-service-listen "tcp://*:${CURRENT_PORT}" \
@@ -125,36 +129,36 @@ while true; do
     reset_config
     exec valhalla_service "$valhalla_config" 1 &
     OLD_PID=$!
-    echo "INFO: Started Valhalla the first time with config $valhalla_config on with PID $OLD_PID"
+    log_message "INFO: Started Valhalla the first time with config $valhalla_config on with PID $OLD_PID"
     sleep 10
     echo ""
     echo ""
     continue
   fi
 
-  echo "INFO: Building initial graph with $PBF..."
+  log_message "INFO: Building initial graph with $PBF..."
   valhalla_build_tiles -c "${valhalla_config}" -s initialize -e build "$PBF" || exit 1
 
-  echo "INFO: Downloading elevation to $ELEVATION_DIR..."
+  log_message "INFO: Downloading elevation to $ELEVATION_DIR..."
   valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
   # debugging with andorra only:
   # valhalla_build_elevation --decompress -c ${valhalla_config} -v -b 1,42,2,43 || exit 1
 
-  echo "INFO: Enhancing initial tiles with elevation..."
+  log_message "INFO: Enhancing initial tiles with elevation..."
   valhalla_build_tiles -c "${valhalla_config}" -s enhance -e cleanup "$PBF" || exit 1
 
   # reset config so the service won't load the graph
   reset_config
 
-  echo "INFO: Updating the registered packages with $(which python3)"
+  log_message "INFO: Updating the registered packages with $(which python3)"
   python3 /app/cli.py
 
   # shut down the old service and launch the new one
-  echo "INFO: Killing Valhalla on port $OLD_PORT with PID $OLD_PID"
+  log_message "INFO: Killing Valhalla on port $OLD_PORT with PID $OLD_PID"
   kill -9 $OLD_PID
   exec valhalla_service "$valhalla_config" 1 &
   OLD_PID=$!
-  echo "INFO: Started Valhalla on port $CURRENT_PORT with PID $OLD_PID"
+  log_message "INFO: Started Valhalla on port $CURRENT_PORT with PID $OLD_PID"
   sleep 10
 
   echo ""

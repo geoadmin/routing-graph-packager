@@ -1,12 +1,13 @@
 from datetime import datetime
-from typing import Optional, List
+from enum import Enum
+from typing import List, Optional
 
 from fastapi.security import HTTPBasicCredentials
 from geoalchemy2 import Geography
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
-from sqlmodel import SQLModel, Field, DateTime, Relationship, Session, select, AutoString
+from sqlmodel import AutoString, DateTime, Field, Relationship, Session, SQLModel, select
 
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
@@ -108,3 +109,9 @@ class User(UserBase, table=True):
             admin_user = User(email=admin_email, password=admin_pass)
             session.add(admin_user)
             session.commit()
+
+
+class LogType(str, Enum):
+    WORKER = "worker"
+    APP = "app"
+    BUILDER = "builder"

@@ -1,22 +1,21 @@
 #--- BEGIN Usual Python stuff ---
 
-FROM ghcr.io/valhalla/valhalla:latest as builder
-LABEL maintainer=nils@gis-ops.com
+FROM ghcr.io/valhalla/valhalla:latest AS builder
+LABEL maintainer="Nils Nolde <nils@gis-ops.com>"
 
 WORKDIR /app
 
 # Install vis
 RUN apt-get update -y > /dev/null && \
     apt-get install -y \
-        apt-transport-https \
-        ca-certificates \
-        python-is-python3 \
-        python3-pip \
-        python3-venv \
-        curl > /dev/null && \
-    python -m pip install --upgrade pip --break-system-packages
+    apt-transport-https \
+    ca-certificates \
+    python-is-python3 \
+    python3-pip \
+    python3-venv \
+    curl > /dev/null
 
-ENV POETRY_BIN /root/.local/bin/poetry
+ENV POETRY_BIN=/root/.local/bin/poetry
 
 RUN curl -sSL https://install.python-poetry.org | python && \
     $POETRY_BIN config virtualenvs.create false && \
@@ -42,21 +41,21 @@ RUN . app_venv/bin/activate && \
 
 # remove some stuff from the original image
 RUN cd /usr/local/bin && \
-  preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic" && \
-  mv $preserve .. && \
-  for f in valhalla*; do rm $f; done && \
-  cd .. && mv $preserve ./bin
+    preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic" && \
+    mv $preserve .. && \
+    for f in valhalla*; do rm $f; done && \
+    cd .. && mv $preserve ./bin
 
-FROM ubuntu:23.04 as runner_base
-MAINTAINER Nils Nolde <nils@gis-ops.com>
+FROM ubuntu:24.04 AS runner_base
+LABEL maintainer="Nils Nolde <nils@gis-ops.com>"
 
 # install Valhalla stuff
 RUN apt-get update > /dev/null && \
     export DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y libluajit-5.1-2 \
-      libzmq5 libgdal-dev libczmq4 spatialite-bin libprotobuf-lite32 sudo locales wget \
-      libsqlite3-0 libsqlite3-mod-spatialite libcurl4 python-is-python3 osmctools \
-      python3.11-minimal python3-distutils curl unzip moreutils jq spatialite-bin supervisor > /dev/null
+    apt-get install -y libluajit-5.1-dev \
+    libzmq5 libgdal-dev libczmq4 spatialite-bin libprotobuf-lite32 sudo locales wget \
+    libsqlite3-0 libsqlite3-mod-spatialite libcurl4 python-is-python3 osmctools \
+    python3.12-minimal curl unzip moreutils jq spatialite-bin supervisor > /dev/null
 
 WORKDIR /app
 

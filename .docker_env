@@ -13,8 +13,6 @@ ADMIN_PASS=admin
 # DATA_DIR=/home/nilsnolde/dev/gis-ops/routing-graph-packager/data
 VALHALLA_URL="http://app"
 
-VALHALLA_IMAGE=gisops/valhalla:latest
-
 POSTGRES_DB=gis
 POSTGRES_USER=admin
 POSTGRES_PASS=admin

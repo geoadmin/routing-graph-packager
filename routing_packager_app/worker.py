@@ -22,11 +22,9 @@ from .config import SETTINGS
 from .db import get_db
 from .api_v1.models import User, Job
 from .constants import Statuses
-from .logger import AppSmtpHandler, get_smtp_details
+from .logger import AppSmtpHandler, get_smtp_details, LOGGER
 from .utils.file_utils import make_zip
 from .utils.valhalla_utils import get_tiles_with_bbox
-
-LOGGER = logging.getLogger("packager")
 
 
 async def create_package(
@@ -107,8 +105,12 @@ async def create_package(
         out_dir = SETTINGS.get_output_path()
         lock = out_dir.joinpath(".lock")
         lock.touch(exist_ok=False)
-        make_zip(tile_paths, current_valhalla_dir, zip_path)
-        lock.unlink(missing_ok=False)
+        try:
+            make_zip(tile_paths, current_valhalla_dir, zip_path)
+        except Exception as e:
+            LOGGER.error(e)
+        finally:
+            lock.unlink(missing_ok=False)
 
         # Create the meta JSON
         fname = os.path.basename(zip_path)
