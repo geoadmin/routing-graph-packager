@@ -52,11 +52,15 @@
                 }
 
                 a {
-                        color: silver;
+                        color: black;
                         font-size: 8pt;
                         text-decoration: none;
                         font-weight: normal;
 
+                }
+
+                a:hover {
+                        color: gainsboro;
                 }
 
                 .dt-bottom-bar {
@@ -79,17 +83,8 @@
                         text-align: left;
                 }
 
-                a:hover {
-                        color: gainsboro;
-                }
 
-                h5 {
-                        color: silver;
-                        font-size: 9pt;
-                        margin-bottom: 3px;
-                        margin-top: 20px;
-                        font-weight: normal;
-                }
+
 
                 .failedjob {
                         background-color: Khaki !important;
@@ -126,7 +121,7 @@
 
                 textarea {
                         width: 100%;
-                        height: 290px;
+                        height: 370px;
                         padding: 12px 20px;
                         box-sizing: border-box;
                         border: 2px solid #ccc;
@@ -359,7 +354,7 @@
                 <!-- rightpane with jobs table -->
                 <div id="rightpane" style="width: 49%; float:left;">
                         <div id="jobhistory" style="height: 415px">
-                                <b>Job History</b>
+                                <b>Job History &nbsp;&nbsp;&nbsp;&nbsp;</b>
                                 <button onclick="destroyRecreateTable();">Refresh</button>
                                 <div style="color: gainsboro; font-size:8pt;float:right;text-align:right">v.1.2. bao
                                 </div>
@@ -527,11 +522,13 @@
                         </div>
                         <!-- Logs right, below table -->
                         <div id="apiLogResponse" style="height: 415px">
-                                <h5>KARP Log Files:</h5>
+                                <br>
+                                <b>KARP Log Files &nbsp;&nbsp;&nbsp;&nbsp;</b>
                                 <!-- links with different endpoints -->
                                 <a id="workerLogLink" href="#">worker</a>&nbsp;&nbsp;&nbsp;&nbsp;<a id="appLogLink"
                                         href="#">app</a>&nbsp;&nbsp;&nbsp;&nbsp;<a id="builderLogLink"
                                         href="#">builder</a>
+
 
                                 <div id="response-container">
                                         <pre id="response-data2"></pre>
