@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="de">
-<!-- https://leafletjs.com/examples/quick-start/ -->
-<!-- 05.07.2024 bao -->
+
+<!-- v.1.1. 05.07.2024 bao -->
+<!-- v.1.2. 01.08.2025 bao -->
+
 <head>
         <style>
-
-                html,body  {
+                html,
+                body {
                         height: 900px;
                         max-width: 98%;
                         margin: auto;
                         font-family: Arial, Helvetica, sans-serif;
                 }
-                h1{
+
+                h1 {
                         line-height: 50px;
                         text-align: center;
                         font-weight: bold;
                         font-family: Arial, Helvetica, sans-serif;
                         color: CadetBlue;
                 }
+
                 .leaflet-container {
                         height: 600px;
                         width: 100%;
@@ -25,118 +29,217 @@
                         max-height: 100%;
                 }
 
-                input[type=text], select {
-                  width: 100%;
-                  padding: 12px 20px;
-                  margin: 8px 0;
-                  display: inline-block;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                  box-sizing: border-box;
+                input[type=text],
+                select {
+                        width: 100%;
+                        padding: 12px 20px;
+                        margin: 8px 0;
+                        display: inline-block;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        box-sizing: border-box;
                 }
 
                 input[type=submit] {
-                  width: 100%;
-                  background-color: CadetBlue;
-                  color: white;
-                  padding: 14px 20px;
-                  margin: 8px 0;
-                  border: none;
-                  border-radius: 4px;
-                  cursor: pointer;
+                        width: 100%;
+                        background-color: CadetBlue;
+                        color: white;
+                        padding: 14px 20px;
+                        margin: 8px 0;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
                 }
+
+                a {
+                        color: black;
+                        font-size: 8pt;
+                        text-decoration: none;
+                        font-weight: normal;
+
+                }
+
+                a:hover {
+                        color: gainsboro;
+                }
+
+                .dt-bottom-bar {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 10px;
+                }
+
+                .dt-bottom-bar .dataTables_filter {
+                        margin: 0;
+                        order: 2;
+                }
+
+                .dt-bottom-bar .dataTables_paginate {
+                        order: 1;
+                }
+
+                .dt-left {
+                        text-align: left;
+                }
+
+
 
 
                 .failedjob {
-                  background-color: Khaki !important;
-                }
-                .workingjob {
-                  background-color: LightGreen !important;
+                        background-color: Khaki !important;
                 }
 
+                .workingjob {
+                        background-color: LightGreen !important;
+                }
+
+                .inf {
+                        background-color: lawngreen;
+                        color: black;
+                        font-weight: bold;
+                }
+
+                .warn {
+                        background-color: yellow;
+                        color: black;
+                        font-weight: bold;
+                }
+
+                .error {
+                        background-color: red;
+                        color: white;
+                        font-weight: bold;
+                }
+
+                .critical {
+                        background-color: red;
+                        color: white;
+                        font-weight: bold;
+                        text-decoration: underline;
+                }
+
+                textarea {
+                        width: 100%;
+                        height: 370px;
+                        padding: 12px 20px;
+                        box-sizing: border-box;
+                        border: 2px solid #ccc;
+                        border-radius: 4px;
+                        background-color: #f8f8f8;
+                        font-size: 10pt;
+                        resize: none;
+                }
         </style>
 
         <title id="titleid"></title>
         <h1 id="h1id"></h1>
 
-        <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+        <!-- Leaflet CSS file -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+                integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
-        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+        <!-- Leaflet JavaScript -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="">
+                </script>
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+        <!-- Leaflet.Draw -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.0/leaflet.draw.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.0/leaflet.draw.js"></script>
 
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <!-- jQuery-->
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"/>
-        <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+        <!-- DataDables-->
+        <link rel="stylesheet" href="https://cdn.datatables.net/2.2.0/css/dataTables.dataTables.min.css" />
+        <script src="https://cdn.datatables.net/2.2.0/js/dataTables.min.js"></script>
 
 </head>
 
 <body style="font-size:11pt">
-    <div style="width: 100%; heigth:1000px">
+        <script>
+                // Variables for host infos
+                var hostlocation = window.location.origin;
+                var hostname = window.location.hostname;
 
+                // ############################## config  ############################## 
+
+                // Authentication header
+                const authHeader = "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=";
+
+                // url path for jobs endpoint (provive full path when debugging localy)
+                var postjobsurl = hostlocation.concat("/api/v1/jobs/");                                                
+
+                // url path for logs endpoint (provive full path when debugging localy)
+                var logsBaseURL = hostlocation.concat("/api/v1/logs/");       
+
+                // ###################################################################### 
+        </script>
+        <div style="width: 100%; height:830px">
+
+                <!-- Leftpane with map, and input fields -->
                 <div id="leftpane" style="width: 49%; float:left;">
                         <div id="map" style="height: 470px; border: 1px solid #ccc "></div>
                         <br>
                         <form method="POST" id="submitForm" action="javascript:postjobsurl;">
 
-                                <label for="name" width="300" >Export name:</label>
-                                <input type="text" id="name" name="name"  placeholder="Enter export name" required><br>
+                                <label for="name" width="300">Export name:</label>
+                                <input type="text" id="name" name="name" placeholder="Enter export name" required><br>
 
                                 <label for="provider">Provider:</label>
-                                <input type="text" id="provider" name="provider" value="osm" style="background-color:Gainsboro" readonly><br>
+                                <input type="text" id="provider" name="provider" value="osm"
+                                        style="background-color:Gainsboro" readonly><br>
 
                                 <label for="bbox">Boundingbox:</label>
-                                <input type="text" id="bbox" name="bbox" placeholder="Use the map to draw the boundingbox or enter comma separated list w,s,e,n" required><br>
+                                <input type="text" id="bbox" name="bbox"
+                                        placeholder="Use the map to draw the boundingbox or enter comma separated list w,s,e,n"
+                                        required><br>
 
                                 <label for="desc">Description:</label>
-                                <input type="text" id="description" name="description" placeholder="Enter description"><br>
+                                <input type="text" id="description" name="description"
+                                        placeholder="Enter description"><br>
 
-                                <label for="update">Update:</label>
-                                <input type="checkbox" id="update" name="update" value="true" style="background-color:Gainsboro" checked><br>
+                                <!-- To do: at the moment tupdating the packages does not work since the files are moved after creation. -->
+                                <!--<label for="update">Update:</label>
+                                <input type="checkbox" id="update" name="update" value="true" style="background-color:Gainsboro" checked><br>-->
 
                                 <input id="submitBtn" type="submit" value="Start Routing Packager Export">
                         </form>
 
                         <script>
-                        // Variables for host infos
-                        var hostlocation = window.location.origin;
-                        var hostname = window.location.hostname;
-						var postjobsurl = "";										
-                        
-                        document.getElementById("titleid").innerHTML = "KARP GUI ".concat(hostname);
-                        document.getElementById("h1id").innerHTML = "KARP - KADAS Routing Packager ".concat(hostname);
-                         
-                        postjobsurl = hostlocation.concat("/api/v1/jobs/");
-                        
-                        // Variables for extent
-                        var sw = 0.0;
-                        var ne = 0.0;
-                        var s = 0.0;
-                        var w = 0.0;
-                        var n = 0.0;
-                        var e = 0.0;
-                        var bbox = "";
 
-                        // initialize map
-                        var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-                        osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-                        osm = L.tileLayer(osmUrl, {
-                                maxZoom: 18,
-                                attribution: osmAttrib
-                        }),
-                        map = new L.Map('map', {
-                                center: new L.LatLng(46.928455, 7.451772),
-                                zoom: 5
-                        }),
-                        drawnItems = L.featureGroup().addTo(map);
+                                document.getElementById("titleid").innerHTML = "KARP GUI ".concat(hostname);
+                                document.getElementById("h1id").innerHTML = "KARP - KADAS Routing Packager GUI ".concat(hostname);
 
-                        osm.addTo(map)
+                                // Variables for extent
+                                var sw = 0.0;
+                                var ne = 0.0;
+                                var s = 0.0;
+                                var w = 0.0;
+                                var n = 0.0;
+                                var e = 0.0;
+                                var bbox = "";
 
-                        // map draw controls
-                        map.addControl(new L.Control.Draw({
+                                // initialize map
+                                var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                                osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+                                osm = L.tileLayer(osmUrl, {
+                                        maxZoom: 18,
+                                        attribution: osmAttrib
+                                }),
+                                        map = new L.Map('map', {
+                                                center: new L.LatLng(46.928455, 7.451772),
+                                                zoom: 5
+                                        }),
+                                        drawnItems = L.featureGroup().addTo(map);
+
+                                osm.addTo(map)
+
+                                // Update the attribution text from leaflet to be less intrusive (without flags)
+                                map.attributionControl.setPrefix('<a href="https://leafletjs.com/">Leaflet</a>');
+                                // map draw controls
+                                map.addControl(new L.Control.Draw({
                                         edit: {
                                                 featureGroup: drawnItems,
                                                 poly: {
@@ -151,10 +254,10 @@
                                         }
                                 }));
 
-                        // Draw rectangle control. Delete previous element when creating new feature.
-                        map.on(L.Draw.Event.CREATED, function (event) {
-                                drawnItems.clearLayers()
-                                var layer = event.layer
+                                // Draw rectangle control. Delete previous element when creating new feature.
+                                map.on(L.Draw.Event.CREATED, function (event) {
+                                        drawnItems.clearLayers()
+                                        var layer = event.layer
                                         drawnItems.addLayer(layer)
 
                                         // get boundingbox informations
@@ -168,248 +271,319 @@
                                         bbox = w + "," + s + "," + e + "," + n
                                         document.getElementById("bbox").value = bbox
                                         //console.log(bbox)
-                        });
+                                });
 
-                        //form elements as json
-                        const formElement = document.querySelector('form#submitForm')
+                                //form elements as json
+                                const formElement = document.querySelector('form#submitForm')
                                 //console.log(formElement)
                                 // convert the form to JSON
                                 const getFormJSON = (form) => {
-                                const data = new FormData(form);
-                                return Array.from(data.keys()).reduce((result, key) => {
-                                        result[key] = data.get(key);
-                                        return result;
-                                }, {});
-                        };
-
-                        // handle the form submission event, prevent default form behaviour, check validity, convert form to JSON
-                        const handler = (event) => {
-                                event.preventDefault();
-                                const valid = formElement.reportValidity();
-                                if (valid) {
-                                        const jsonBody = getFormJSON(formElement);
-                                        //console.log(jsonBody);
-
-                                        // prepare POST Call for ajax
-                                        $.ajax({
-                                                url: postjobsurl,
-                                                type: "POST",
-                                                headers: {
-                                                        "Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
-                                                        "Content-Type": "application/json"
-                                                },
-                                                crossDomain: true,
-                                                data: JSON.stringify(jsonBody),
-                                                dataType: "json",
-
-                                                // call success
-                                                success: function (response) {
-                                                        //console.log(response);
-                                                        //console.log(response.status);
-                                                        //console.log(response.id);
-                                                        responseid = response.id
-                                                                jobid = responseid;
-                                                        //console.log(jobid);
-                                                        document.getElementById("submitBtn").value = "Job with id " + jobid + " successfully submitted!";
-                                                        document.getElementById("submitBtn").style = "background-color: SeaGreen";
-
-                                                },
-
-                                                //call error
-                                                error: function (xhr, status) {
-                                                        //console.log(xhr.status);
-                                                        if (xhr.status == 409) {
-                                                                document.getElementById("submitBtn").value = "Error: Export name already exists! Try again with another name. ";
-                                                                document.getElementById("submitBtn").style = "background-color: LightCoral";
-                                                        } else {
-                                                                document.getElementById("submitBtn").value = "Unexpected Error! ";
-                                                                document.getElementById("submitBtn").style = "background-color: LightCoral";
-                                                        }
-
-                                                }
-                                        });
-
+                                        const data = new FormData(form);
+                                        return Array.from(data.keys()).reduce((result, key) => {
+                                                result[key] = data.get(key);
+                                                return result;
+                                        }, {});
                                 };
 
-                                // refresh jobtable after clicking submit button
-                                destroyRecreateTable();
-                        }
+                                // handle the form submission event, prevent default form behaviour, check validity, convert form to JSON
+                                const handler = (event) => {
+                                        event.preventDefault();
+                                        const valid = formElement.reportValidity();
+                                        if (valid) {
+                                                const jsonBody = getFormJSON(formElement);
+                                                //console.log(jsonBody);
 
-                        // listen for button submit click
-                        formElement.addEventListener("submit", handler);
+                                                // prepare POST Call for ajax
+                                                $.ajax({
+                                                        url: postjobsurl,
+                                                        type: "POST",
+                                                        headers: {
+                                                                "Authorization": authHeader,
+                                                                "Content-Type": "application/json"
+                                                        },
+                                                        crossDomain: true,
+                                                        data: JSON.stringify(jsonBody),
+                                                        dataType: "json",
 
-                        </script>
-                <p style="color: gray; font-size:8pt">v.1.1</p>
-        </div>
+                                                        // call success
+                                                        success: function (response) {
+                                                                //console.log(response);
+                                                                //console.log(response.status);
+                                                                //console.log(response.id);
+                                                                responseid = response.id
+                                                                jobid = responseid;
+                                                                //console.log(jobid);
+                                                                document.getElementById("submitBtn").value = "Job with id " + jobid + " successfully submitted!";
+                                                                document.getElementById("submitBtn").style = "background-color: SeaGreen";
 
-        <div id="middlepane" style="width: 2%; float:left; ">
-                <br>
-        </div>
+                                                        },
 
-        <div id="rightpane" style="width: 49%; float:left; ">
-                        <b>Job History</b>
-                        <button onclick="destroyRecreateTable();">Refresh</button>
-
-                        <div id="jobdelstatus" name="jobdelstatus" style="color:green; height:6px; padding:3px;"></div>
-
-                        <table id="getJobsResult" class="stripe hover order-column row-border compact" width="100%"></table>
-                        <script>
-
-                        function jobresult() {
-                                $.getJSON(postjobsurl, function (gr) {
-                                        if (gr) {
-                                                //console.log(gr)
-                                                var jsonData = gr
-                                                        jsonData ??= 0;
-
-                                                // prepare table values
-                                                var dataSet = []
-                                                for (j in jsonData) {
-
-                                                        // table values per line
-                                                        var dataLine = []
-                                                        var jname = jsonData[j].name
-                                                                var jprovider = jsonData[j].provider
-                                                                var jbbox = jsonData[j].bbox
-                                                                var jdescription = jsonData[j].description
-                                                                var jupdate = jsonData[j].update
-                                                                var jid = jsonData[j].id
-                                                                var juser_id = jsonData[j].user_id
-                                                                var jarq_id = jsonData[j].arq_id
-                                                                var jstatus = jsonData[j].status
-                                                                var jzip_path = jsonData[j].zip_path
-                                                                var jupdate = jsonData[j].update
-                                                                jsonData[j].last_started ??= "-"
-                                                                jsonData[j].last_finished ??= "-"
-
-                                                                var jlast_started = jsonData[j].last_started
-                                                                var jlast_finished = jsonData[j].last_finished
-
-                                                                dataLine.push(jid)
-                                                                dataLine.push(jstatus)
-                                                                dataLine.push(jname)
-                                                                dataLine.push(jdescription)
-                                                                //dataLine.push(jzip_path)
-
-                                                                // nice last started date, no NaN or NULL
-                                                                if (jlast_started != "-") {
-                                                                        var lsdate = jlast_started.substring(0, 10);
-                                                                        var lstime = jlast_started.substring(11, 16);
-                                                                        var lsniceDateTime = lsdate + " " + lstime;
-                                                                        dataLine.push(lsniceDateTime);
+                                                        //call error
+                                                        error: function (xhr, status) {
+                                                                //console.log(xhr.status);
+                                                                if (xhr.status == 409) {
+                                                                        document.getElementById("submitBtn").value = "Error: Export name already exists! Try again with another name. ";
+                                                                        document.getElementById("submitBtn").style = "background-color: LightCoral";
                                                                 } else {
-                                                                        dataLine.push(jlast_started);
+                                                                        document.getElementById("submitBtn").value = "Unexpected Error! ";
+                                                                        document.getElementById("submitBtn").style = "background-color: LightCoral";
                                                                 }
 
-                                                                // nice last finished date, no NaN or NULL
-                                                                if (jlast_finished != "-") {
-                                                                        var lfexportDate = jlast_finished;
-                                                                        var lfdate = new Date(lfexportDate);
-                                                                        var lfy = lfdate.getFullYear().toString();
-                                                                        var lfmo = (lfdate.getMonth()+1).toString().padStart(2, "0");
-                                                                        var lfd = lfdate.getDate().toString().padStart(2, "0");
-                                                                        var lfh = lfdate.getHours().toString().padStart(2, "0");
-                                                                        var lfmi = lfdate.getMinutes().toString().padStart(2, "0");
-                                                                        var lfniceDateTime = lfy + "-" + lfmo + "-" + lfd + " " + lfh + ":" + lfmi;
-                                                                        dataLine.push(lfniceDateTime);
-                                                                } else {
-                                                                        dataLine.push(jlast_finished);
-                                                                }
-
-                                                                dataLine.push(jupdate)
-
-                                                                // job delete button per line
-                                                                dataLine.push('<button onclick="delJob(' + jid + ');destroyRecreateTable();">x</button>')
-
-                                                                // push all cell-data to tableline
-                                                                dataSet.push(dataLine);
-                                                }
-
-                                                // create table with DataTable library
-                                                $(document).ready(function () {
-                                                        table = $('#getJobsResult').DataTable({
-                                                                dom: 'ftip', // only show filter menu, no "show x entries"
-                                                                data: dataSet,
-                                                                pageLength: 20, // how many entries to show
-                                                                order: [0, 'desc'],
-                                                                columns: [{
-                                                                                title: 'ID'
-                                                                        }, {
-                                                                                title: 'Status'
-                                                                        }, {
-                                                                                title: 'Name'
-                                                                        }, {
-                                                                                title: 'Description'
-                                                                        },
-                                                                        //{ title: 'Zip Path' },
-                                                                        {
-                                                                                title: 'Last Started UTC'
-                                                                        }, {
-                                                                                title: 'Last Finished UTC'
-                                                                        },{
-                                                                                title: 'Update'
-                                                                        },{
-                                                                                title: 'Del'
-                                                                        },
-                                                                ],
-
-                                                                // background color of row according to jobstatus, working=green, failed/deleted=red
-                                                                "createdRow": function (row, data, dataIndex) {
-                                                                        if (data[1] == "Failed" || data[1] == "Deleted") {
-                                                                                $(row).addClass('failedjob');
-                                                                        } else if (data[1] == "Compressing" || data[1] == "Queued") {
-                                                                                $(row).addClass('workingjob');
-                                                                        }
-                                                                }
-
-                                                        });
+                                                        }
                                                 });
 
-                                        // error if GET jobs fails
-                                        } else {
-                                                console.log("GET ERROR: CAN NOT BUILD JOBS TABLE");
-                                        }
-                                });
-                        };
+                                        };
 
-                        //destroy existing jobs table if exists
-                        function destroyTable() {
-                                if (typeof table == "object") {
-                                        table.destroy();
+                                        // refresh jobtable after clicking submit button
+                                        destroyRecreateTable();
                                 }
-                        };
 
-                        // nested function to destroy and recreate table in single function
-                        function destroyRecreateTable() {
-                                destroyTable();
-                                jobresult();
-                        };
-
-                        //refresh table during page load
-                        destroyRecreateTable();
-
-                        // delete job by jobid with DELETE request
-                        function delJob(jid) {
-                                //console.log("del Job: "+jid);
-                                $.ajax({
-                                        url: postjobsurl + jid,
-                                        type: 'DELETE',
-                                        headers: {
-                                                "Authorization": "Basic YWRtaW5AZXhhbXBsZS5vcmc6YWRtaW4=",
-                                                "Content-Type": "application/json"
-                                        },
-                                        crossDomain: true,
-                                        dataType: "json",
-
-                                        success: function (result) {
-                                                document.getElementById("jobdelstatus").innerHTML = "Job " + jid + " successfully deleted!";
-                                        }
-                                });
-                        };
+                                // listen for button submit click
+                                formElement.addEventListener("submit", handler);
 
                         </script>
+                </div>
+
+                <!-- middlepane = empty, only decoration -->
+                <div id="middlepane" style="width: 2%; float:left; ">
+                        <br>
+                </div>
+
+                <!-- rightpane with jobs table -->
+                <div id="rightpane" style="width: 49%; float:left;">
+                        <div id="jobhistory" style="height: 415px">
+                                <b>Job History &nbsp;&nbsp;&nbsp;&nbsp;</b>
+                                <button onclick="destroyRecreateTable();">Refresh</button>
+                                <div style="color: gainsboro; font-size:8pt;float:right;text-align:right">v.1.2. bao
+                                </div>
+                                <br>
+                                <div id="jobdelstatus" name="jobdelstatus"
+                                        style="color:green; height:6px; padding:3px; "></div>
+                                <table id="getJobsResult" class="stripe hover order-column row-border compact"
+                                        width="100%">
+                                </table>
+                                <script>
+
+                                        function jobresult() {
+                                                $.getJSON(postjobsurl, function (gr) {
+                                                        if (gr) {
+                                                                //console.log(gr)
+                                                                var jsonData = gr
+                                                                jsonData ??= 0;
+
+                                                                // prepare table values
+                                                                var dataSet = []
+                                                                for (j in jsonData) {
+
+                                                                        // table values per line
+                                                                        var dataLine = []
+                                                                        var jname = jsonData[j].name
+                                                                        var jprovider = jsonData[j].provider
+                                                                        var jbbox = jsonData[j].bbox
+                                                                        var jdescription = jsonData[j].description
+                                                                        var jid = jsonData[j].id
+                                                                        var juser_id = jsonData[j].user_id
+                                                                        var jarq_id = jsonData[j].arq_id
+                                                                        var jstatus = jsonData[j].status
+                                                                        var jzip_path = jsonData[j].zip_path
+                                                                        //var jupdate = jsonData[j].update
+                                                                        jsonData[j].last_started ??= "-"
+                                                                        jsonData[j].last_finished ??= "-"
+
+                                                                        var jlast_started = jsonData[j].last_started
+                                                                        var jlast_finished = jsonData[j].last_finished
+
+                                                                        dataLine.push(jid)
+                                                                        dataLine.push(jstatus)
+                                                                        dataLine.push(jname)
+                                                                        dataLine.push(jdescription)
+                                                                        //dataLine.push(jzip_path)
+
+                                                                        // nice last started date, no NaN or NULL
+                                                                        if (jlast_started != "-") {
+                                                                                var lsdate = jlast_started.substring(0, 10);
+                                                                                var lstime = jlast_started.substring(11, 16);
+                                                                                var lsniceDateTime = lsdate + " " + lstime;
+                                                                                dataLine.push(lsniceDateTime);
+                                                                        } else {
+                                                                                dataLine.push(jlast_started);
+                                                                        }
+
+                                                                        // nice last finished date, no NaN or NULL
+                                                                        if (jlast_finished != "-") {
+                                                                                var lfexportDate = jlast_finished;
+                                                                                var lfdate = new Date(lfexportDate);
+                                                                                var lfy = lfdate.getFullYear().toString();
+                                                                                var lfmo = (lfdate.getMonth() + 1).toString().padStart(2, "0");
+                                                                                var lfd = lfdate.getDate().toString().padStart(2, "0");
+                                                                                var lfh = lfdate.getHours().toString().padStart(2, "0");
+                                                                                var lfmi = lfdate.getMinutes().toString().padStart(2, "0");
+                                                                                var lfniceDateTime = lfy + "-" + lfmo + "-" + lfd + " " + lfh + ":" + lfmi;
+                                                                                dataLine.push(lfniceDateTime);
+                                                                        } else {
+                                                                                dataLine.push(jlast_finished);
+                                                                        }
+
+                                                                        //dataLine.push(jupdate)
+
+                                                                        // job delete button per line
+                                                                        dataLine.push('<button onclick="delJob(' + jid + ');destroyRecreateTable();">x</button>')
+
+                                                                        // push all cell-data to tableline
+                                                                        dataSet.push(dataLine);
+                                                                }
+
+                                                                // create table with DataTable library
+                                                                $(document).ready(function () {
+                                                                        table = $('#getJobsResult').DataTable({
+                                                                                dom: 't<"dt-bottom-bar"pf>', // only show filter menu, no "show x entries"
+                                                                                data: dataSet,
+                                                                                pageLength: 10, // how many entries to show
+                                                                                order: [0, 'desc'],
+                                                                                columnDefs: [
+                                                                                        { className: 'dt-left', targets: '_all' }],
+                                                                                columns: [{
+                                                                                        title: 'ID'
+                                                                                }, {
+                                                                                        title: 'Status'
+                                                                                }, {
+                                                                                        title: 'Name'
+                                                                                }, {
+                                                                                        title: 'Description'
+                                                                                },
+                                                                                //{ title: 'Zip Path' },
+                                                                                {
+                                                                                        title: 'Last Started UTC'
+                                                                                }, {
+                                                                                        title: 'Last Finished UTC'
+                                                                                },
+                                                                                //{title: 'Update'}
+                                                                                {
+                                                                                        title: 'Del'
+                                                                                },
+                                                                                ],
+
+                                                                                // background color of row according to jobstatus, working=green, failed/deleted=red
+                                                                                "createdRow": function (row, data, dataIndex) {
+                                                                                        if (data[1] == "Failed" || data[1] == "Deleted") {
+                                                                                                $(row).addClass('failedjob');
+                                                                                        } else if (data[1] == "Compressing" || data[1] == "Queued") {
+                                                                                                $(row).addClass('workingjob');
+                                                                                        }
+                                                                                }
+
+                                                                        });
+                                                                });
+
+                                                                // error if GET jobs fails
+                                                        } else {
+                                                                console.log("GET ERROR: CAN NOT BUILD JOBS TABLE");
+                                                        }
+                                                });
+                                        };
+
+                                        //destroy existing jobs table if exists
+                                        function destroyTable() {
+                                                if (typeof table == "object") {
+                                                        table.destroy();
+                                                }
+                                        };
+
+                                        // nested function to destroy and recreate table in single function
+                                        function destroyRecreateTable() {
+                                                destroyTable();
+                                                jobresult();
+                                        };
+
+                                        //refresh table during page load
+                                        destroyRecreateTable();
+
+                                        // delete job by jobid with DELETE request
+                                        function delJob(jid) {
+                                                //console.log("del Job: "+jid);
+                                                $.ajax({
+                                                        url: postjobsurl + jid,
+                                                        type: 'DELETE',
+                                                        headers: {
+                                                                "Authorization": authHeader,
+                                                                "Content-Type": "application/json"
+                                                        },
+                                                        crossDomain: true,
+                                                        dataType: "json",
+
+                                                        success: function (result) {
+                                                                document.getElementById("jobdelstatus").innerHTML = "Job " + jid + " successfully deleted!";
+                                                        }
+                                                });
+                                        };
+                                </script>
+                        </div>
+                        <!-- Logs right, below table -->
+                        <div id="apiLogResponse" style="height: 415px">
+                                <br>
+                                <b>KARP Log Files &nbsp;&nbsp;&nbsp;&nbsp;</b>
+                                <!-- links with different endpoints -->
+                                <a id="workerLogLink" href="#">worker</a>&nbsp;&nbsp;&nbsp;&nbsp;<a id="appLogLink"
+                                        href="#">app</a>&nbsp;&nbsp;&nbsp;&nbsp;<a id="builderLogLink"
+                                        href="#">builder</a>
+
+
+                                <div id="response-container">
+                                        <pre id="response-data2"></pre>
+                                        <textarea id="response-data" name="logdata" hidden="hidden"></textarea>
+                                        <!-- Response content appears here -->
+                                </div>
+                                <script>
+                                        $(document).ready(function () {
+
+                                                // openLink function
+                                                function openLink(event, endpoint) {
+                                                        event.preventDefault();
+
+                                                        var fullURL = logsBaseURL + endpoint;
+
+                                                        // GET request with jQuery AJAX
+                                                        $.ajax({
+                                                                url: fullURL,
+                                                                type: "GET",
+                                                                headers: {
+                                                                        "Authorization": authHeader,
+                                                                        "Content-Type": "application/json"
+                                                                },
+                                                                crossDomain: true,
+                                                                success: function (data) {
+                                                                        // Check if the response container is available
+                                                                        var responseDataElement = document.getElementById("response-data");
+                                                                        if (responseDataElement) {
+                                                                                // Format the response: remove quotes and make breaklines
+                                                                                var formattedData = JSON.stringify(data, null, 2)
+                                                                                        .replace(/^"|"$/g, '')
+                                                                                        .replace(/\\n/g, '\n');
+
+                                                                                // Display the highlighted data in the response container
+                                                                                responseDataElement.innerHTML = formattedData;
+                                                                        }
+                                                                        // only show respons data box when logs are shown
+                                                                        document.getElementById("response-data").removeAttribute("hidden");
+                                                                },
+                                                                error: function (error) {
+                                                                        console.error("Error:", error);
+                                                                        var responseDataElement = document.getElementById("response-data");
+                                                                        if (responseDataElement) {
+                                                                                responseDataElement.textContent = "Error fetching data.";
+                                                                        }
+                                                                }
+                                                        });
+                                                }
+                                                // Attach the openLink function to the links
+                                                $('#workerLogLink').on('click', function (event) { openLink(event, 'worker'); });
+                                                $('#appLogLink').on('click', function (event) { openLink(event, 'app'); });
+                                                $('#builderLogLink').on('click', function (event) { openLink(event, 'builder'); });
+                                        });
+                                </script>
+                        </div>
+                </div>
         </div>
-    </div>
-        <br>
 </body>
+
 </html>
