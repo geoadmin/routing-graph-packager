@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: kartoza/postgis:14
@@ -45,20 +45,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install and set up Poetry
+      - name: Install and set up uv
         run: |
-          curl -sSL https://install.python-poetry.org | python
-          $HOME/.local/bin/poetry config virtualenvs.in-project true
-
+          curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Cache dependencies.py
         uses: actions/cache@v2
         with:
           path: .venv
-          key: venv-3.12-${{ hashFiles('**/poetry.lock') }}
+          key: venv-3.12-${{ hashFiles('**/uv.lock') }}
 
       - name: Install dependencies.py
         run: |
-          $HOME/.local/bin/poetry install
+          $HOME/.local/bin/uv pip install --editable .
 
       - name: Install osmium & osmctools
         run: |
