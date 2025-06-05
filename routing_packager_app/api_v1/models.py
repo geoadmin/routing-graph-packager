@@ -42,7 +42,7 @@ class JobCreate(JobBase):
 
 
 class Job(JobBase, table=True):
-    __tablename__ = "jobs"
+    __tablename__ = "jobs"  # type: ignore
 
     id: int | None = Field(default=None, primary_key=True)
     arq_id: str | None = Field(nullable=True)
@@ -62,7 +62,7 @@ class Job(JobBase, table=True):
 
     def convert_bbox(self):
         """Converts a WKBElement to a bbox string"""
-        self.bbox = wkbe_to_str(self.bbox)
+        self.bbox = wkbe_to_str(self.bbox)  # type: ignore
 
 
 class UserBase(SQLModel):
@@ -80,7 +80,7 @@ class UserCreate(UserBase):
 class User(UserBase, table=True):
     """The users table."""
 
-    __tablename__ = "users"
+    __tablename__ = "users"  # type: ignore
 
     id: int | None = Field(default=None, primary_key=True)
     password: str = Field(sa_column=Column(PasswordType(schemes=("pbkdf2_sha512",)), nullable=False))
@@ -91,7 +91,7 @@ class User(UserBase, table=True):
 
     @staticmethod
     def get_user(db: Session, auth_data: HTTPBasicCredentials) -> Optional["User"]:
-        user = db.exec(select(User).filter(User.email == auth_data.username)).first()
+        user = db.exec(select(User).filter(User.email == auth_data.username)).first()  # type: ignore
         if not user:
             return None
         if not user.password == auth_data.password:

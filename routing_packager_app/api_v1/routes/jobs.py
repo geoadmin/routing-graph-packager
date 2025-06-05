@@ -1,6 +1,6 @@
 import os
 from shutil import rmtree
-from typing import List, Optional
+from typing import Tuple, List, Optional
 
 from arq.connections import ArqRedis
 from arq.constants import job_key_prefix
@@ -19,7 +19,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from ..models import JobRead, JobCreate, Job, User
-from ..dependencies import split_bbox, get_validated_name, validate_bbox
+from ..dependencies import split_bbox, get_validated_name
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
 from ...config import SETTINGS, TestSettings
@@ -35,8 +35,8 @@ router = APIRouter()
 async def get_jobs(
     provider: Optional[Providers] = None,
     status: Optional[Statuses] = None,
-    update: bool = None,
-    bbox: List[float] = Depends(split_bbox),
+    update: bool | None = None,
+    bbox: Tuple[float, float, float, float] = Depends(split_bbox),
     db: Session = Depends(get_db),
 ):
     filters = []
@@ -71,7 +71,6 @@ async def post_job(
         raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
 
     # keep the input bbox string around for the response
-    validate_bbox(job.bbox)
     bbox_str = job.bbox
     job.bbox = bbox_to_wkt(split_bbox(bbox_str))
 
@@ -137,7 +136,7 @@ async def delete_job(
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Not authorized to delete a user.")
 
     # get job or 404
-    db_job: Job = db.get(Job, job_id)
+    db_job: Job | None = db.get(Job, job_id)
     if not db_job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
 

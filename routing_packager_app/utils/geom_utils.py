@@ -1,10 +1,11 @@
-from typing import List, Tuple
+from typing import Tuple
 
-from shapely.geometry import box, Polygon
-from geoalchemy2.shape import to_shape, WKBElement
+from geoalchemy2.shape import to_shape
+from geoalchemy2.elements import WKBElement
+from shapely.geometry import Polygon, box
 
 
-def bbox_to_wkt(bbox: List[float]) -> str:
+def bbox_to_wkt(bbox: Tuple[float, float, float, float]) -> str:
     """
     Convert a bbox to WKT.
 
@@ -15,7 +16,7 @@ def bbox_to_wkt(bbox: List[float]) -> str:
     return box(*bbox).wkt
 
 
-def bbox_to_geom(bbox: List[float]) -> Polygon:
+def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Polygon:
     """
     Convert a bbox to a shapely geometry.
 
@@ -34,10 +35,10 @@ def wkbe_to_geom(wkbe: WKBElement) -> Polygon:
 
     :returns: The shapely polygon
     """
-    return to_shape(wkbe)
+    return to_shape(wkbe)  # type: ignore
 
 
-def wkbe_to_bbox(wkbe: WKBElement) -> Tuple[float]:
+def wkbe_to_bbox(wkbe: WKBElement) -> Tuple[float, float, float, float]:
     """
     Converts a geoalchemy2 :class:`WKBElement` to a list of bbox coordinates.
 

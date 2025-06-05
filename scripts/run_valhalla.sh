@@ -14,8 +14,8 @@
 
 # so it can see prime_server within the supervisor process
 export LD_LIBRARY_PATH=/usr/local/lib
-export http_proxy=http://prxp01.admin.ch:8080
-export https_proxy=http://prxp01.admin.ch:8080
+# export http_proxy=http://prxp01.admin.ch:8080
+# export https_proxy=http://prxp01.admin.ch:8080
 
 log_message() {
     echo "build_loop: $(date "+%Y-%m-%d %H:%M:%S") $1"
@@ -72,6 +72,7 @@ while true; do
   # Take 8002 if this is the first start
   # this is copied from FOSSGIS, was too lazy to change to smth more suitable
   if curl -fs --noproxy localhost "http://localhost:${PORT_8002}/status"; then
+    # if port 8002 is up then switch
     CURRENT_PORT=${PORT_8003}
     OLD_PORT=${PORT_8002}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8003
@@ -83,6 +84,7 @@ while true; do
     log_message "ERROR: Neither localhost:8002 nor localhost:8003 is up."
     exit 1
   else
+    # first iteration, start with 8002
     CURRENT_PORT=${PORT_8002}
     CURRENT_VALHALLA_DIR=$VALHALLA_DIR_8002
   fi
@@ -95,16 +97,20 @@ while true; do
   UPDATE_OSM="True"
   if ! [ -f "$PBF" ]; then
     log_message "INFO: Downloading OSM file $PBF"
-    wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
+    # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/germany-latest.osm.pbf -O "$PBF" || exit 1
     # wget -nv https://download.geofabrik.de/europe/iceland-latest.osm.pbf -O "$PBF" || exit 1
-    # wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
+    wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf -O "$PBF" || exit 1
     UPDATE_OSM="False"
   fi
 
+  # maybe we have the file but it's recent, so we don't download/build
+
   if [[ $UPDATE_OSM == "True" ]]; then
+    # pbf file will be updated constantly starting from the second iteration, need something better here 
+    # also if the osm file wasn't updated in this iteration, and there is a graph, we can skip until there is an update
     log_message "INFO: Updating OSM file $PBF"
-    update_osm.sh -p "$PBF" || exit 1
+    # update_osm.sh -p "$PBF" || exit 1
   fi
 
   # build the current config
@@ -140,9 +146,9 @@ while true; do
   valhalla_build_tiles -c "${valhalla_config}" -s initialize -e build "$PBF" || exit 1
 
   log_message "INFO: Downloading elevation to $ELEVATION_DIR..."
-  valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
+  #valhalla_build_elevation --from-tiles --decompress -c ${valhalla_config} -v || exit 1
   # debugging with andorra only:
-  # valhalla_build_elevation --decompress -c ${valhalla_config} -v -b 1,42,2,43 || exit 1
+  valhalla_build_elevation --decompress -c ${valhalla_config} -v -b 1,42,2,43 || exit 1
 
   log_message "INFO: Enhancing initial tiles with elevation..."
   valhalla_build_tiles -c "${valhalla_config}" -s enhance -e cleanup "$PBF" || exit 1

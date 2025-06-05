@@ -29,7 +29,7 @@ def post_user(
     if not User.get_user(db, auth):
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Wrong username or password.")
 
-    user_db = User.from_orm(user)
+    user_db = User.model_validate(user)
     user_db.password = auth.password
 
     add_or_abort(db, user_db)
@@ -61,7 +61,7 @@ def delete_user(user_id, db: Session = Depends(get_db), auth: HTTPBasicCredentia
     if not req_user:
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Not authorized to delete a user.")
 
-    user: User = db.get(User, user_id)
+    user: User | None = db.get(User, user_id)
     if not user:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find user id {user_id}")
     if user.email == SETTINGS.ADMIN_EMAIL:

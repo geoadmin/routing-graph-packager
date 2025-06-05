@@ -1,21 +1,21 @@
 import asyncio
-from asyncio import TimeoutError
 import logging
 import sys
 import time
 from argparse import ArgumentParser
-from typing import List
+from asyncio import TimeoutError
+from typing import List, Sequence
 
 from arq import ArqRedis, create_pool
-from arq.jobs import ResultNotFound
 from arq.connections import RedisSettings
+from arq.jobs import ResultNotFound
 from fastapi import HTTPException
 from sqlmodel import select
 
 from routing_packager_app import SETTINGS
-from routing_packager_app.db import get_db
 from routing_packager_app.api_v1.models import Job, User
-from routing_packager_app.logger import AppSmtpHandler, get_smtp_details, LOGGER
+from routing_packager_app.db import get_db
+from routing_packager_app.logger import LOGGER, AppSmtpHandler, get_smtp_details
 from routing_packager_app.utils.geom_utils import wkbe_to_geom, wkbe_to_str
 
 JOB_TIMEOUT = 60 * 60  # one hour to compress a single graph
@@ -24,7 +24,7 @@ description = "Runs the worker to update the ZIP packages."
 parser = ArgumentParser(description=description)
 
 
-def _sort_jobs(jobs_: List[Job]):
+def _sort_jobs(jobs_: Sequence[Job]):
     out = list()
     for job in jobs_:
         out.append((wkbe_to_geom(job.bbox).area, job))
@@ -50,7 +50,7 @@ async def update_jobs(jobs_: List[Job], user_email_: str):
             wkbe_to_str(job.bbox),
             job.zip_path,
             job.user_id,
-            True
+            True,
             # TODO: possibly we can't use the same ID, since arq won't process
             #   the same ID twice, which would be needed for updating every package
             # _job_id=job.arq_id,
