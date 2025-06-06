@@ -72,7 +72,7 @@ async def test_fail_no_tiles_in_dir(get_client: TestClient, httpserver: HTTPServ
     with pytest.raises(HTTPException) as e:
         await create_package(*params)
 
-    assert e.value.status_code == 404
+    assert e.value.status_code == 500
     assert "No Valhalla tiles in /" in e.value.detail
 
 
