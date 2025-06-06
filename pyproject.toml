@@ -32,6 +32,19 @@ dependencies = [
     "uvicorn>=0.34.3",
 ]
 
+[dependency-groups]
+dev = [
+    "coverage>=7.8.2",
+    "coveralls>=4.0.1",
+    "httpx>=0.28.1",
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.1.1",
+    "pytest-httpserver>=1.1.3",
+    "ruff>=0.11.12",
+]
+
 [tool.ruff]
 
 extend-exclude = [".venv", "third_party", "build"]
@@ -93,14 +106,3 @@ lint.unfixable = []
 format.preview = true
 line-length = 105
 
-[dependency-groups]
-dev = [
-    "coverage>=7.8.2",
-    "coveralls>=4.0.1",
-    "pre-commit>=4.2.0",
-    "pytest>=8.4.0",
-    "pytest-asyncio>=1.0.0",
-    "pytest-cov>=6.1.1",
-    "pytest-httpserver>=1.1.3",
-    "ruff>=0.11.12",
-]
