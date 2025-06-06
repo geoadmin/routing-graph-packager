@@ -57,7 +57,7 @@ jobs:
       - name: Install dependencies.py
         run: |
           python -m venv .venv && source ./.venv/bin/activate
-          $HOME/.local/bin/uv pip install --editable .
+          $HOME/.local/bin/uv sync
 
       - name: Install osmium & osmctools
         run: |
