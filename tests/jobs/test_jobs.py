@@ -65,7 +65,7 @@ def test_job_get_jobs(get_client, basic_auth_header):
 
     res = get_client.get("/api/v1/jobs/").json()
 
-    assert len(res) == 1
+    assert isinstance(res, list) and len(res) == 1
     assert res[0]["zip_path"] == str(
         SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
     )
@@ -95,7 +95,7 @@ def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
     res = get_client.get("/api/v1/jobs/", params=(key_value,)).json()
 
     # since we don't do any actual processing when testing, Statuses.Completed is never set
-    assert len(res) == 2 if key_value[0] == "value" else 1
+    assert isinstance(res, list) and len(res) == 2 if key_value[0] == "value" else 1
     assert res[0]["provider"] == "osm"
 
 
