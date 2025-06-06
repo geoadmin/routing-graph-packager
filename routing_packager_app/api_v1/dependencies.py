@@ -22,7 +22,7 @@ def split_bbox(bbox: Optional[str] = "") -> Tuple[float, float, float, float]:
         )
     # validate bbox
     if (split[0] >= split[2] or split[0] < -180 or split[2] > 180) or (
-        bbox[1] >= bbox[3] or split[1] < -90 or split[3] > 90
+        split[1] >= split[3] or split[1] < -90 or split[3] > 90
     ):
         raise HTTPException(HTTP_400_BAD_REQUEST, "'bbox' has an invalid geometry.")
 
