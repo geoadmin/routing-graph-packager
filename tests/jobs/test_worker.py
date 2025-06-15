@@ -28,7 +28,7 @@ DEFAULT_ARGS = {
 async def test_success(
     get_client: TestClient, httpserver: HTTPServer, basic_auth_header, copy_valhalla_tiles
 ):
-    httpserver.expect_request("/status").respond_with_json({})
+    httpserver.expect_oneshot_request("/status").respond_with_json({})
 
     # create the right bbox
     bbox = "1.486630,42.608695,1.534706,42.646334"
@@ -65,7 +65,7 @@ async def test_fail_no_valhalla(get_client: TestClient, basic_auth_header):
 
 @pytest.mark.asyncio
 async def test_fail_no_tiles_in_dir(get_client: TestClient, httpserver: HTTPServer, basic_auth_header):
-    httpserver.expect_request("/status").respond_with_json({})
+    httpserver.expect_oneshot_request("/status").respond_with_json({})
     new_job = create_new_job(get_client, DEFAULT_ARGS, basic_auth_header)
     shutil.rmtree(Path(new_job.json()["zip_path"]).parent)
     params = create_package_params(new_job.json())
@@ -80,7 +80,7 @@ async def test_fail_no_tiles_in_dir(get_client: TestClient, httpserver: HTTPServ
 async def test_fail_no_tiles_in_bbox(
     get_client: TestClient, httpserver: HTTPServer, basic_auth_header, copy_valhalla_tiles
 ):
-    httpserver.expect_request("/status").respond_with_json({})
+    httpserver.expect_oneshot_request("/status").respond_with_json({})
     new_job = create_new_job(get_client, DEFAULT_ARGS, basic_auth_header)
     shutil.rmtree(Path(new_job.json()["zip_path"]).parent)
     params = create_package_params(new_job.json())
