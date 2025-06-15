@@ -9,17 +9,14 @@ def split_bbox(bbox: Optional[str] = "") -> Tuple[float, float, float, float]:
     """Splits a bbox string into a list of four floats. Expects the format minx,miny,maxx,maxy."""
     error_msg = "'bbox' needs to be a comma-delimited string in the format minx,miny,maxx,maxy."
     if not bbox:
-        raise HTTPException(HTTP_400_BAD_REQUEST, error_msg)
+        return None
 
     try:
         split = tuple((float(x) for x in bbox.split(",")))
     except (ValueError, AttributeError):
         raise HTTPException(HTTP_400_BAD_REQUEST, error_msg)
     if not len(split) == 4:
-        raise HTTPException(
-            HTTP_400_BAD_REQUEST,
-            error_msg
-        )
+        raise HTTPException(HTTP_400_BAD_REQUEST, error_msg)
     # validate bbox
     if (split[0] >= split[2] or split[0] < -180 or split[2] > 180) or (
         split[1] >= split[3] or split[1] < -90 or split[3] > 90
@@ -38,4 +35,3 @@ def get_validated_name(name: str) -> str:
         )
 
     return name.replace(" ", "_")
-
