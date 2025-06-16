@@ -61,7 +61,6 @@ def post_key(
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Wrong username or password.")
 
     generated_key = secrets.token_urlsafe(16)
-    print(f"gen key: {generated_key}")
     hashed_key = hmac_hash(generated_key)
     key_db = APIKeys.model_validate(
         key,

@@ -98,7 +98,7 @@ class JobBase(SQLModel):
 
 class JobRead(JobBase):
     id: int = 1
-    user_id: int = 1
+    user_id: int | None = 1
     arq_id: str = ""
     status: Statuses = Statuses.QUEUED
     bbox: str = ""

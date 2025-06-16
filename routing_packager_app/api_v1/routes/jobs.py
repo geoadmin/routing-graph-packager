@@ -80,7 +80,7 @@ async def post_job(
 ):
     """POST a new job. Needs admin privileges or a valid API key with write permissions."""
     # check api key is valid and active
-    matched_key = APIKeys.check_key(db, key, False)
+    matched_key = APIKeys.check_key(db, key, True)
 
     # Sanitize the name field before using it
     job.name = get_validated_name(job.name)
@@ -91,6 +91,11 @@ async def post_job(
             "No valid authentication method provided. Possible authentication methods: API key"
             "(x-key header) username/password (basic auth).",
         )
+
+    if not current_user:
+        user_id = None
+    else:
+        user_id = current_user.id
 
     # keep the input bbox string around for the response
     bbox_str = job.bbox
@@ -108,7 +113,7 @@ async def post_job(
     )
     db_job.status = Statuses.QUEUED
     db_job.arq_id = arq_id
-    db_job.user_id = current_user.id
+    db_job.user_id = user_id
     db_job.zip_path = str(zip_path.resolve())
     add_or_abort(db, db_job)
 
@@ -123,7 +128,7 @@ async def post_job(
             db_job.description,
             bbox_str,
             str(zip_path.resolve()),
-            current_user.id,
+            user_id,
             _job_id=db_job.arq_id,
         )
 
