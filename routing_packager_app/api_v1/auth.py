@@ -1,15 +1,15 @@
 from fastapi.security import HTTPBasic, APIKeyHeader
-from bcrypt import gensalt, hashpw, checkpw
+import hmac
+import hashlib
+
+from routing_packager_app.config import SETTINGS
 
 
-BasicAuth = HTTPBasic()
+BasicAuth = HTTPBasic(auto_error=False)
 
-HeaderKey = APIKeyHeader(name="x-key")
-
-
-def hash_key(raw_key: str) -> str:
-    return hashpw(raw_key.encode(), gensalt()).decode()
+HeaderKey = APIKeyHeader(name="x-api-key", auto_error=False)
 
 
-def check_key(raw_key: str, stored_key: str) -> bool:
-    return checkpw(raw_key.encode(), stored_key.encode())
+def hmac_hash(key: str) -> str:
+    """Hash an API Key"""
+    return hmac.new(SETTINGS.SECRET_KEY.encode(), key.encode(), hashlib.sha256).hexdigest()

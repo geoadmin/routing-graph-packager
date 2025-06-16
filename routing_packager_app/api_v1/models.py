@@ -7,7 +7,9 @@ from geoalchemy2 import Geography
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
-from sqlmodel import AutoString, DateTime, Field, Relationship, Session, SQLModel, select
+from sqlmodel import AutoString, DateTime, Field, Relationship, Session, SQLModel, and_, select
+
+from routing_packager_app.api_v1.auth import hmac_hash
 
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
@@ -53,6 +55,27 @@ class APIKeys(APIKeysBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     valid_until: datetime = Field(nullable=True, default=datetime(1970, 1, 1, tzinfo=timezone.utc))
     is_active: bool = Field(nullable=False, default=False)
+
+    @staticmethod
+    def check_key(db: Session, key: str, requires_write: bool) -> bool:
+        if not key:
+            return False
+        hashed_key = hmac_hash(key)
+        key_candidate: APIKeys | None = db.exec(
+            select(APIKeys).where(
+                and_(
+                    APIKeys.is_active,
+                    APIKeys.key == hashed_key,
+                    (APIKeys.permission == "write") if requires_write else True,
+                    APIKeys.valid_until > datetime.now(),
+                )
+            )
+        ).first()
+
+        if not key_candidate:
+            return False
+
+        return True
 
     def __repr__(self):  # pragma: no cover
         s = f"<APIKey id={self.id} key={self.key} permission={self.permission}"
@@ -138,6 +161,8 @@ class User(UserBase, table=True):
 
     @staticmethod
     def get_user(db: Session, auth_data: HTTPBasicCredentials) -> Optional["User"]:
+        if not auth_data or not auth_data.username or not auth_data.password:
+            return None
         user = db.exec(select(User).filter(User.email == auth_data.username)).first()  # type: ignore
         if not user:
             return None

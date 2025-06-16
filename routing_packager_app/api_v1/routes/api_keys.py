@@ -15,7 +15,7 @@ from starlette.status import (
 from ..models import APIKeys, APIKeysUpdate, APIKeysRead, APIKeysCreate, APIPermission, User
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
-from ..auth import BasicAuth, hash_key
+from ..auth import BasicAuth, hmac_hash
 
 router = APIRouter()
 
@@ -62,7 +62,7 @@ def post_key(
 
     generated_key = secrets.token_urlsafe(16)
     print(f"gen key: {generated_key}")
-    hashed_key = hash_key(generated_key)
+    hashed_key = hmac_hash(generated_key)
     key_db = APIKeys.model_validate(
         key,
         update={

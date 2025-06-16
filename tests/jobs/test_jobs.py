@@ -63,7 +63,7 @@ def test_post_job_existing_dir(get_client, basic_auth_header):
 def test_job_get_jobs(get_client, basic_auth_header):
     create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
 
-    res = get_client.get("/api/v1/jobs/").json()
+    res = get_client.get("/api/v1/jobs/", headers=basic_auth_header).json()
 
     assert isinstance(res, list) and len(res) == 1
     assert res[0]["zip_path"] == str(
@@ -92,7 +92,7 @@ def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
         },
     )
 
-    res = get_client.get("/api/v1/jobs/", params=(key_value,)).json()
+    res = get_client.get("/api/v1/jobs/", params=(key_value,), headers=basic_auth_header).json()
 
     # since we don't do any actual processing when testing, Statuses.Completed is never set
     assert isinstance(res, list) and len(res) == 2 if key_value[0] == "value" else 1
@@ -102,14 +102,14 @@ def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
 def test_job_get_job(get_client, basic_auth_header):
     res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
 
-    res = get_client.get(f"/api/v1/jobs/{res.json()['id']}").json()
+    res = get_client.get(f"/api/v1/jobs/{res.json()['id']}", headers=basic_auth_header).json()
     assert res["zip_path"] == str(
         SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
     )
 
 
 def test_job_get_job_not_found(get_client, basic_auth_header):
-    res = get_client.get("/api/v1/jobs/1")
+    res = get_client.get("/api/v1/jobs/1", headers=basic_auth_header)
     assert res.status_code == 404
     assert res.json()["detail"] == "Couldn't find job id 1"
 

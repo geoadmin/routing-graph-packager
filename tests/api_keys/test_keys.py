@@ -4,6 +4,7 @@ from base64 import b64encode
 from sqlalchemy_utils.functions.database import itertools
 from sqlmodel import Session, select
 
+from routing_packager_app.api_v1.auth import hmac_hash
 from routing_packager_app.api_v1.models import APIKeys, APIKeysRead
 from routing_packager_app.config import SETTINGS
 from ..utils_ import create_new_key
@@ -33,7 +34,7 @@ def test_post_key(
     assert abs(key_db.valid_until - (datetime.now() + timedelta(days=validity_days))) <= tolerance
 
     assert key_db.permission == permission
-    assert len(key_db.key) == 60
+    assert len(key_db.key) == 64
 
 
 def test_post_key_unauthenticated(get_client):
@@ -128,10 +129,7 @@ def test_patch_key(get_client, basic_auth_header, get_session: Session):
     assert new_response_key.comment == "test"
 
     # then a new permission and a different validity time frame
-    data = {
-        "permission": "read",
-        "validity_days": 15
-    }
+    data = {"permission": "read", "validity_days": 15}
     res = get_client.patch(f"/api/v1/keys/{response_key.id}", headers=basic_auth_header, json=data)
     assert res.status_code == 200
     new_response_key = APIKeysRead.model_validate(res.json())
@@ -143,12 +141,30 @@ def test_patch_key(get_client, basic_auth_header, get_session: Session):
     assert new_response_key.is_active
 
     # finally revoke it
-    data = {
-        "is_active": False
-    }
+    data = {"is_active": False}
     res = get_client.patch(f"/api/v1/keys/{response_key.id}", headers=basic_auth_header, json=data)
     assert res.status_code == 200
     new_response_key = APIKeysRead.model_validate(res.json())
     assert new_response_key.id == response_key.id
     assert not new_response_key.is_active
 
+
+@pytest.mark.parametrize("_", range(10))
+def test_match_key(get_client, basic_auth_header, get_session: Session, _):
+    """
+    Check some generated API Keys against their hashes
+    """
+    data = {
+        "permission": "write",
+        "validity_days": 1,
+    }
+    res = create_new_key(
+        get_client,
+        auth_header=basic_auth_header,
+        data=data,
+    )
+
+    statement = select(APIKeys).where(APIKeys.id == res.json()["id"])
+    key_db: APIKeys | None = get_session.exec(statement).first()
+    assert key_db is not None
+    assert hmac_hash(res.json()["key"]) == key_db.key

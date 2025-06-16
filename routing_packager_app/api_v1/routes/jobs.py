@@ -18,12 +18,12 @@ from starlette.status import (
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from ..models import JobRead, JobCreate, Job, User
+from ..models import APIKeys, JobRead, JobCreate, Job, User
 from ..dependencies import split_bbox, get_validated_name
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
 from ...config import SETTINGS, TestSettings
-from ..auth import BasicAuth
+from ..auth import BasicAuth, HeaderKey
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
 from ...constants import Providers, Statuses
@@ -38,7 +38,21 @@ async def get_jobs(
     update: bool | None = None,
     bbox: Tuple[float, float, float, float] = Depends(split_bbox),
     db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
 ):
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, False)
+
+    # alternatively, allow basic auth
+    current_user = User.get_user(db, auth)
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-key header) username/password (basic auth).",
+        )
+
     filters = []
     if bbox:
         filters.append(func.ST_Intersects(Job.bbox, bbox_to_wkt(bbox)))
@@ -62,13 +76,21 @@ async def post_job(
     job: JobCreate,
     db: Session = Depends(get_db),
     auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
 ):
-    """POST a new job. Needs admin privileges."""
+    """POST a new job. Needs admin privileges or a valid API key with write permissions."""
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, False)
+
     # Sanitize the name field before using it
     job.name = get_validated_name(job.name)
     current_user = User.get_user(db, auth)
-    if not current_user:
-        raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-key header) username/password (basic auth).",
+        )
 
     # keep the input bbox string around for the response
     bbox_str = job.bbox
@@ -111,8 +133,24 @@ async def post_job(
 
 
 @router.get("/{job_id}", response_model=JobRead)
-async def get_job(job_id: int, db: Session = Depends(get_db)):
+async def get_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
+):
     """GET a single job."""
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, False)
+
+    # alternatively, allow basic auth
+    current_user = User.get_user(db, auth)
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-key header) username/password (basic auth).",
+        )
     job = db.get(Job, job_id)
     if not job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
