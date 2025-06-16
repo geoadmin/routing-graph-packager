@@ -23,7 +23,7 @@ from ..dependencies import split_bbox, get_validated_name
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
 from ...config import SETTINGS, TestSettings
-from ...auth.basic_auth import BasicAuth
+from ..auth import BasicAuth
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
 from ...constants import Providers, Statuses

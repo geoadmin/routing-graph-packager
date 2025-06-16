@@ -7,7 +7,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from ...auth.basic_auth import BasicAuth
+from ..auth import BasicAuth
 from ...config import SETTINGS
 from ...db import get_db
 from ..models import LogType, User

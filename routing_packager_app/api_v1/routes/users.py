@@ -16,7 +16,7 @@ from ..models import User, UserRead, UserCreate
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
 from ...config import SETTINGS
-from ...auth.basic_auth import BasicAuth
+from ..auth import BasicAuth
 
 router = APIRouter()
 
@@ -40,6 +40,7 @@ def post_user(
 @router.get("/", response_model=List[UserRead])
 def get_users(
     db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth)
 ):
     """GET all users."""
     return db.exec(select(User)).all()
