@@ -160,3 +160,12 @@ curl --location -XPATCH 'http://localhost:5000/api/v1/keys' \
 ```
 
 This method also allows changing a key's validity, comment or permission.
+
+###### Passing a key 
+
+When reading or creating jobs, you can pass an API key instead of a basic auth header like this: 
+
+```
+curl --location -XGET 'http://localhost:443/api/v1/jobs' --header 'x-api-key: H_I99kW7qqMATr5SGYTLAQ' --header 'Content-Type: application/json'
+```
+

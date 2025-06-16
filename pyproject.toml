@@ -3,7 +3,7 @@ packages = ["routing_packager_app"]
 
 [project]
 name = "routing-graph-packager"
-version = "1.0.0b"
+version = "1.1.0"
 description = "Backend to generate packages of routing graphs for FOSS routing engines in a job queue."
 authors = [
  { name = "Nils Nolde", email = "nils@gis-ops.com" },
