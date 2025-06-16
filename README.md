@@ -15,6 +15,7 @@ The default road dataset is the [OSM](openstreetmap.org) planet PBF. If availabl
 - **asynchronous API**: graph generation is outsourced to a [`ARQ`](https://github.com/samuelcolvin/arq) worker
 - **email notifications**: notifies the requesting user if the job succeeded/failed
 - **logs API** read the logs for the worker, the app and the graph builder via the API
+- **api key based authentication**: for reading/creating jobs
 
 ## "Quick Start"
 
@@ -92,3 +93,70 @@ The app is listening on `/api/v1/jobs` for new `POST` requests to generate some 
 ### Logs
 
 The app exposes logs via the route `/api/v1/logs/{log_type}`. Available log types are `worker`, `app` and `builder`. An optional query parameter `?lines={n}` limits the output to the last `n` lines. Authentication is required.
+
+### Authentication and Authorization 
+
+The REST API supports two methods of authentication: basic auth and api keys. 
+
+#### Basic Auth 
+
+Rather than a full fledged user management system, this method provides access to all routes for an admin user. 
+
+
+#### API Keys 
+
+For all non-admin users, access to either reading or reading and creating jobs can be granted by the admin user via issuing API keys. These keys can be created with a specific permission and validity duration in days. Furthermore, they can be annotated with comments. Finally, they can be revoked and their permissions and validity changed at any given time. For security reasons, keys are not stored directly in the database. Instead, their hashes are stored. 
+
+##### Examples 
+
+###### Creating a new key 
+
+```
+curl --location -XPOST 'http://localhost:5000/api/v1/keys' \
+--header 'Authorization: Basic <encoded_auth>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"permission": "read",  # read or write
+	"validity_days": 90,
+	"comment": "issued to client XY"  # supports arbitrary comments
+}'
+```
+
+The created key is returned as part of the response. Make sure to store the key, since this will be the only time it is accessible directly. In the DB, only its hash is stored. 
+
+
+###### Retrieving a key 
+
+Keys can either be found through their ID: 
+
+```
+curl --location -XPOST 'http://localhost:5000/api/v1/keys/<id>' \
+--header 'Authorization: Basic <encoded_auth>' 
+```
+
+or using query parameters: 
+
+```
+curl --location -XPOST 'http://localhost:5000/api/v1/keys/?comment="client xy"' \
+--header 'Authorization: Basic <encoded_auth>' 
+```
+
+```
+curl --location -XPOST 'http://localhost:5000/api/v1/keys/?is_active=true'\
+--header 'Authorization: Basic <encoded_auth>' 
+```
+
+###### Revoking a key 
+
+Keys can be modified through PATCH requests: 
+
+```
+curl --location -XPATCH 'http://localhost:5000/api/v1/keys' \
+--header 'Authorization: Basic <encoded_auth>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"is_active": false 
+}'
+```
+
+This method also allows changing a key's validity, comment or permission.
