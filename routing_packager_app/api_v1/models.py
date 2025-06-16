@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional
 
@@ -12,6 +12,53 @@ from sqlmodel import AutoString, DateTime, Field, Relationship, Session, SQLMode
 from ..config import SETTINGS
 from ..constants import Providers, Statuses
 from ..utils.geom_utils import wkbe_to_str
+
+
+class APIPermission(str, Enum):
+    READ = "read"
+    READWRITE = "write"
+
+
+class APIKeysBase(SQLModel):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    is_active: bool = Field(nullable=False, default=False)
+    comment: str = Field(nullable=False, default="")
+
+
+class APIKeysUpdate(SQLModel):
+    is_active: bool | None = None
+    comment: str | None = None
+    validity_days: int | None = None
+    permission: APIPermission | None = None
+
+
+class APIKeysCreate(APIKeysBase):
+    permission: APIPermission
+    validity_days: int
+
+
+class APIKeysRead(APIKeysBase):
+    key: str
+    permission: APIPermission
+    valid_until: datetime
+
+
+class APIKeys(APIKeysBase, table=True):
+    __tablename__ = "api_keys"  # type: ignore
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    key: str = Field(nullable=False)
+    permission: APIPermission = Field(default=APIPermission.READ)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    valid_until: datetime = Field(nullable=True, default=datetime(1970, 1, 1, tzinfo=timezone.utc))
+    is_active: bool = Field(nullable=False, default=False)
+
+    def __repr__(self):  # pragma: no cover
+        s = f"<APIKey id={self.id} key={self.key} permission={self.permission}"
+        f"created_at={self.created_at} valid_until={self.valid_until} is_active={self.is_active}"
+        f"comment={self.comment}>"
+        return s
 
 
 class JobBase(SQLModel):

@@ -38,11 +38,11 @@ def post_user(
 
 
 @router.get("/", response_model=List[UserRead])
-def get_users(
-    db: Session = Depends(get_db),
-    auth: HTTPBasicCredentials = Depends(BasicAuth)
-):
+def get_users(db: Session = Depends(get_db), auth: HTTPBasicCredentials = Depends(BasicAuth)):
     """GET all users."""
+    req_user = User.get_user(db, auth)
+    if not req_user:
+        raise HTTPException(HTTP_401_UNAUTHORIZED, "Not authorized to delete a user.")
     return db.exec(select(User)).all()
 
 
