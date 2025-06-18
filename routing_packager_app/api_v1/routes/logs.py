@@ -3,11 +3,11 @@ from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPBasicCredentials
 from sqlmodel import Session
 from starlette.status import (
-    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from ...auth.basic_auth import BasicAuth
+from ..auth import BasicAuth
 from ...config import SETTINGS
 from ...db import get_db
 from ..models import LogType, User
@@ -45,4 +45,4 @@ def get_logs(
             return response
 
     except:  # noqa
-        return HTTP_400_BAD_REQUEST(f"Unable to open {log_file}.")
+        return HTTPException(HTTP_500_INTERNAL_SERVER_ERROR, f"Unable to open {log_file}.")

@@ -8,7 +8,7 @@ from routing_packager_app.utils.valhalla_utils import TILE_SIZES, get_tiles_with
 TAR_PATH_LENGTHS = [6, 6, 9]  # how many leading 0's do we need as tar file name?
 
 
-def tile_base_to_path(base_x: int, base_y: int, level: int, fake_dir: Path) -> Path:
+def tile_base_to_path(base_x: int | float, base_y: int | float, level: int, fake_dir: Path) -> Path:
     """Convert a tile's base lat/lon to a relative tile path."""
     tile_size = TILE_SIZES[level]
 

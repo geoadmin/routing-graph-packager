@@ -26,8 +26,11 @@ def delete_jobs(get_session: Session):
 @pytest.fixture(scope="function", autouse=True)
 def delete_dirs():
     yield
-    for dir_ in SETTINGS.get_output_path().iterdir():
-        rmtree(dir_)
+    try:
+        for dir_ in SETTINGS.get_output_path().iterdir():
+            rmtree(dir_)
+    except Exception:  # failing tests may not have produced any output
+        pass
 
 
 @pytest.fixture(scope="function")

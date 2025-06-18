@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from pydantic_settings import BaseSettings as _BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -121,7 +121,7 @@ class TestSettings(BaseSettings):
 
 
 # decide which settings we'll use
-SETTINGS: Optional[BaseSettings] = None
+SETTINGS: BaseSettings
 env = os.getenv("API_CONFIG", "prod")
 if env == "prod":  # pragma: no cover
     SETTINGS = ProdSettings()

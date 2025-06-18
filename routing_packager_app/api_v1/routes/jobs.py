@@ -1,6 +1,6 @@
 import os
 from shutil import rmtree
-from typing import List, Optional
+from typing import Tuple, List, Optional
 
 from arq.connections import ArqRedis
 from arq.constants import job_key_prefix
@@ -18,12 +18,12 @@ from starlette.status import (
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from ..models import JobRead, JobCreate, Job, User
-from ..dependencies import split_bbox, get_validated_name, validate_bbox
+from ..models import APIKeys, JobRead, JobCreate, Job, User
+from ..dependencies import split_bbox, get_validated_name
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
 from ...config import SETTINGS, TestSettings
-from ...auth.basic_auth import BasicAuth
+from ..auth import BasicAuth, HeaderKey
 from ...utils.geom_utils import bbox_to_wkt
 from ...utils.file_utils import make_package_path
 from ...constants import Providers, Statuses
@@ -35,10 +35,24 @@ router = APIRouter()
 async def get_jobs(
     provider: Optional[Providers] = None,
     status: Optional[Statuses] = None,
-    update: bool = None,
-    bbox: List[float] = Depends(split_bbox),
+    update: bool | None = None,
+    bbox: Tuple[float, float, float, float] = Depends(split_bbox),
     db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
 ):
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, False)
+
+    # alternatively, allow basic auth
+    current_user = User.get_user(db, auth)
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-key header) username/password (basic auth).",
+        )
+
     filters = []
     if bbox:
         filters.append(func.ST_Intersects(Job.bbox, bbox_to_wkt(bbox)))
@@ -62,16 +76,28 @@ async def post_job(
     job: JobCreate,
     db: Session = Depends(get_db),
     auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
 ):
-    """POST a new job. Needs admin privileges."""
+    """POST a new job. Needs admin privileges or a valid API key with write permissions."""
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, True)
+
     # Sanitize the name field before using it
     job.name = get_validated_name(job.name)
     current_user = User.get_user(db, auth)
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-key header) username/password (basic auth).",
+        )
+
     if not current_user:
-        raise HTTPException(HTTP_401_UNAUTHORIZED, "No valid username or password provided.")
+        user_id = None
+    else:
+        user_id = current_user.id
 
     # keep the input bbox string around for the response
-    validate_bbox(job.bbox)
     bbox_str = job.bbox
     job.bbox = bbox_to_wkt(split_bbox(bbox_str))
 
@@ -87,7 +113,7 @@ async def post_job(
     )
     db_job.status = Statuses.QUEUED
     db_job.arq_id = arq_id
-    db_job.user_id = current_user.id
+    db_job.user_id = user_id
     db_job.zip_path = str(zip_path.resolve())
     add_or_abort(db, db_job)
 
@@ -102,7 +128,7 @@ async def post_job(
             db_job.description,
             bbox_str,
             str(zip_path.resolve()),
-            current_user.id,
+            user_id,
             _job_id=db_job.arq_id,
         )
 
@@ -112,8 +138,24 @@ async def post_job(
 
 
 @router.get("/{job_id}", response_model=JobRead)
-async def get_job(job_id: int, db: Session = Depends(get_db)):
+async def get_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
+):
     """GET a single job."""
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, False)
+
+    # alternatively, allow basic auth
+    current_user = User.get_user(db, auth)
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-key header) username/password (basic auth).",
+        )
     job = db.get(Job, job_id)
     if not job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
@@ -137,7 +179,7 @@ async def delete_job(
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Not authorized to delete a user.")
 
     # get job or 404
-    db_job: Job = db.get(Job, job_id)
+    db_job: Job | None = db.get(Job, job_id)
     if not db_job:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find job id {job_id}")
 

@@ -34,26 +34,29 @@ async def create_package(
     description: str,
     bbox: str,
     zip_path: str,
-    user_id: int,
+    user_id: int | None,
     update: bool = False,
 ):
     session: Session = next(get_db())
 
     # Set up the logger where we have access to the user email
     # and only if there hasn't been one before
-    statement = select(User).where(User.id == user_id)
-    results = session.exec(statement).first()
+    if user_id is not None:
+        statement = select(User).where(User.id == user_id)
+        results = session.exec(statement).first()
 
-    if results is None:
-        raise HTTPException(
-            HTTP_404_NOT_FOUND,
-            "No user with specified ID found.",
-        )
-    user_email = results.email
-    if not LOGGER.handlers and update is False:
-        handler = AppSmtpHandler(**get_smtp_details([user_email]))
-        handler.setLevel(logging.INFO)
-        LOGGER.addHandler(handler)
+        if results is None:
+            raise HTTPException(
+                HTTP_404_NOT_FOUND,
+                "No user with specified ID found.",
+            )
+        user_email = results.email
+        if not LOGGER.handlers and update is False:
+            handler = AppSmtpHandler(**get_smtp_details([user_email]))
+            handler.setLevel(logging.INFO)
+            LOGGER.addHandler(handler)
+    else:
+        user_email = ""
     log_extra = {"user": user_email, "job_id": job_id}
 
     statement = select(Job).where(Job.id == job_id)

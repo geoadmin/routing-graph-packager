@@ -106,7 +106,7 @@ def test_get_all_users_not_empty(get_client, basic_auth_header, get_session: Ses
         )
         user_ids.append(res.json()["id"])
 
-    response = get_client.get("/api/v1/users/")
+    response = get_client.get("/api/v1/users/", headers=basic_auth_header)
 
     assert len(response.json()) == 4
     assert any("user4@email.com" in x["email"] for x in response.json())
@@ -184,11 +184,11 @@ def test_delete_auth_no_admin_error(get_client, basic_auth_header):
     assert response.json()["detail"] == "Not authorized to delete a user."
 
 
-def test_admin_user_created(get_client, get_session: Session):
+def test_admin_user_created(get_client, get_session: Session, basic_auth_header: dict):
     """Tests whether the admin user was created before the first request"""
     expected_email = SETTINGS.ADMIN_EMAIL
 
-    response = get_client.get("/api/v1/users")
+    response = get_client.get("/api/v1/users", headers=basic_auth_header)
     assert response.json()[0]["email"] == expected_email
 
     statement = select(User).where(User.id == 1)

@@ -1,6 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Set
+from typing import List, Set, Tuple
 
 from math import floor
 
@@ -22,20 +22,20 @@ def get_tile_bbox(tile_path: Path) -> Bbox:
     return Bbox(tile_base_x, tile_base_y, tile_base_x + tile_size, tile_base_y + tile_size)
 
 
-def get_tiles_with_bbox(all_tile_paths: List[Path], bbox: List[float], valhalla_dir: Path) -> Set[Path]:
+def get_tiles_with_bbox(
+    all_tile_paths: List[Path], bbox: Tuple[float, float, float, float], valhalla_dir: Path
+) -> Set[Path]:
     tile_paths = set()
     bbox = Bbox(*bbox)
     for tile_path in all_tile_paths:
         tile_bbox: Bbox = get_tile_bbox(tile_path.relative_to(valhalla_dir))
         # check if tile_bbox is outside bbox
-        if not any(
-            [
-                tile_bbox.min_x < bbox.min_x and tile_bbox.max_x < bbox.min_x,  # left of bbox
-                tile_bbox.min_y < bbox.min_y and tile_bbox.max_y < bbox.min_y,  # below bbox
-                tile_bbox.min_x > bbox.max_x and tile_bbox.max_x > bbox.max_x,  # right of bbox
-                tile_bbox.min_y > bbox.max_y and tile_bbox.max_y > bbox.max_y,  # above bbox
-            ]
-        ):
+        if not any([
+            tile_bbox.min_x < bbox.min_x and tile_bbox.max_x < bbox.min_x,  # left of bbox
+            tile_bbox.min_y < bbox.min_y and tile_bbox.max_y < bbox.min_y,  # below bbox
+            tile_bbox.min_x > bbox.max_x and tile_bbox.max_x > bbox.max_x,  # right of bbox
+            tile_bbox.min_y > bbox.max_y and tile_bbox.max_y > bbox.max_y,  # above bbox
+        ]):
             tile_paths.add(tile_path)
 
     return tile_paths

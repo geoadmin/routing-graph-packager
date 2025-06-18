@@ -14,12 +14,12 @@ class AppSmtpHandler(SMTPHandler):
         """Alters the subject line of the emails."""
         subject = f"{record.levelname}: "
         if record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
-            subject += f"{record.user}'s job {record.job_id} failed"
+            subject += f"{record.user}'s job {record.job_id} failed"  # type: ignore
         # Warning is only emitted in worker.py, when the deletion fails
         elif record.levelno == logging.WARNING:
-            subject += f"{record.user}'s job {record.job_id} was stopped and deleted"
+            subject += f"{record.user}'s job {record.job_id} was stopped and deleted"  # type: ignore
         elif record.levelno == logging.INFO:
-            subject += f"{record.user}'s job {record.job_id} succeeded"
+            subject += f"{record.user}'s job {record.job_id} succeeded"  # type: ignore
         else:
             raise NotImplementedError(
                 f"Logger level {record.levelno} is not implemented for this handler."
@@ -54,7 +54,7 @@ def get_smtp_details(toaddrs: List[str]):
     )
 
     if SETTINGS.SMTP_USER and SETTINGS.SMTP_PASS:  # pragma: no cover
-        conf["credentials"] = (SETTINGS.SMTP_USER, SETTINGS.SMTP_PASS)
+        conf["credentials"] = (SETTINGS.SMTP_USER, SETTINGS.SMTP_PASS)  # type: ignore
     if SETTINGS.SMTP_SECURE:
         conf["secure"] = tuple()
 

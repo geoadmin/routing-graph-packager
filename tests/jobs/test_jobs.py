@@ -29,7 +29,7 @@ def test_post_job(provider, get_client, basic_auth_header, get_session: Session)
         },
     )
     statement = select(Job).where(Job.id == res.json()["id"])
-    job_inst: Job = get_session.exec(statement).first()
+    job_inst: Job | None = get_session.exec(statement).first()
 
     assert job_inst is not None
     assert job_inst.provider == provider
@@ -45,6 +45,106 @@ def test_post_job_no_user(get_client):
     job = create_new_job(get_client, auth_header=bad_auth, data=DEFAULT_ARGS_POST, must_succeed=False)
 
     assert job.status_code == 401
+
+
+@pytest.mark.parametrize("provider", Providers)
+def test_post_job_key(provider, get_client, basic_auth_header, get_session: Session, create_key_header):
+    """Test posting a job with an appropriate API Key."""
+    key = create_key_header("write", 90)
+    res = create_new_job(
+        get_client,
+        auth_header={"x-api-key": key["key"]},
+        data={
+            **DEFAULT_ARGS_POST,
+            "provider": provider,
+        },
+    )
+    statement = select(Job).where(Job.id == res.json()["id"])
+    job_inst: Job | None = get_session.exec(statement).first()
+
+    assert job_inst is not None
+    assert job_inst.provider == provider
+    assert job_inst.status == "Queued"
+    assert job_inst.description == DEFAULT_ARGS_POST["description"]
+    assert job_inst.user_id is None
+    check_dir(job_inst)
+
+
+@pytest.mark.parametrize("provider", Providers)
+def test_post_job_unauthorized_key(
+    provider, get_client, basic_auth_header, get_session: Session, create_key_header
+):
+    """Test posting a job with an API Key without write permissions."""
+    key = create_key_header("read", 90)
+    res = create_new_job(
+        get_client,
+        auth_header={"x-api-key": key["key"]},
+        data={
+            **DEFAULT_ARGS_POST,
+            "provider": provider,
+        },
+        must_succeed=False,
+    )
+    assert res.status_code == 401
+
+
+@pytest.mark.parametrize("provider", Providers)
+def test_post_job_revoked_key(
+    provider, get_client, basic_auth_header, get_session: Session, create_key_header
+):
+    """Test posting a job with a revoked API Key."""
+    key = create_key_header("write", 90)
+
+    # revoke key
+    get_client.patch(f"/api/v1/keys/{key['id']}", headers=basic_auth_header, json={"is_active": False})
+
+    res = create_new_job(
+        get_client,
+        auth_header={"x-api-key": key["key"]},
+        data={
+            **DEFAULT_ARGS_POST,
+            "provider": provider,
+        },
+        must_succeed=False,
+    )
+    assert res.status_code == 401
+
+
+@pytest.mark.parametrize("provider", Providers)
+def test_read_jobs_revoked_key(
+    provider, get_client, basic_auth_header, get_session: Session, create_key_header
+):
+    """Test posting a job with a revoked API Key."""
+    key = create_key_header("read", 90)
+    res = get_client.get("/api/v1/jobs/", headers={"x-api-key": key["key"]})
+
+    assert res.status_code == 200
+
+    # revoke key
+    get_client.patch(f"/api/v1/keys/{key['id']}", headers=basic_auth_header, json={"is_active": False})
+
+    res = get_client.get("/api/v1/jobs/", headers={"x-api-key": key["key"]})
+
+    assert res.status_code == 401
+
+
+@pytest.mark.parametrize("provider", Providers)
+def test_post_job_invalid_key(
+    provider, get_client, basic_auth_header, get_session: Session, create_key_header
+):
+    """Test posting a job with an expired API Key."""
+
+    key = create_key_header("write", 0)
+    res = create_new_job(
+        get_client,
+        auth_header={"x-api-key": key["key"]},
+        data={
+            **DEFAULT_ARGS_POST,
+            "provider": provider,
+        },
+        must_succeed=False,
+    )
+    assert res.status_code == 401
 
 
 def test_post_job_existing_dir(get_client, basic_auth_header):
@@ -63,9 +163,9 @@ def test_post_job_existing_dir(get_client, basic_auth_header):
 def test_job_get_jobs(get_client, basic_auth_header):
     create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
 
-    res = get_client.get("/api/v1/jobs/").json()
+    res = get_client.get("/api/v1/jobs/", headers=basic_auth_header).json()
 
-    assert len(res) == 1
+    assert isinstance(res, list) and len(res) == 1
     assert res[0]["zip_path"] == str(
         SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
     )
@@ -92,24 +192,24 @@ def test_job_get_jobs_all_params(key_value, get_client, basic_auth_header):
         },
     )
 
-    res = get_client.get("/api/v1/jobs/", params=(key_value,)).json()
+    res = get_client.get("/api/v1/jobs/", params=(key_value,), headers=basic_auth_header).json()
 
     # since we don't do any actual processing when testing, Statuses.Completed is never set
-    assert len(res) == 2 if key_value[0] == "value" else 1
+    assert isinstance(res, list) and len(res) == 2 if key_value[0] == "value" else 1
     assert res[0]["provider"] == "osm"
 
 
 def test_job_get_job(get_client, basic_auth_header):
     res = create_new_job(get_client, auth_header=basic_auth_header, data={**DEFAULT_ARGS_POST})
 
-    res = get_client.get(f"/api/v1/jobs/{res.json()['id']}").json()
+    res = get_client.get(f"/api/v1/jobs/{res.json()['id']}", headers=basic_auth_header).json()
     assert res["zip_path"] == str(
         SETTINGS.get_output_path().joinpath("osm_test", "osm_test.zip").resolve()
     )
 
 
 def test_job_get_job_not_found(get_client, basic_auth_header):
-    res = get_client.get("/api/v1/jobs/1")
+    res = get_client.get("/api/v1/jobs/1", headers=basic_auth_header)
     assert res.status_code == 404
     assert res.json()["detail"] == "Couldn't find job id 1"
 
