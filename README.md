@@ -118,7 +118,7 @@ curl --location -XPOST 'http://localhost:5000/api/v1/keys' \
 --header 'Authorization: Basic <encoded_auth>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-	"permission": "read",  # read or write
+	"permission": "read",  # read, write or internal (for reading logs)
 	"validity_days": 90,
 	"comment": "issued to client XY"  # supports arbitrary comments
 }'

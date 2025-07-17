@@ -18,7 +18,7 @@ from starlette.status import (
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from ..models import APIKeys, JobRead, JobCreate, Job, User
+from ..models import APIKeys, APIPermission, JobRead, JobCreate, Job, User
 from ..dependencies import split_bbox, get_validated_name
 from ...utils.db_utils import delete_or_abort, add_or_abort
 from ...db import get_db
@@ -42,7 +42,7 @@ async def get_jobs(
     key: str = Depends(HeaderKey),
 ):
     # check api key is valid and active
-    matched_key = APIKeys.check_key(db, key, False)
+    matched_key = APIKeys.check_key(db, key, APIPermission.READ)
 
     # alternatively, allow basic auth
     current_user = User.get_user(db, auth)
@@ -50,7 +50,7 @@ async def get_jobs(
         raise HTTPException(
             HTTP_401_UNAUTHORIZED,
             "No valid authentication method provided. Possible authentication methods: API key"
-            "(x-key header) username/password (basic auth).",
+            "(x-api-key header) username/password (basic auth).",
         )
 
     filters = []
@@ -80,7 +80,7 @@ async def post_job(
 ):
     """POST a new job. Needs admin privileges or a valid API key with write permissions."""
     # check api key is valid and active
-    matched_key = APIKeys.check_key(db, key, True)
+    matched_key = APIKeys.check_key(db, key, APIPermission.READWRITE)
 
     # Sanitize the name field before using it
     job.name = get_validated_name(job.name)
@@ -146,7 +146,7 @@ async def get_job(
 ):
     """GET a single job."""
     # check api key is valid and active
-    matched_key = APIKeys.check_key(db, key, False)
+    matched_key = APIKeys.check_key(db, key, APIPermission.READ)
 
     # alternatively, allow basic auth
     current_user = User.get_user(db, auth)

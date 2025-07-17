@@ -7,10 +7,10 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from ..auth import BasicAuth
+from ..auth import BasicAuth, HeaderKey
 from ...config import SETTINGS
 from ...db import get_db
-from ..models import LogType, User
+from ..models import LogType, User, APIKeys, APIPermission
 
 router = APIRouter()
 
@@ -21,11 +21,19 @@ def get_logs(
     lines: int | None = None,
     db: Session = Depends(get_db),
     auth: HTTPBasicCredentials = Depends(BasicAuth),
+    key: str = Depends(HeaderKey),
 ):
-    # first authenticate
-    req_user = User.get_user(db, auth)
-    if not req_user:
-        raise HTTPException(HTTP_401_UNAUTHORIZED, "Not authorized to read logs.")
+    # check api key is valid and active
+    matched_key = APIKeys.check_key(db, key, APIPermission.INTERNAL)
+
+    # alternatively, allow basic auth
+    current_user = User.get_user(db, auth)
+    if not current_user and not matched_key:
+        raise HTTPException(
+            HTTP_401_UNAUTHORIZED,
+            "No valid authentication method provided. Possible authentication methods: API key"
+            "(x-api-key header) username/password (basic auth).",
+        )
 
     # figure out the type of logs
     log_file = SETTINGS.get_logging_dir() / f"{log_type.value}.log"

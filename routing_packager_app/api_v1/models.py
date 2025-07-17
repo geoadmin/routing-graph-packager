@@ -7,7 +7,7 @@ from geoalchemy2 import Geography
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy_utils import PasswordType
-from sqlmodel import AutoString, DateTime, Field, Relationship, Session, SQLModel, and_, select
+from sqlmodel import AutoString, DateTime, Field, Relationship, Session, SQLModel, and_, select, or_
 
 from routing_packager_app.api_v1.auth import hmac_hash
 
@@ -19,6 +19,7 @@ from ..utils.geom_utils import wkbe_to_str
 class APIPermission(str, Enum):
     READ = "read"
     READWRITE = "write"
+    INTERNAL = "internal"
 
 
 class APIKeysBase(SQLModel):
@@ -57,16 +58,23 @@ class APIKeys(APIKeysBase, table=True):
     is_active: bool = Field(nullable=False, default=False)
 
     @staticmethod
-    def check_key(db: Session, key: str, requires_write: bool) -> bool:
+    def check_key(db: Session, key: str, min_permission: APIPermission) -> bool:
         if not key:
             return False
         hashed_key = hmac_hash(key)
+        permission_clause = min_permission == APIPermission.READ  
+
+        if min_permission == APIPermission.READWRITE: 
+            permission_clause = or_(APIKeys.permission == "write", APIKeys.permission == "internal")
+        if min_permission == APIPermission.INTERNAL: 
+            permission_clause = APIKeys.permission == "internal"
+
         key_candidate: APIKeys | None = db.exec(
             select(APIKeys).where(
                 and_(
                     APIKeys.is_active,
                     APIKeys.key == hashed_key,
-                    (APIKeys.permission == "write") if requires_write else True,
+                    permission_clause,
                     APIKeys.valid_until > datetime.now(),
                 )
             )
