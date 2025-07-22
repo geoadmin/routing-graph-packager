@@ -168,7 +168,7 @@ def test_delete_admin_error(get_client, basic_auth_header):
 
 
 def test_delete_auth_no_admin_error(get_client, basic_auth_header):
-    email = "user@email.org"
+    email = "user1@email.org"
     password = "password"
 
     res = create_new_user(
