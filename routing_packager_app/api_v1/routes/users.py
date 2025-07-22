@@ -26,11 +26,13 @@ def post_user(
     user: UserCreate, db: Session = Depends(get_db), auth: HTTPBasicCredentials = Depends(BasicAuth)
 ):
     """POST a new user. Needs admin privileges"""
-    if not User.get_user(db, auth):
+    req_user = User.get_user(db, auth)
+    if not req_user:
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Wrong username or password.")
+    if not req_user.email == SETTINGS.ADMIN_EMAIL: 
+        raise HTTPException(HTTP_401_UNAUTHORIZED, "Operation requires admin privilegs")
 
     user_db = User.model_validate(user)
-    user_db.password = auth.password
 
     add_or_abort(db, user_db)
 
@@ -59,7 +61,7 @@ def get_user(user_id, db: Session = Depends(get_db)):
 def delete_user(user_id, db: Session = Depends(get_db), auth: HTTPBasicCredentials = Depends(BasicAuth)):
     # first authenticate
     req_user = User.get_user(db, auth)
-    if not req_user:
+    if not req_user or req_user.email != SETTINGS.ADMIN_EMAIL:
         raise HTTPException(HTTP_401_UNAUTHORIZED, "Not authorized to delete a user.")
 
     user: User | None = db.get(User, user_id)
@@ -67,7 +69,7 @@ def delete_user(user_id, db: Session = Depends(get_db), auth: HTTPBasicCredentia
         raise HTTPException(HTTP_404_NOT_FOUND, f"Couldn't find user id {user_id}")
     if user.email == SETTINGS.ADMIN_EMAIL:
         raise HTTPException(HTTP_409_CONFLICT, "Can't delete admin user.")
-    elif not req_user.email == SETTINGS.ADMIN_EMAIL:
+    if not req_user.email == SETTINGS.ADMIN_EMAIL:
         raise HTTPException(HTTP_400_BAD_REQUEST, "Admin privileges are required to delete a user.")
 
     delete_or_abort(db, user)
